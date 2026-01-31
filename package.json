@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "arkregex": "^0.0.5",
     "arktype": "^2.1.29",
     "effect": "^3.19.15"
   },

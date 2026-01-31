@@ -2,7 +2,7 @@
  * Phase 1 Components: Attributes, Health, Class, Combat Stats, Weapon, Item
  */
 import { Schema } from "effect"
-import { type } from "arktype"
+import { regex } from "arkregex"
 import { EntityId } from "./entities.js"
 
 // OSR formula: (attribute - 10) / 2 rounded down
@@ -50,18 +50,16 @@ export class CombatStatsComponent extends Schema.TaggedClass<CombatStatsComponen
   armorClass: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
 }) {}
 
-// Dice notation validator using ArkType's regex performance
-const arktypeDiceValidator = type(/^\d+d\d+(?:[+-]\d+)?$/)
+// Dice notation validator using ArkRegex with type inference
+const arkregexDiceValidator = regex("^\\d+d\\d+(?:[+-]\\d+)?$")
 
 /**
  * Dice notation string (e.g., "1d8", "2d6+3", "1d20-2")
- * Validated with ArkType regex, branded for type safety
+ * Validated with ArkRegex, branded for type safety
  */
 export const DiceNotation = Schema.String.pipe(
   Schema.filter((input): input is string => {
-    const result = arktypeDiceValidator(input)
-    // ArkType returns validated value on success, ArkErrors on failure
-    return !(result instanceof type.errors)
+    return arkregexDiceValidator.test(input)
   }, {
     message: () => "Invalid dice notation (expected: NdN, NdN+M, or NdN-M)"
   }),
