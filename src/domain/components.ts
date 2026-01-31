@@ -1,7 +1,6 @@
 /**
  * Phase 1 Components: Attributes, Health, Class, Combat Stats, Weapon, Item
  */
-import { regex } from "arkregex"
 import { Schema } from "effect"
 
 import { EntityId } from "./entities.js"
@@ -62,17 +61,15 @@ export class CombatStatsComponent extends Schema.TaggedClass<CombatStatsComponen
   armorClass: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
 }) {}
 
-// Dice notation validator using ArkRegex with type inference
-const arkregexDiceValidator = regex("^\\d+d\\d+(?:[+-]\\d+)?$")
+// Dice notation pattern
+const diceNotationPattern = /^\d+d\d+(?:[+-]\d+)?$/
 
 /**
  * Dice notation string (e.g., "1d8", "2d6+3", "1d20-2")
- * Validated with ArkRegex, branded for type safety
+ * Validated with regex, branded for type safety
  */
 export const DiceNotation = Schema.String.pipe(
-  Schema.filter((input): input is string => {
-    return arkregexDiceValidator.test(input)
-  }, {
+  Schema.filter((input): input is string => diceNotationPattern.test(input), {
     message: () => "Invalid dice notation (expected: NdN, NdN+M, or NdN-M)"
   }),
   Schema.brand("DiceNotation")

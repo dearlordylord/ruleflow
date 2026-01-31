@@ -8,12 +8,6 @@ importers:
 
   .:
     dependencies:
-      arkregex:
-        specifier: ^0.0.5
-        version: 0.0.5
-      arktype:
-        specifier: ^2.1.29
-        version: 2.1.29
       effect:
         specifier: ^3.19.15
         version: 3.19.15
@@ -74,12 +68,6 @@ importers:
         version: 4.0.18(tsx@4.21.0)
 
 packages:
-
-  '@ark/schema@0.56.0':
-    resolution: {integrity: sha512-ECg3hox/6Z/nLajxXqNhgPtNdHWC9zNsDyskwO28WinoFEnWow4IsERNz9AnXRhTZJnYIlAJ4uGn3nlLk65vZA==}
-
-  '@ark/util@0.56.0':
-    resolution: {integrity: sha512-BghfRC8b9pNs3vBoDJhcta0/c1J1rsoS1+HgVUreMFPdhz/CRAKReAu57YEllNaSy98rWAdY1gE+gFup7OXpgA==}
 
   '@dprint/formatter@0.4.1':
     resolution: {integrity: sha512-IB/GXdlMOvi0UhQQ9mcY15Fxcrc2JPadmo6tqefCNV0bptFq7YBpggzpqYXldBXDa04CbKJ+rDwO2eNRPE2+/g==}
@@ -689,12 +677,6 @@ packages:
 
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
-
-  arkregex@0.0.5:
-    resolution: {integrity: sha512-ncYjBdLlh5/QnVsAA8De16Tc9EqmYM7y/WU9j+236KcyYNUXogpz3sC4ATIZYzzLxwI+0sEOaQLEmLmRleaEXw==}
-
-  arktype@2.1.29:
-    resolution: {integrity: sha512-jyfKk4xIOzvYNayqnD8ZJQqOwcrTOUbIU4293yrzAjA3O1dWh61j71ArMQ6tS/u4pD7vabSPe7nG3RCyoXW6RQ==}
 
   array-buffer-byte-length@1.0.2:
     resolution: {integrity: sha512-LHE+8BuR7RYGDKvnrmcuSq3tDcKv9OFEXQt/HpbZhY7V6h0zlUXutnAD82GiFx9rdieCMjkvtcsPqBwgUl1Iiw==}
@@ -1741,12 +1723,6 @@ packages:
 
 snapshots:
 
-  '@ark/schema@0.56.0':
-    dependencies:
-      '@ark/util': 0.56.0
-
-  '@ark/util@0.56.0': {}
-
   '@dprint/formatter@0.4.1': {}
 
   '@dprint/typescript@0.91.8': {}
@@ -2238,16 +2214,6 @@ snapshots:
       color-convert: 2.0.1
 
   argparse@2.0.1: {}
-
-  arkregex@0.0.5:
-    dependencies:
-      '@ark/util': 0.56.0
-
-  arktype@2.1.29:
-    dependencies:
-      '@ark/schema': 0.56.0
-      '@ark/util': 0.56.0
-      arkregex: 0.0.5
 
   array-buffer-byte-length@1.0.2:
     dependencies:
