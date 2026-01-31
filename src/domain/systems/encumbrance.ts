@@ -1,14 +1,11 @@
 /**
  * Encumbrance System
  */
-import { Effect, Chunk, HashMap, Option } from "effect"
+import { Effect, Chunk } from "effect"
 import type { System } from "./types.js"
 import { SystemName } from "../entities.js"
 import { DomainError } from "../errors.js"
-import {
-  InventoryComponent,
-  ItemComponent
-} from "../components.js"
+import { getComponent } from "../components.js"
 
 export const encumbranceValidationSystem: System = (state, pendingMutations) =>
   Effect.gen(function* () {
@@ -17,59 +14,51 @@ export const encumbranceValidationSystem: System = (state, pendingMutations) =>
       (m) => m._tag === "AddItem"
     )
 
-    for (const mutation of addItemMutations) {
-      const character = yield* state.getEntity(mutation.entityId).pipe(
-        Effect.orElseFail(() =>
-          Chunk.of(
-            DomainError.make({
-              systemName: SystemName.make("Encumbrance"),
-              message: `Character ${mutation.entityId} not found`
-            })
+    yield* Effect.forEach(addItemMutations, (mutation) =>
+      Effect.gen(function* () {
+        const character = yield* state.getEntity(mutation.entityId).pipe(
+          Effect.orElseFail(() =>
+            Chunk.of(
+              DomainError.make({
+                systemName: SystemName.make("Encumbrance"),
+                message: `Character ${mutation.entityId} not found`
+              })
+            )
           )
         )
-      )
 
-      const item = yield* state.getEntity(mutation.itemId).pipe(
-        Effect.orElseFail(() =>
-          Chunk.of(
-            DomainError.make({
-              systemName: SystemName.make("Encumbrance"),
-              message: `Item ${mutation.itemId} not found`
-            })
+        const item = yield* state.getEntity(mutation.itemId).pipe(
+          Effect.orElseFail(() =>
+            Chunk.of(
+              DomainError.make({
+                systemName: SystemName.make("Encumbrance"),
+                message: `Item ${mutation.itemId} not found`
+              })
+            )
           )
         )
-      )
 
-      const inventoryOpt = HashMap.get(character.components, "Inventory")
-      const itemCompOpt = HashMap.get(item.components, "Item")
+        const inventory = getComponent(character, "Inventory")
+        const itemComp = getComponent(item, "Item")
 
-      if (Option.isNone(inventoryOpt) || Option.isNone(itemCompOpt)) {
-        continue
-      }
+        if (!inventory || !itemComp) {
+          return
+        }
 
-      const inventory = inventoryOpt.value
-      const itemComp = itemCompOpt.value
+        const newLoad = inventory.currentLoad + itemComp.loadValue
 
-      if (
-        !(inventory instanceof InventoryComponent) ||
-        !(itemComp instanceof ItemComponent)
-      ) {
-        continue
-      }
-
-      const newLoad = inventory.currentLoad + itemComp.loadValue
-
-      if (newLoad > inventory.loadCapacity) {
-        return yield* Effect.fail(
-          Chunk.of(
-            DomainError.make({
-              systemName: SystemName.make("Encumbrance"),
-              message: `Adding item exceeds capacity: ${newLoad} > ${inventory.loadCapacity}`
-            })
+        if (newLoad > inventory.loadCapacity) {
+          return yield* Effect.fail(
+            Chunk.of(
+              DomainError.make({
+                systemName: SystemName.make("Encumbrance"),
+                message: `Adding item exceeds capacity: ${newLoad} > ${inventory.loadCapacity}`
+              })
+            )
           )
-        )
-      }
-    }
+        }
+      })
+    )
 
     return Chunk.empty()
   })

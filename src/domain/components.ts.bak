@@ -24,7 +24,7 @@ export class AttributesComponent extends Schema.TaggedClass<AttributesComponent>
   get charismaMod() { return calculateModifier(this.charisma) }
 }
 
-export class HealthComponent extends Schema.TaggedClass<HealthComponent>()("Health", {
+export class HealthComponent extends Schema.Class<HealthComponent>("Health")({
   current: Schema.Int,
   max: Schema.Int.pipe(Schema.greaterThan(0)),
   traumaActive: Schema.Boolean,
@@ -38,12 +38,12 @@ export class HealthComponent extends Schema.TaggedClass<HealthComponent>()("Heal
 export const CharacterClass = Schema.Literal("Fighter", "Specialist", "Mystic")
 export type CharacterClass = typeof CharacterClass.Type
 
-export class ClassComponent extends Schema.TaggedClass<ClassComponent>()("Class", {
+export class ClassComponent extends Schema.Class<ClassComponent>("Class")({
   class: CharacterClass,
   level: Schema.Int.pipe(Schema.between(1, 10))
 }) {}
 
-export class CombatStatsComponent extends Schema.TaggedClass<CombatStatsComponent>()("CombatStats", {
+export class CombatStatsComponent extends Schema.Class<CombatStatsComponent>("CombatStats")({
   meleeAttackBonus: Schema.Int,
   rangedAttackBonus: Schema.Int,
   armorClass: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
@@ -55,7 +55,7 @@ export const WeaponGroup = Schema.Literal(
 )
 export type WeaponGroup = typeof WeaponGroup.Type
 
-export class WeaponComponent extends Schema.TaggedClass<WeaponComponent>()("Weapon", {
+export class WeaponComponent extends Schema.Class<WeaponComponent>("Weapon")({
   name: Schema.NonEmptyString,
   damageDice: Schema.NonEmptyString, // e.g. "1d8", "2d6"
   weaponGroup: WeaponGroup,
@@ -65,7 +65,7 @@ export class WeaponComponent extends Schema.TaggedClass<WeaponComponent>()("Weap
 export const LoadSize = Schema.Literal("Small", "Standard", "Large")
 export type LoadSize = typeof LoadSize.Type
 
-export class ItemComponent extends Schema.TaggedClass<ItemComponent>()("Item", {
+export class ItemComponent extends Schema.Class<ItemComponent>("Item")({
   name: Schema.NonEmptyString,
   loadSize: LoadSize,
   quantity: Schema.Int.pipe(Schema.greaterThan(0))
@@ -76,13 +76,13 @@ export class ItemComponent extends Schema.TaggedClass<ItemComponent>()("Item", {
   }
 }
 
-export class InventoryComponent extends Schema.TaggedClass<InventoryComponent>()("Inventory", {
+export class InventoryComponent extends Schema.Class<InventoryComponent>("Inventory")({
   items: Schema.Array(EntityId),
   loadCapacity: Schema.Number.pipe(Schema.greaterThan(0)),
   currentLoad: Schema.Number.pipe(Schema.greaterThanOrEqualTo(0))
 }) {}
 
-export class CurrencyComponent extends Schema.TaggedClass<CurrencyComponent>()("Currency", {
+export class CurrencyComponent extends Schema.Class<CurrencyComponent>("Currency")({
   copper: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
   silver: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
   gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
@@ -92,13 +92,13 @@ export class CurrencyComponent extends Schema.TaggedClass<CurrencyComponent>()("
   }
 }
 
-export class ArmorComponent extends Schema.TaggedClass<ArmorComponent>()("Armor", {
+export class ArmorComponent extends Schema.Class<ArmorComponent>("Armor")({
   baseAC: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
   armorType: Schema.String,
   encumbrancePenalty: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
 }) {}
 
-export class SpecializationComponent extends Schema.TaggedClass<SpecializationComponent>()("Specialization", {
+export class SpecializationComponent extends Schema.Class<SpecializationComponent>("Specialization")({
   weaponGroups: Schema.Array(WeaponGroup),
   bonusDamage: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
 }) {}
@@ -117,23 +117,11 @@ export const Component = Schema.Union(
 )
 export type Component = typeof Component.Type
 
-// Component tag schema for validation
-export const ComponentTag = Schema.Literal(
-  "Attributes",
-  "Health",
-  "Class",
-  "CombatStats",
-  "Weapon",
-  "Item",
-  "Inventory",
-  "Currency",
-  "Armor",
-  "Specialization"
-)
-export type ComponentTag = typeof ComponentTag.Type
+// Component tag is derived from the discriminated union _tag
+export type ComponentTag = Component["_tag"]
 
 // Entity with components stored as array (discriminated union ensures type safety)
-export class Entity extends Schema.TaggedClass<Entity>()("Entity", {
+export class Entity extends Schema.Class<Entity>("Entity")({
   id: EntityId,
   components: Schema.Array(Component)
 }) {}

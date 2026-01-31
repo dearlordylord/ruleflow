@@ -2,7 +2,7 @@
  * Combat system tests
  */
 import { describe, expect, it } from "@effect/vitest"
-import { Effect, HashMap, Chunk } from "effect"
+import { Effect, Chunk } from "effect"
 import {
   Entity,
   AttributesComponent,
@@ -16,70 +16,72 @@ import { ReadModelStore } from "../src/domain/infrastructure/ReadModelStore.js"
 import { GameState } from "../src/domain/infrastructure/GameState.js"
 import { combatToHitSystem, traumaSystem } from "../src/domain/systems/index.js"
 import { deterministicTestLayer, maxRollTestLayer } from "./layers.js"
+import { IdGenerator } from "../src/domain/services/IdGenerator.js"
 
 describe("Combat To-Hit System", () => {
   it.effect("successful attack generates damage mutation", () =>
     Effect.gen(function* () {
       const state = yield* GameState
       const store = yield* ReadModelStore
+      const idGen = yield* IdGenerator
 
       // Setup: Create attacker with STR 16 (+3), melee bonus +2
-      const attackerId = EntityId.make(crypto.randomUUID())
+      const attackerId = EntityId.make(yield* idGen.generate())
       yield* store.set(
         Entity.make({
           id: attackerId,
-          components: HashMap.make(
-            ["Attributes", AttributesComponent.make({
+          components: [
+            AttributesComponent.make({
               strength: 16,
               dexterity: 10,
               intelligence: 10,
               will: 10,
               constitution: 10,
               charisma: 10
-            })] as const,
-            ["CombatStats", CombatStatsComponent.make({
+            }),
+            CombatStatsComponent.make({
               meleeAttackBonus: 2,
               rangedAttackBonus: 0,
               armorClass: 15
-            })] as const
-          )
+            })
+          ]
         })
       )
 
       // Setup: Create target with AC 15
-      const targetId = EntityId.make(crypto.randomUUID())
+      const targetId = EntityId.make(yield* idGen.generate())
       yield* store.set(
         Entity.make({
           id: targetId,
-          components: HashMap.make(
-            ["Health", HealthComponent.make({
+          components: [
+            HealthComponent.make({
               current: 20,
               max: 20,
               traumaActive: false,
               traumaEffect: null
-            })] as const,
-            ["CombatStats", CombatStatsComponent.make({
+            }),
+            CombatStatsComponent.make({
               meleeAttackBonus: 0,
               rangedAttackBonus: 0,
               armorClass: 15
-            })] as const
-          )
+            })
+          ]
         })
       )
 
       // Setup: Create weapon
-      const weaponId = EntityId.make(crypto.randomUUID())
+      const weaponId = EntityId.make(yield* idGen.generate())
       yield* store.set(
         Entity.make({
           id: weaponId,
-          components: HashMap.make(
-            ["Weapon", WeaponComponent.make({
+          components: [
+            WeaponComponent.make({
               name: "Longsword",
               damageDice: "1d8",
               weaponGroup: "Blades",
               traits: []
-            })] as const
-          )
+            })
+          ]
         })
       )
 
@@ -108,55 +110,56 @@ describe("Combat To-Hit System", () => {
     Effect.gen(function* () {
       const state = yield* GameState
       const store = yield* ReadModelStore
+      const idGen = yield* IdGenerator
 
-      const attackerId = EntityId.make(crypto.randomUUID())
+      const attackerId = EntityId.make(yield* idGen.generate())
       yield* store.set(
         Entity.make({
           id: attackerId,
-          components: HashMap.make(
-            ["Attributes", AttributesComponent.make({
+          components: [
+            AttributesComponent.make({
               strength: 10,
               dexterity: 10,
               intelligence: 10,
               will: 10,
               constitution: 10,
               charisma: 10
-            })] as const,
-            ["CombatStats", CombatStatsComponent.make({
+            }),
+            CombatStatsComponent.make({
               meleeAttackBonus: 0,
               rangedAttackBonus: 0,
               armorClass: 15
-            })] as const
-          )
+            })
+          ]
         })
       )
 
-      const targetId = EntityId.make(crypto.randomUUID())
+      const targetId = EntityId.make(yield* idGen.generate())
       yield* store.set(
         Entity.make({
           id: targetId,
-          components: HashMap.make(
-            ["CombatStats", CombatStatsComponent.make({
+          components: [
+            CombatStatsComponent.make({
               meleeAttackBonus: 0,
               rangedAttackBonus: 0,
               armorClass: 20
-            })] as const
-          )
+            })
+          ]
         })
       )
 
-      const weaponId = EntityId.make(crypto.randomUUID())
+      const weaponId = EntityId.make(yield* idGen.generate())
       yield* store.set(
         Entity.make({
           id: weaponId,
-          components: HashMap.make(
-            ["Weapon", WeaponComponent.make({
+          components: [
+            WeaponComponent.make({
               name: "Longsword",
               damageDice: "1d8",
               weaponGroup: "Blades",
               traits: []
-            })] as const
-          )
+            })
+          ]
         })
       )
 
@@ -179,55 +182,56 @@ describe("Combat To-Hit System", () => {
     Effect.gen(function* () {
       const state = yield* GameState
       const store = yield* ReadModelStore
+      const idGen = yield* IdGenerator
 
-      const attackerId = EntityId.make(crypto.randomUUID())
+      const attackerId = EntityId.make(yield* idGen.generate())
       yield* store.set(
         Entity.make({
           id: attackerId,
-          components: HashMap.make(
-            ["Attributes", AttributesComponent.make({
+          components: [
+            AttributesComponent.make({
               strength: 16,
               dexterity: 10,
               intelligence: 10,
               will: 10,
               constitution: 10,
               charisma: 10
-            })] as const,
-            ["CombatStats", CombatStatsComponent.make({
+            }),
+            CombatStatsComponent.make({
               meleeAttackBonus: 5,
               rangedAttackBonus: 0,
               armorClass: 15
-            })] as const
-          )
+            })
+          ]
         })
       )
 
-      const targetId = EntityId.make(crypto.randomUUID())
+      const targetId = EntityId.make(yield* idGen.generate())
       yield* store.set(
         Entity.make({
           id: targetId,
-          components: HashMap.make(
-            ["CombatStats", CombatStatsComponent.make({
+          components: [
+            CombatStatsComponent.make({
               meleeAttackBonus: 0,
               rangedAttackBonus: 0,
               armorClass: 15
-            })] as const
-          )
+            })
+          ]
         })
       )
 
-      const weaponId = EntityId.make(crypto.randomUUID())
+      const weaponId = EntityId.make(yield* idGen.generate())
       yield* store.set(
         Entity.make({
           id: weaponId,
-          components: HashMap.make(
-            ["Weapon", WeaponComponent.make({
+          components: [
+            WeaponComponent.make({
               name: "Longsword",
               damageDice: "1d8",
               weaponGroup: "Blades",
               traits: []
-            })] as const
-          )
+            })
+          ]
         })
       )
 
@@ -257,19 +261,20 @@ describe("Trauma System", () => {
     Effect.gen(function* () {
       const state = yield* GameState
       const store = yield* ReadModelStore
+      const idGen = yield* IdGenerator
 
-      const entityId = EntityId.make(crypto.randomUUID())
+      const entityId = EntityId.make(yield* idGen.generate())
       yield* store.set(
         Entity.make({
           id: entityId,
-          components: HashMap.make(
-            ["Health", HealthComponent.make({
+          components: [
+            HealthComponent.make({
               current: 5,
               max: 20,
               traumaActive: false,
               traumaEffect: null
-            })] as const
-          )
+            })
+          ]
         })
       )
 
@@ -277,13 +282,13 @@ describe("Trauma System", () => {
         _tag: "DealDamage" as const,
         entityId,
         amount: 10,
-        source: EntityId.make(crypto.randomUUID())
+        source: EntityId.make(yield* idGen.generate())
       }
 
       const mutations = yield* traumaSystem(state, Chunk.of(damageMutation))
 
       expect(Chunk.size(mutations)).toBe(1)
-      const trauma = Chunk.unsafeHead(mutations)
+      const trauma = Chunk.unsafeHead(mutations) as any
       expect(trauma._tag).toBe("SetHealth")
       if (trauma._tag === "SetHealth") {
         expect(trauma.data.traumaActive).toBe(true)

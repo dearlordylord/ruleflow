@@ -1,29 +1,25 @@
 /**
  * Combat Systems
  */
-import { Effect, Chunk, HashMap, Option } from "effect"
+import { Effect, Chunk, Option } from "effect"
 import type { System } from "./types.js"
 import { SystemName } from "../entities.js"
 import { DomainError } from "../errors.js"
 import {
-  AttributesComponent,
-  CombatStatsComponent,
-  HealthComponent,
-  WeaponComponent,
-  SpecializationComponent
+  Entity,
+  getComponent,
+  WeaponGroup
 } from "../components.js"
 import { DealDamageMutation, SetHealthMutation } from "../mutations.js"
 import { CombatResolver } from "../services/CombatResolver.js"
 
 function getSpecializationBonus(
-  entity: any,
-  weaponGroup: string
+  entity: Entity,
+  weaponGroup: WeaponGroup
 ): number {
-  const specOpt = HashMap.get(entity.components, "Specialization")
-  if (Option.isNone(specOpt)) return 0
-  const spec = specOpt.value
-  if (!(spec instanceof SpecializationComponent)) return 0
-  return spec.weaponGroups.includes(weaponGroup as any) ? spec.bonusDamage : 0
+  const spec = getComponent(entity, "Specialization")
+  if (!spec) return 0
+  return spec.weaponGroups.includes(weaponGroup) ? spec.bonusDamage : 0
 }
 
 export const combatToHitSystem: System = (state, pendingMutations) =>
@@ -33,79 +29,63 @@ export const combatToHitSystem: System = (state, pendingMutations) =>
       (m) => m._tag === "PerformAttack"
     )
 
-    const damageMutations: typeof DealDamageMutation.Type[] = []
     const combat = yield* CombatResolver
 
-    for (const attack of attackMutations) {
-      const attacker = yield* state.getEntity(attack.attackerId).pipe(
-        Effect.orElseFail(() =>
-          Chunk.of(
-            DomainError.make({
-              systemName: SystemName.make("CombatToHit"),
-              message: `Attacker ${attack.attackerId} not found`
-            })
+    const damageMutations = yield* Effect.forEach(attackMutations, (attack) =>
+      Effect.gen(function* () {
+        const attacker = yield* state.getEntity(attack.attackerId).pipe(
+          Effect.orElseFail(() =>
+            Chunk.of(
+              DomainError.make({
+                systemName: SystemName.make("CombatToHit"),
+                message: `Attacker ${attack.attackerId} not found`
+              })
+            )
           )
         )
-      )
 
-      const target = yield* state.getEntity(attack.targetId).pipe(
-        Effect.orElseFail(() =>
-          Chunk.of(
-            DomainError.make({
-              systemName: SystemName.make("CombatToHit"),
-              message: `Target ${attack.targetId} not found`
-            })
+        const target = yield* state.getEntity(attack.targetId).pipe(
+          Effect.orElseFail(() =>
+            Chunk.of(
+              DomainError.make({
+                systemName: SystemName.make("CombatToHit"),
+                message: `Target ${attack.targetId} not found`
+              })
+            )
           )
         )
-      )
 
-      const weapon = yield* state.getEntity(attack.weaponId).pipe(
-        Effect.orElseFail(() =>
-          Chunk.of(
-            DomainError.make({
-              systemName: SystemName.make("CombatToHit"),
-              message: `Weapon ${attack.weaponId} not found`
-            })
+        const weapon = yield* state.getEntity(attack.weaponId).pipe(
+          Effect.orElseFail(() =>
+            Chunk.of(
+              DomainError.make({
+                systemName: SystemName.make("CombatToHit"),
+                message: `Weapon ${attack.weaponId} not found`
+              })
+            )
           )
         )
-      )
 
-      const attrsOpt = HashMap.get(attacker.components, "Attributes")
-      const combatStatsOpt = HashMap.get(attacker.components, "CombatStats")
-      const weaponCompOpt = HashMap.get(weapon.components, "Weapon")
-      const targetCombatOpt = HashMap.get(target.components, "CombatStats")
+        const attrs = getComponent(attacker, "Attributes")
+        const combatStats = getComponent(attacker, "CombatStats")
+        const weaponComp = getComponent(weapon, "Weapon")
+        const targetCombat = getComponent(target, "CombatStats")
 
-      if (
-        Option.isNone(attrsOpt) ||
-        Option.isNone(combatStatsOpt) ||
-        Option.isNone(weaponCompOpt) ||
-        Option.isNone(targetCombatOpt)
-      ) {
-        continue
-      }
+        if (!attrs || !combatStats || !weaponComp || !targetCombat) {
+          return Option.none()
+        }
 
-      const attrs = attrsOpt.value
-      const combatStats = combatStatsOpt.value
-      const weaponComp = weaponCompOpt.value
-      const targetCombat = targetCombatOpt.value
+        const hit = combat.resolveToHit(
+          attack.attackRoll,
+          combatStats.meleeAttackBonus,
+          attrs.strengthMod,
+          targetCombat.armorClass
+        )
 
-      if (
-        !(attrs instanceof AttributesComponent) ||
-        !(combatStats instanceof CombatStatsComponent) ||
-        !(weaponComp instanceof WeaponComponent) ||
-        !(targetCombat instanceof CombatStatsComponent)
-      ) {
-        continue
-      }
+        if (!hit) {
+          return Option.none()
+        }
 
-      const hit = combat.resolveToHit(
-        attack.attackRoll,
-        combatStats.meleeAttackBonus,
-        attrs.strengthMod,
-        targetCombat.armorClass
-      )
-
-      if (hit) {
         const damage = yield* combat.calculateDamage(
           weaponComp.damageDice,
           attrs.strengthMod,
@@ -113,17 +93,20 @@ export const combatToHitSystem: System = (state, pendingMutations) =>
           attack.isCritical
         )
 
-        damageMutations.push(
+        return Option.some(
           DealDamageMutation.make({
             entityId: attack.targetId,
             amount: damage,
             source: attack.attackerId
           })
         )
-      }
-    }
+      })
+    )
 
-    return Chunk.fromIterable(damageMutations)
+    // Filter out None values and extract mutations
+    return Chunk.fromIterable(damageMutations).pipe(
+      Chunk.filterMap((opt) => opt)
+    )
   })
 
 export const traumaSystem: System = (state, pendingMutations) =>
@@ -133,40 +116,41 @@ export const traumaSystem: System = (state, pendingMutations) =>
       (m) => m._tag === "DealDamage"
     )
 
-    const traumaMutations: typeof SetHealthMutation.Type[] = []
-
-    for (const damage of damageMutations) {
-      const entity = yield* state.getEntity(damage.entityId).pipe(
-        Effect.orElseFail(() =>
-          Chunk.of(
-            DomainError.make({
-              systemName: SystemName.make("Trauma"),
-              message: `Entity ${damage.entityId} not found`
-            })
+    const traumaMutations = yield* Effect.forEach(damageMutations, (damage) =>
+      Effect.gen(function* () {
+        const entity = yield* state.getEntity(damage.entityId).pipe(
+          Effect.orElseFail(() =>
+            Chunk.of(
+              DomainError.make({
+                systemName: SystemName.make("Trauma"),
+                message: `Entity ${damage.entityId} not found`
+              })
+            )
           )
         )
-      )
 
-      const healthOpt = HashMap.get(entity.components, "Health")
-      if (Option.isNone(healthOpt)) continue
+        const health = getComponent(entity, "Health")
+        if (!health) return Option.none()
 
-      const health = healthOpt.value
-      if (!(health instanceof HealthComponent)) continue
+        const newHP = health.current - damage.amount
 
-      const newHP = health.current - damage.amount
+        if (newHP <= 0 && !health.traumaActive) {
+          return Option.some(
+            SetHealthMutation.make({
+              entityId: damage.entityId,
+              data: {
+                traumaActive: true,
+                traumaEffect: "Bleeding"
+              }
+            })
+          )
+        }
 
-      if (newHP <= 0 && !health.traumaActive) {
-        traumaMutations.push(
-          SetHealthMutation.make({
-            entityId: damage.entityId,
-            data: {
-              traumaActive: true,
-              traumaEffect: "Bleeding"
-            }
-          })
-        )
-      }
-    }
+        return Option.none()
+      })
+    )
 
-    return Chunk.fromIterable(traumaMutations)
+    return Chunk.fromIterable(traumaMutations).pipe(
+      Chunk.filterMap((opt) => opt)
+    )
   })

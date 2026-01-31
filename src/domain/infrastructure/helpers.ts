@@ -1,8 +1,8 @@
 /**
  * Helper functions for mutations to components
  */
-import { Effect, HashMap, Option } from "effect"
-import { Entity } from "../components.js"
+import { Effect } from "effect"
+import { Entity, getComponent } from "../components.js"
 import { Mutation } from "../mutations.js"
 import { EntityNotFound } from "../errors.js"
 
@@ -25,13 +25,13 @@ export function createComponentFromMutation(
         Effect.orElseSucceed(() =>
           Entity.make({
             id: mutation.entityId,
-            components: HashMap.empty()
+            components: []
           })
         )
       )
-      const existing = HashMap.get(entity.components, "Attributes")
-      const base = Option.isSome(existing) && existing.value instanceof Components.AttributesComponent
-        ? existing.value
+      const existing = getComponent(entity, "Attributes")
+      const base = existing instanceof Components.AttributesComponent
+        ? existing
         : Components.AttributesComponent.make({
             strength: 10,
             dexterity: 10,
@@ -58,13 +58,13 @@ export function createComponentFromMutation(
         Effect.orElseSucceed(() =>
           Entity.make({
             id: mutation.entityId,
-            components: HashMap.empty()
+            components: []
           })
         )
       )
-      const existing = HashMap.get(entity.components, "Health")
-      const base = Option.isSome(existing) && existing.value instanceof Components.HealthComponent
-        ? existing.value
+      const existing = getComponent(entity, "Health")
+      const base = existing instanceof Components.HealthComponent
+        ? existing
         : Components.HealthComponent.make({
             current: 10,
             max: 10,
@@ -87,13 +87,13 @@ export function createComponentFromMutation(
         Effect.orElseSucceed(() =>
           Entity.make({
             id: mutation.entityId,
-            components: HashMap.empty()
+            components: []
           })
         )
       )
-      const existing = HashMap.get(entity.components, "Class")
-      const base = Option.isSome(existing) && existing.value instanceof Components.ClassComponent
-        ? existing.value
+      const existing = getComponent(entity, "Class")
+      const base = existing instanceof Components.ClassComponent
+        ? existing
         : Components.ClassComponent.make({ class: "Fighter", level: 1 })
 
       return Components.ClassComponent.make({
@@ -109,13 +109,13 @@ export function createComponentFromMutation(
         Effect.orElseSucceed(() =>
           Entity.make({
             id: mutation.entityId,
-            components: HashMap.empty()
+            components: []
           })
         )
       )
-      const existing = HashMap.get(entity.components, "Inventory")
-      const base = Option.isSome(existing) && existing.value instanceof Components.InventoryComponent
-        ? existing.value
+      const existing = getComponent(entity, "Inventory")
+      const base = existing instanceof Components.InventoryComponent
+        ? existing
         : Components.InventoryComponent.make({
             items: [],
             loadCapacity: 50,
@@ -136,13 +136,13 @@ export function createComponentFromMutation(
         Effect.orElseSucceed(() =>
           Entity.make({
             id: mutation.entityId,
-            components: HashMap.empty()
+            components: []
           })
         )
       )
-      const existing = HashMap.get(entity.components, "Inventory")
-      const base = Option.isSome(existing) && existing.value instanceof Components.InventoryComponent
-        ? existing.value
+      const existing = getComponent(entity, "Inventory")
+      const base = existing instanceof Components.InventoryComponent
+        ? existing
         : Components.InventoryComponent.make({
             items: [],
             loadCapacity: 50,
@@ -165,13 +165,13 @@ export function createComponentFromMutation(
         Effect.orElseSucceed(() =>
           Entity.make({
             id: mutation.fromEntityId,
-            components: HashMap.empty()
+            components: []
           })
         )
       )
-      const existing = HashMap.get(entity.components, "Currency")
-      const base = Option.isSome(existing) && existing.value instanceof Components.CurrencyComponent
-        ? existing.value
+      const existing = getComponent(entity, "Currency")
+      const base = existing instanceof Components.CurrencyComponent
+        ? existing
         : Components.CurrencyComponent.make({ copper: 0, silver: 0, gold: 0 })
 
       return Components.CurrencyComponent.make({
@@ -182,5 +182,6 @@ export function createComponentFromMutation(
     })
   }
 
-  return Effect.dieMessage(`Unreachable: unknown mutation type ${(mutation as any)._tag}`)
+  // Should never reach here - only called for mutations that create components
+  return Effect.die(`Unexpected mutation type in createComponentFromMutation`)
 }
