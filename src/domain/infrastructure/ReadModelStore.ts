@@ -1,10 +1,11 @@
 /**
  * Read Model Store - current game state
  */
-import { Effect, Context, Layer, SynchronizedRef, Option } from "effect"
-import { EntityId } from "../entities.js"
+import { Context, Effect, Layer, Option, SynchronizedRef } from "effect"
+
+import type { Entity } from "../components.js"
+import type { EntityId } from "../entities.js"
 import { EntityNotFound } from "../errors.js"
-import { Entity } from "../components.js"
 
 export class ReadModelStore extends Context.Tag("@game/ReadModelStore")<
   ReadModelStore,
@@ -19,7 +20,7 @@ export class ReadModelStore extends Context.Tag("@game/ReadModelStore")<
 >() {
   static readonly testLayer = Layer.effect(
     ReadModelStore,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const store = yield* SynchronizedRef.make(
         new Map<EntityId, Entity>()
       )
@@ -37,6 +38,7 @@ export class ReadModelStore extends Context.Tag("@game/ReadModelStore")<
       const set = (entity: Entity) =>
         SynchronizedRef.update(store, (map) => {
           const newMap = new Map(map)
+          // eslint-disable-next-line functional/immutable-data
           newMap.set(entity.id, entity)
           return newMap
         })
@@ -46,17 +48,17 @@ export class ReadModelStore extends Context.Tag("@game/ReadModelStore")<
         f: (entity: Entity) => Effect.Effect<Entity>
       ) =>
         SynchronizedRef.updateEffect(store, (map) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const entity = Option.fromNullable(map.get(id))
             if (Option.isNone(entity)) {
               return yield* EntityNotFound.make({ id })
             }
             const updated = yield* f(entity.value)
             const newMap = new Map(map)
+            // eslint-disable-next-line functional/immutable-data
             newMap.set(id, updated)
             return newMap
-          })
-        )
+          }))
 
       return ReadModelStore.of({ get, set, update })
     })

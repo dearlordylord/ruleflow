@@ -2,25 +2,26 @@
  * Helper functions for mutations to components
  */
 import { Effect } from "effect"
-import { Entity, getComponent } from "../components.js"
-import { Mutation } from "../mutations.js"
-import { EntityNotFound } from "../errors.js"
 
+import { Entity, getComponent } from "../components.js"
 import * as Components from "../components.js"
+import type { EntityId } from "../entities.js"
+import type { EntityNotFound } from "../errors.js"
+import type { Mutation } from "../mutations.js"
 
 export function createComponentFromMutation(
   mutation: Mutation,
   store: {
-    readonly get: (id: any) => Effect.Effect<Entity, EntityNotFound>
+    readonly get: (id: EntityId) => Effect.Effect<Entity, EntityNotFound>
     readonly set: (entity: Entity) => Effect.Effect<void>
     readonly update: (
-      id: any,
+      id: EntityId,
       f: (entity: Entity) => Effect.Effect<Entity>
     ) => Effect.Effect<void, EntityNotFound>
   }
 ): Effect.Effect<Components.Component, never> {
   if (mutation._tag === "SetAttributes") {
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const entity = yield* store.get(mutation.entityId).pipe(
         Effect.orElseSucceed(() =>
           Entity.make({
@@ -33,13 +34,13 @@ export function createComponentFromMutation(
       const base = existing instanceof Components.AttributesComponent
         ? existing
         : Components.AttributesComponent.make({
-            strength: 10,
-            dexterity: 10,
-            intelligence: 10,
-            will: 10,
-            constitution: 10,
-            charisma: 10
-          })
+          strength: 10,
+          dexterity: 10,
+          intelligence: 10,
+          will: 10,
+          constitution: 10,
+          charisma: 10
+        })
 
       return Components.AttributesComponent.make({
         strength: mutation.data.strength ?? base.strength,
@@ -53,7 +54,7 @@ export function createComponentFromMutation(
   }
 
   if (mutation._tag === "SetHealth") {
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const entity = yield* store.get(mutation.entityId).pipe(
         Effect.orElseSucceed(() =>
           Entity.make({
@@ -66,11 +67,11 @@ export function createComponentFromMutation(
       const base = existing instanceof Components.HealthComponent
         ? existing
         : Components.HealthComponent.make({
-            current: 10,
-            max: 10,
-            traumaActive: false,
-            traumaEffect: null
-          })
+          current: 10,
+          max: 10,
+          traumaActive: false,
+          traumaEffect: null
+        })
 
       return Components.HealthComponent.make({
         current: mutation.data.current ?? base.current,
@@ -82,7 +83,7 @@ export function createComponentFromMutation(
   }
 
   if (mutation._tag === "SetClass") {
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const entity = yield* store.get(mutation.entityId).pipe(
         Effect.orElseSucceed(() =>
           Entity.make({
@@ -104,7 +105,7 @@ export function createComponentFromMutation(
   }
 
   if (mutation._tag === "AddItem") {
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const entity = yield* store.get(mutation.entityId).pipe(
         Effect.orElseSucceed(() =>
           Entity.make({
@@ -117,10 +118,10 @@ export function createComponentFromMutation(
       const base = existing instanceof Components.InventoryComponent
         ? existing
         : Components.InventoryComponent.make({
-            items: [],
-            loadCapacity: 50,
-            currentLoad: 0
-          })
+          items: [],
+          loadCapacity: 50,
+          currentLoad: 0
+        })
 
       return Components.InventoryComponent.make({
         items: [...base.items, mutation.itemId],
@@ -131,7 +132,7 @@ export function createComponentFromMutation(
   }
 
   if (mutation._tag === "RemoveItem") {
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const entity = yield* store.get(mutation.entityId).pipe(
         Effect.orElseSucceed(() =>
           Entity.make({
@@ -144,10 +145,10 @@ export function createComponentFromMutation(
       const base = existing instanceof Components.InventoryComponent
         ? existing
         : Components.InventoryComponent.make({
-            items: [],
-            loadCapacity: 50,
-            currentLoad: 0
-          })
+          items: [],
+          loadCapacity: 50,
+          currentLoad: 0
+        })
 
       return Components.InventoryComponent.make({
         items: base.items.filter(id => id !== mutation.itemId),
@@ -160,7 +161,7 @@ export function createComponentFromMutation(
   if (mutation._tag === "TransferCurrency") {
     // This mutation affects TWO entities, so we need special handling
     // For now, we'll just update the "from" entity's currency
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const entity = yield* store.get(mutation.fromEntityId).pipe(
         Effect.orElseSucceed(() =>
           Entity.make({

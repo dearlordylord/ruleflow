@@ -2,7 +2,7 @@
  * Injectable UUID Generator Service
  * Allows deterministic ID generation in tests
  */
-import { Effect, Context, Layer } from "effect"
+import { Context, Effect, Layer } from "effect"
 
 export class IdGenerator extends Context.Tag("@game/IdGenerator")<
   IdGenerator,
@@ -15,7 +15,7 @@ export class IdGenerator extends Context.Tag("@game/IdGenerator")<
   })
 
   // Deterministic test layer with fixed UUIDs
-  static readonly testLayer = (ids: string[]) => {
+  static readonly testLayer = (ids: Array<string>) => {
     let index = 0
     return Layer.succeed(IdGenerator, {
       generate: () => Effect.sync(() => ids[index++ % ids.length])

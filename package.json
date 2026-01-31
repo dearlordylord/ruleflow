@@ -8,7 +8,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "prepare": "effect-language-service patch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "lint:fix": "eslint src tests --fix"
   },
   "keywords": [],
   "author": "",
@@ -19,11 +21,23 @@
     "effect": "^3.19.15"
   },
   "devDependencies": {
+    "@effect/eslint-plugin": "^0.3.2",
     "@effect/language-service": "^0.72.0",
     "@effect/vitest": "^0.27.0",
+    "@eslint/compat": "^2.0.2",
+    "@eslint/eslintrc": "^3.3.3",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "eslint": "^9.39.2",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-functional": "^9.0.2",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-sort-destructure-keys": "^2.0.0",
     "fast-check": "^4.5.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0",
     "vitest": "^4.0.18"
   }
 }

@@ -2,12 +2,13 @@
  * Test layer compositions
  */
 import { Layer } from "effect"
+
 import { testLayer as infraTestLayer } from "../src/domain/infrastructure/layers.js"
-import { DiceRoller } from "../src/domain/services/DiceRoller.js"
 import { CombatResolver } from "../src/domain/services/CombatResolver.js"
+import { DiceRoller } from "../src/domain/services/DiceRoller.js"
 import { WeaponTemplates } from "../src/domain/services/Templates.js"
 
-export const deterministicTestLayer = (rolls: number[]) =>
+export const deterministicTestLayer = (rolls: Array<number>) =>
   Layer.mergeAll(
     infraTestLayer,
     DiceRoller.testLayer(rolls),

@@ -3,6 +3,7 @@
  */
 import { describe, expect, it } from "@effect/vitest"
 import { Schema } from "effect"
+
 import { DiceNotation } from "../src/domain/components.js"
 
 describe("DiceNotation Schema", () => {
@@ -16,14 +17,14 @@ describe("DiceNotation Schema", () => {
 
   it("rejects invalid dice notation formats", () => {
     const invalidFormats = [
-      "d8",        // missing count
-      "1d",        // missing sides
-      "1dd8",      // double 'd'
-      "1d8+",      // modifier without value
-      "abc",       // non-numeric
-      "1d8+3+2",   // multiple modifiers
-      "",          // empty string
-      "1d8 +3",    // space in modifier
+      "d8", // missing count
+      "1d", // missing sides
+      "1dd8", // double 'd'
+      "1d8+", // modifier without value
+      "abc", // non-numeric
+      "1d8+3+2", // multiple modifiers
+      "", // empty string
+      "1d8 +3" // space in modifier
     ]
 
     invalidFormats.forEach(dice => {

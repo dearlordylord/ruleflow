@@ -1,7 +1,8 @@
 /**
  * Combat Resolver Service - combat mechanics
  */
-import { Effect, Context, Layer } from "effect"
+import { Context, Effect, Layer } from "effect"
+
 import { DiceRoller } from "./DiceRoller.js"
 
 export class CombatResolver extends Context.Tag("@game/CombatResolver")<
@@ -23,7 +24,7 @@ export class CombatResolver extends Context.Tag("@game/CombatResolver")<
 >() {
   static readonly layer = Layer.effect(
     CombatResolver,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const dice = yield* DiceRoller
 
       const calculateDamage = (
@@ -32,7 +33,7 @@ export class CombatResolver extends Context.Tag("@game/CombatResolver")<
         specializationBonus: number,
         isCritical: boolean
       ) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const baseDamage = yield* dice.roll(damageDice)
           const criticalDamage = isCritical ? yield* dice.roll(damageDice) : 0
           const total = baseDamage + criticalDamage + strengthMod + specializationBonus

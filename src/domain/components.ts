@@ -1,13 +1,13 @@
 /**
  * Phase 1 Components: Attributes, Health, Class, Combat Stats, Weapon, Item
  */
-import { Schema } from "effect"
 import { regex } from "arkregex"
+import { Schema } from "effect"
+
 import { EntityId } from "./entities.js"
 
 // OSR formula: (attribute - 10) / 2 rounded down
-const calculateModifier = (attribute: number): number =>
-  Math.floor((attribute - 10) / 2)
+const calculateModifier = (attribute: number): number => Math.floor((attribute - 10) / 2)
 
 export class AttributesComponent extends Schema.TaggedClass<AttributesComponent>()("Attributes", {
   strength: Schema.Int.pipe(Schema.between(3, 18)),
@@ -17,12 +17,24 @@ export class AttributesComponent extends Schema.TaggedClass<AttributesComponent>
   constitution: Schema.Int.pipe(Schema.between(3, 18)),
   charisma: Schema.Int.pipe(Schema.between(3, 18))
 }) {
-  get strengthMod() { return calculateModifier(this.strength) }
-  get dexterityMod() { return calculateModifier(this.dexterity) }
-  get intelligenceMod() { return calculateModifier(this.intelligence) }
-  get willMod() { return calculateModifier(this.will) }
-  get constitutionMod() { return calculateModifier(this.constitution) }
-  get charismaMod() { return calculateModifier(this.charisma) }
+  get strengthMod() {
+    return calculateModifier(this.strength)
+  }
+  get dexterityMod() {
+    return calculateModifier(this.dexterity)
+  }
+  get intelligenceMod() {
+    return calculateModifier(this.intelligence)
+  }
+  get willMod() {
+    return calculateModifier(this.will)
+  }
+  get constitutionMod() {
+    return calculateModifier(this.constitution)
+  }
+  get charismaMod() {
+    return calculateModifier(this.charisma)
+  }
 }
 
 export class HealthComponent extends Schema.TaggedClass<HealthComponent>()("Health", {
@@ -68,8 +80,18 @@ export const DiceNotation = Schema.String.pipe(
 export type DiceNotation = typeof DiceNotation.Type
 
 export const WeaponGroup = Schema.Literal(
-  "Axes", "Blades", "Bows", "Brawling", "Clubs", "Crossbows",
-  "Flails", "Polearms", "Slings", "Spears", "Staves", "Thrown"
+  "Axes",
+  "Blades",
+  "Bows",
+  "Brawling",
+  "Clubs",
+  "Crossbows",
+  "Flails",
+  "Polearms",
+  "Slings",
+  "Spears",
+  "Staves",
+  "Thrown"
 )
 export type WeaponGroup = typeof WeaponGroup.Type
 

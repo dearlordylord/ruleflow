@@ -1,17 +1,15 @@
 /**
  * Combat Systems
  */
-import { Effect, Chunk, Option } from "effect"
-import type { System } from "./types.js"
+import { Chunk, Effect, Option } from "effect"
+
+import type { Entity, WeaponGroup } from "../components.js"
+import { getComponent } from "../components.js"
 import { SystemName } from "../entities.js"
 import { DomainError } from "../errors.js"
-import {
-  Entity,
-  getComponent,
-  WeaponGroup
-} from "../components.js"
 import { DealDamageMutation, SetHealthMutation } from "../mutations.js"
 import { CombatResolver } from "../services/CombatResolver.js"
+import type { System } from "./types.js"
 
 function getSpecializationBonus(
   entity: Entity,
@@ -23,7 +21,7 @@ function getSpecializationBonus(
 }
 
 export const combatToHitSystem: System = (state, pendingMutations) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const attackMutations = Chunk.filter(
       pendingMutations,
       (m) => m._tag === "PerformAttack"
@@ -32,7 +30,7 @@ export const combatToHitSystem: System = (state, pendingMutations) =>
     const combat = yield* CombatResolver
 
     const damageMutations = yield* Effect.forEach(attackMutations, (attack) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const attacker = yield* state.getEntity(attack.attackerId).pipe(
           Effect.orElseFail(() =>
             Chunk.of(
@@ -100,8 +98,7 @@ export const combatToHitSystem: System = (state, pendingMutations) =>
             source: attack.attackerId
           })
         )
-      })
-    )
+      }))
 
     // Filter out None values and extract mutations
     return Chunk.fromIterable(damageMutations).pipe(
@@ -110,14 +107,14 @@ export const combatToHitSystem: System = (state, pendingMutations) =>
   })
 
 export const traumaSystem: System = (state, pendingMutations) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const damageMutations = Chunk.filter(
       pendingMutations,
       (m) => m._tag === "DealDamage"
     )
 
     const traumaMutations = yield* Effect.forEach(damageMutations, (damage) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const entity = yield* state.getEntity(damage.entityId).pipe(
           Effect.orElseFail(() =>
             Chunk.of(
@@ -147,8 +144,7 @@ export const traumaSystem: System = (state, pendingMutations) =>
         }
 
         return Option.none()
-      })
-    )
+      }))
 
     return Chunk.fromIterable(traumaMutations).pipe(
       Chunk.filterMap((opt) => opt)

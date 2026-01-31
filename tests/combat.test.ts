@@ -2,26 +2,27 @@
  * Combat system tests
  */
 import { describe, expect, it } from "@effect/vitest"
-import { Effect, Chunk, Schema } from "effect"
+import { Chunk, Effect } from "effect"
+
 import {
-  Entity,
   AttributesComponent,
   CombatStatsComponent,
+  Entity,
   HealthComponent,
-  WeaponComponent,
-  DiceNotation
+  WeaponComponent
 } from "../src/domain/components.js"
 import { EntityId } from "../src/domain/entities.js"
-import { PerformAttackMutation } from "../src/domain/mutations.js"
-import { ReadModelStore } from "../src/domain/infrastructure/ReadModelStore.js"
 import { GameState } from "../src/domain/infrastructure/GameState.js"
+import { ReadModelStore } from "../src/domain/infrastructure/ReadModelStore.js"
+import type { SetHealthMutation } from "../src/domain/mutations.js"
+import { PerformAttackMutation } from "../src/domain/mutations.js"
+import { IdGenerator } from "../src/domain/services/IdGenerator.js"
 import { combatToHitSystem, traumaSystem } from "../src/domain/systems/index.js"
 import { deterministicTestLayer, maxRollTestLayer } from "./layers.js"
-import { IdGenerator } from "../src/domain/services/IdGenerator.js"
 
 describe("Combat To-Hit System", () => {
   it.effect("successful attack generates damage mutation", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const state = yield* GameState
       const store = yield* ReadModelStore
       const idGen = yield* IdGenerator
@@ -78,7 +79,7 @@ describe("Combat To-Hit System", () => {
           components: [
             WeaponComponent.make({
               name: "Longsword",
-              damageDice: Schema.decodeSync(DiceNotation)("1d8"),
+              damageDice: "1d8",
               weaponGroup: "Blades",
               traits: []
             })
@@ -108,7 +109,7 @@ describe("Combat To-Hit System", () => {
   )
 
   it.effect("miss does not generate damage", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const state = yield* GameState
       const store = yield* ReadModelStore
       const idGen = yield* IdGenerator
@@ -156,7 +157,7 @@ describe("Combat To-Hit System", () => {
           components: [
             WeaponComponent.make({
               name: "Longsword",
-              damageDice: Schema.decodeSync(DiceNotation)("1d8"),
+              damageDice: "1d8",
               weaponGroup: "Blades",
               traits: []
             })
@@ -176,11 +177,10 @@ describe("Combat To-Hit System", () => {
       const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation))
 
       expect(Chunk.isEmpty(mutations)).toBe(true)
-    }).pipe(Effect.provide(deterministicTestLayer([10])))
-  )
+    }).pipe(Effect.provide(deterministicTestLayer([10]))))
 
   it.effect("critical hit doubles damage dice", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const state = yield* GameState
       const store = yield* ReadModelStore
       const idGen = yield* IdGenerator
@@ -228,7 +228,7 @@ describe("Combat To-Hit System", () => {
           components: [
             WeaponComponent.make({
               name: "Longsword",
-              damageDice: Schema.decodeSync(DiceNotation)("1d8"),
+              damageDice: "1d8",
               weaponGroup: "Blades",
               traits: []
             })
@@ -253,13 +253,12 @@ describe("Combat To-Hit System", () => {
       if (damage._tag === "DealDamage") {
         expect(damage.amount).toBe(19)
       }
-    }).pipe(Effect.provide(maxRollTestLayer))
-  )
+    }).pipe(Effect.provide(maxRollTestLayer)))
 })
 
 describe("Trauma System", () => {
   it.effect("HP <= 0 triggers trauma", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const state = yield* GameState
       const store = yield* ReadModelStore
       const idGen = yield* IdGenerator
@@ -289,12 +288,11 @@ describe("Trauma System", () => {
       const mutations = yield* traumaSystem(state, Chunk.of(damageMutation))
 
       expect(Chunk.size(mutations)).toBe(1)
-      const trauma = Chunk.unsafeHead(mutations) as any
+      const trauma = Chunk.unsafeHead(mutations) as typeof SetHealthMutation.Type
       expect(trauma._tag).toBe("SetHealth")
       if (trauma._tag === "SetHealth") {
         expect(trauma.data.traumaActive).toBe(true)
         expect(trauma.data.traumaEffect).toBe("Bleeding")
       }
-    }).pipe(Effect.provide(deterministicTestLayer([10])))
-  )
+    }).pipe(Effect.provide(deterministicTestLayer([10]))))
 })

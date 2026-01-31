@@ -2,11 +2,12 @@
  * Layer composition for infrastructure
  */
 import { Layer } from "effect"
-import { EventLog } from "./EventLog.js"
-import { ReadModelStore } from "./ReadModelStore.js"
-import { GameState } from "./GameState.js"
-import { Committer } from "./Committer.js"
+
 import { IdGenerator } from "../services/IdGenerator.js"
+import { Committer } from "./Committer.js"
+import { EventLog } from "./EventLog.js"
+import { GameState } from "./GameState.js"
+import { ReadModelStore } from "./ReadModelStore.js"
 
 export const baseLayer = Layer.mergeAll(
   ReadModelStore.testLayer,

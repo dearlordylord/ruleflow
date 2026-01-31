@@ -1,21 +1,22 @@
 /**
  * Encumbrance System
  */
-import { Effect, Chunk } from "effect"
-import type { System } from "./types.js"
+import { Chunk, Effect } from "effect"
+
+import { getComponent } from "../components.js"
 import { SystemName } from "../entities.js"
 import { DomainError } from "../errors.js"
-import { getComponent } from "../components.js"
+import type { System } from "./types.js"
 
 export const encumbranceValidationSystem: System = (state, pendingMutations) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const addItemMutations = Chunk.filter(
       pendingMutations,
       (m) => m._tag === "AddItem"
     )
 
     yield* Effect.forEach(addItemMutations, (mutation) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const character = yield* state.getEntity(mutation.entityId).pipe(
           Effect.orElseFail(() =>
             Chunk.of(
@@ -57,14 +58,13 @@ export const encumbranceValidationSystem: System = (state, pendingMutations) =>
             )
           )
         }
-      })
-    )
+      }))
 
     return Chunk.empty()
   })
 
-export const attributeModifierSystem: System = (state, pendingMutations) =>
-  Effect.gen(function* () {
+export const attributeModifierSystem: System = (_state, _pendingMutations) =>
+  Effect.gen(function*() {
     // For now, just return empty - full implementation would recalculate
     // AC, load capacity, etc. based on new attribute modifiers
     return Chunk.empty()

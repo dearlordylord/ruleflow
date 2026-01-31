@@ -2,13 +2,9 @@
  * Phase 1-3 Mutations
  */
 import { Schema } from "effect"
+
+import { AttributesComponent, ClassComponent, ComponentTag, HealthComponent } from "./components.js"
 import { EntityId } from "./entities.js"
-import {
-  AttributesComponent,
-  HealthComponent,
-  ClassComponent,
-  ComponentTag
-} from "./components.js"
 
 export class SetAttributesMutation extends Schema.TaggedClass<SetAttributesMutation>()(
   "SetAttributes",

@@ -2,6 +2,7 @@
  * Domain errors
  */
 import { Schema } from "effect"
+
 import { EntityId, EventLogEntryId, SystemName } from "./entities.js"
 
 export class EntityNotFound extends Schema.TaggedError<EntityNotFound>()(

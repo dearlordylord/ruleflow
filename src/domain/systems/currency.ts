@@ -1,21 +1,22 @@
 /**
  * Currency Validation System
  */
-import { Effect, Chunk } from "effect"
-import type { System } from "./types.js"
+import { Chunk, Effect } from "effect"
+
+import { getComponent } from "../components.js"
 import { SystemName } from "../entities.js"
 import { DomainError } from "../errors.js"
-import { getComponent } from "../components.js"
+import type { System } from "./types.js"
 
 export const currencyValidationSystem: System = (state, pendingMutations) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const transferMutations = Chunk.filter(
       pendingMutations,
       (m) => m._tag === "TransferCurrency"
     )
 
     yield* Effect.forEach(transferMutations, (mutation) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const from = yield* state.getEntity(mutation.fromEntityId).pipe(
           Effect.orElseFail(() =>
             Chunk.of(
@@ -40,9 +41,9 @@ export const currencyValidationSystem: System = (state, pendingMutations) =>
         }
 
         if (
-          currency.copper < mutation.copper ||
-          currency.silver < mutation.silver ||
-          currency.gold < mutation.gold
+          currency.copper < mutation.copper
+          || currency.silver < mutation.silver
+          || currency.gold < mutation.gold
         ) {
           return yield* Effect.fail(
             Chunk.of(
@@ -53,8 +54,7 @@ export const currencyValidationSystem: System = (state, pendingMutations) =>
             )
           )
         }
-      })
-    )
+      }))
 
     return Chunk.empty()
   })

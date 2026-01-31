@@ -3,12 +3,13 @@
  */
 import { describe, expect, it } from "@effect/vitest"
 import { Effect } from "effect"
+
 import { AttributesComponent } from "../src/domain/components.js"
 import { deterministicTestLayer } from "./layers.js"
 
 describe("Attributes Component", () => {
   it.effect("calculates modifiers correctly (OSR formula)", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const attrs = AttributesComponent.make({
         strength: 16,
         dexterity: 14,
@@ -24,11 +25,10 @@ describe("Attributes Component", () => {
       expect(attrs.willMod).toBe(0) // (10-10)/2 = 0
       expect(attrs.constitutionMod).toBe(1) // (12-10)/2 = 1
       expect(attrs.charismaMod).toBe(4) // (18-10)/2 = 4
-    }).pipe(Effect.provide(deterministicTestLayer([10])))
-  )
+    }).pipe(Effect.provide(deterministicTestLayer([10]))))
 
   it.effect("enforces attribute ranges (3-18)", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // This should fail schema validation
       const result = yield* Effect.either(
         Effect.try(() =>
@@ -44,11 +44,10 @@ describe("Attributes Component", () => {
       )
 
       expect(result._tag).toBe("Left")
-    }).pipe(Effect.provide(deterministicTestLayer([10])))
-  )
+    }).pipe(Effect.provide(deterministicTestLayer([10]))))
 
   it.effect("low attributes give negative modifiers", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const attrs = AttributesComponent.make({
         strength: 3,
         dexterity: 3,
@@ -59,6 +58,5 @@ describe("Attributes Component", () => {
       })
 
       expect(attrs.strengthMod).toBe(-4) // (3-10)/2 = -3.5 → -4
-    }).pipe(Effect.provide(deterministicTestLayer([10])))
-  )
+    }).pipe(Effect.provide(deterministicTestLayer([10]))))
 })
