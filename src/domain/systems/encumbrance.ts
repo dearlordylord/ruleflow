@@ -8,10 +8,10 @@ import { SystemName } from "../entities.js"
 import { DomainError } from "../errors.js"
 import type { System } from "./types.js"
 
-export const encumbranceValidationSystem: System = (state, pendingMutations) =>
+export const encumbranceValidationSystem: System = (state, _events, accumulatedMutations) =>
   Effect.gen(function*() {
     const addItemMutations = Chunk.filter(
-      pendingMutations,
+      accumulatedMutations,
       (m) => m._tag === "AddItem"
     )
 
@@ -63,7 +63,7 @@ export const encumbranceValidationSystem: System = (state, pendingMutations) =>
     return Chunk.empty()
   })
 
-export const attributeModifierSystem: System = (_state, _pendingMutations) =>
+export const attributeModifierSystem: System = (_state, _events, _accumulatedMutations) =>
   Effect.gen(function*() {
     // For now, just return empty - full implementation would recalculate
     // AC, load capacity, etc. based on new attribute modifiers

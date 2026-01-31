@@ -16,6 +16,7 @@ export class ReadModelStore extends Context.Tag("@game/ReadModelStore")<
       id: EntityId,
       f: (entity: Entity) => Effect.Effect<Entity>
     ) => Effect.Effect<void, EntityNotFound>
+    readonly clear: () => Effect.Effect<void>
   }
 >() {
   static readonly testLayer = Layer.effect(
@@ -60,7 +61,10 @@ export class ReadModelStore extends Context.Tag("@game/ReadModelStore")<
             return newMap
           }))
 
-      return ReadModelStore.of({ get, set, update })
+      const clear = () =>
+        SynchronizedRef.update(store, () => new Map<EntityId, Entity>())
+
+      return ReadModelStore.of({ get, set, update, clear })
     })
   )
 }

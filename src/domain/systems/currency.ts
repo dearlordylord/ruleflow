@@ -1,60 +1,33 @@
 /**
- * Currency Validation System
+ * Currency Transfer System
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../components.js"
-import { SystemName } from "../entities.js"
-import { DomainError } from "../errors.js"
+import { CurrencyTransferred } from "../events.js"
+import { CreditCurrencyMutation, DebitCurrencyMutation } from "../mutations.js"
 import type { System } from "./types.js"
 
-export const currencyValidationSystem: System = (state, pendingMutations) =>
+export const currencyTransferSystem: System = (state, events, _accumulatedMutations) =>
   Effect.gen(function*() {
-    const transferMutations = Chunk.filter(
-      pendingMutations,
-      (m) => m._tag === "TransferCurrency"
+    const transferEvents = Chunk.filter(
+      events,
+      (event): event is CurrencyTransferred => event._tag === "CurrencyTransferred"
     )
 
-    yield* Effect.forEach(transferMutations, (mutation) =>
-      Effect.gen(function*() {
-        const from = yield* state.getEntity(mutation.fromEntityId).pipe(
-          Effect.orElseFail(() =>
-            Chunk.of(
-              DomainError.make({
-                systemName: SystemName.make("CurrencyValidation"),
-                message: `From entity ${mutation.fromEntityId} not found`
-              })
-            )
-          )
-        )
-
-        const currency = getComponent(from, "Currency")
-        if (!currency) {
-          return yield* Effect.fail(
-            Chunk.of(
-              DomainError.make({
-                systemName: SystemName.make("CurrencyValidation"),
-                message: `From entity has no currency component`
-              })
-            )
-          )
-        }
-
-        if (
-          currency.copper < mutation.copper
-          || currency.silver < mutation.silver
-          || currency.gold < mutation.gold
-        ) {
-          return yield* Effect.fail(
-            Chunk.of(
-              DomainError.make({
-                systemName: SystemName.make("CurrencyValidation"),
-                message: `Insufficient funds for transfer`
-              })
-            )
-          )
-        }
-      }))
-
-    return Chunk.empty()
+    return Chunk.flatMap(transferEvents, (transfer) =>
+      Chunk.make(
+        DebitCurrencyMutation.make({
+          entityId: transfer.fromEntityId,
+          copper: transfer.copper,
+          silver: transfer.silver,
+          gold: transfer.gold
+        }),
+        CreditCurrencyMutation.make({
+          entityId: transfer.toEntityId,
+          copper: transfer.copper,
+          silver: transfer.silver,
+          gold: transfer.gold
+        })
+      )
+    )
   })

@@ -6,6 +6,7 @@ import type { Chunk, Effect } from "effect"
 import type { Entity } from "../components.js"
 import type { EntityId } from "../entities.js"
 import type { DomainError, EntityNotFound } from "../errors.js"
+import type { DomainEvent } from "../events.js"
 import type { Mutation } from "../mutations.js"
 
 export interface ReadonlyGameState {
@@ -14,5 +15,6 @@ export interface ReadonlyGameState {
 
 export type System = (
   state: ReadonlyGameState,
-  pendingMutations: Chunk.Chunk<Mutation>
-) => Effect.Effect<Chunk.Chunk<Mutation>, Chunk.Chunk<DomainError>, unknown>
+  events: Chunk.Chunk<DomainEvent>,
+  accumulatedMutations: Chunk.Chunk<Mutation>
+) => Effect.Effect<Chunk.Chunk<Mutation>, Chunk.Chunk<DomainError>, any>

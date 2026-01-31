@@ -39,17 +39,6 @@ export class SetClassMutation extends Schema.TaggedClass<SetClassMutation>()(
   }
 ) {}
 
-export class PerformAttackMutation extends Schema.TaggedClass<PerformAttackMutation>()(
-  "PerformAttack",
-  {
-    attackerId: EntityId,
-    targetId: EntityId,
-    weaponId: EntityId,
-    attackRoll: Schema.Int.pipe(Schema.between(1, 20)),
-    isCritical: Schema.Boolean
-  }
-) {}
-
 export class AddItemMutation extends Schema.TaggedClass<AddItemMutation>()(
   "AddItem",
   {
@@ -66,11 +55,20 @@ export class RemoveItemMutation extends Schema.TaggedClass<RemoveItemMutation>()
   }
 ) {}
 
-export class TransferCurrencyMutation extends Schema.TaggedClass<TransferCurrencyMutation>()(
-  "TransferCurrency",
+export class DebitCurrencyMutation extends Schema.TaggedClass<DebitCurrencyMutation>()(
+  "DebitCurrency",
   {
-    fromEntityId: EntityId,
-    toEntityId: EntityId,
+    entityId: EntityId,
+    copper: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
+    silver: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
+    gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
+  }
+) {}
+
+export class CreditCurrencyMutation extends Schema.TaggedClass<CreditCurrencyMutation>()(
+  "CreditCurrency",
+  {
+    entityId: EntityId,
     copper: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
     silver: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
     gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
@@ -90,10 +88,10 @@ export const Mutation = Schema.Union(
   SetHealthMutation,
   DealDamageMutation,
   SetClassMutation,
-  PerformAttackMutation,
   AddItemMutation,
   RemoveItemMutation,
-  TransferCurrencyMutation,
+  DebitCurrencyMutation,
+  CreditCurrencyMutation,
   RemoveComponentMutation
 )
 export type Mutation = typeof Mutation.Type

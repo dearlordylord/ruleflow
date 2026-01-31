@@ -1,17 +1,17 @@
 /**
- * Event Log Service - persists all mutations
+ * Event Log Service - persists domain events (source of truth)
  */
 import { Context, Effect, Layer, Option, Schema, SynchronizedRef } from "effect"
 
 import { EventLogEntryId } from "../entities.js"
 import type { EventLogWriteError } from "../errors.js"
 import { EventLogEntryNotFound } from "../errors.js"
-import { Mutation } from "../mutations.js"
+import { DomainEvent } from "../events.js"
 
 export class EventLogEntry extends Schema.Class<EventLogEntry>("EventLogEntry")({
   id: EventLogEntryId,
   timestamp: Schema.Date,
-  mutations: Schema.Array(Mutation)
+  event: DomainEvent
 }) {}
 
 export class EventLog extends Context.Tag("@game/EventLog")<

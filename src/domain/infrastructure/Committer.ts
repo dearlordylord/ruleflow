@@ -6,6 +6,7 @@ import { Context, Effect, Exit, Layer } from "effect"
 
 import { EventLogEntryId } from "../entities.js"
 import type { EntityNotFound, EventLogWriteError } from "../errors.js"
+import type { DomainEvent } from "../events.js"
 import type { Mutation } from "../mutations.js"
 import { IdGenerator } from "../services/IdGenerator.js"
 import { EventLog, EventLogEntry } from "./EventLog.js"
@@ -15,6 +16,7 @@ export class Committer extends Context.Tag("@game/Committer")<
   Committer,
   {
     readonly commit: (
+      event: DomainEvent,
       mutations: Chunk.Chunk<Mutation>
     ) => Effect.Effect<EventLogEntry, EventLogWriteError | EntityNotFound>
   }
@@ -26,14 +28,14 @@ export class Committer extends Context.Tag("@game/Committer")<
       const state = yield* GameState
       const idGen = yield* IdGenerator
 
-      const commit = (mutations: Chunk.Chunk<Mutation>) =>
+      const commit = (event: DomainEvent, mutations: Chunk.Chunk<Mutation>) =>
         Effect.acquireUseRelease(
           Effect.gen(function*() {
             const id = yield* idGen.generate()
             return EventLogEntry.make({
               id: EventLogEntryId.make(id),
               timestamp: new Date(),
-              mutations: Array.from(mutations)
+              event
             })
           }),
           (entry) =>

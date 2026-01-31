@@ -8,6 +8,7 @@ import { Committer } from "./Committer.js"
 import { EventLog } from "./EventLog.js"
 import { GameState } from "./GameState.js"
 import { ReadModelStore } from "./ReadModelStore.js"
+import { Replayer } from "./Replayer.js"
 
 export const baseLayer = Layer.mergeAll(
   ReadModelStore.testLayer,
@@ -29,8 +30,13 @@ export const committerLayer = Committer.layer.pipe(
   Layer.provide(Layer.merge(baseLayer, gameStateLayer))
 )
 
+export const replayerLayer = Replayer.layer.pipe(
+  Layer.provide(gameStateLayer)
+)
+
 export const testLayer = Layer.mergeAll(
   baseLayer,
   gameStateLayer,
-  committerLayer
+  committerLayer,
+  replayerLayer
 )

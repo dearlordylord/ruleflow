@@ -4,7 +4,7 @@
 import { Context, Effect, Layer } from "effect"
 
 import type { Entity } from "../components.js"
-import { getComponent, HealthComponent, removeComponent, setComponent } from "../components.js"
+import { CurrencyComponent, getComponent, HealthComponent, removeComponent, setComponent } from "../components.js"
 import type { EntityId } from "../entities.js"
 import type { EntityNotFound } from "../errors.js"
 import type { Mutation } from "../mutations.js"
@@ -51,12 +51,36 @@ export class GameState extends Context.Tag("@game/State")<
                 }))
               break
 
-            case "PerformAttack":
-              // No-op - handled by systems
+            case "DebitCurrency":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const currency = getComponent(entity, "Currency")
+                  if (!currency) {
+                    return entity
+                  }
+                  const newCurrency = CurrencyComponent.make({
+                    copper: currency.copper - mutation.copper,
+                    silver: currency.silver - mutation.silver,
+                    gold: currency.gold - mutation.gold
+                  })
+                  return setComponent(entity, newCurrency)
+                }))
               break
 
-            case "TransferCurrency":
-              // No-op - needs separate debit/credit mutations
+            case "CreditCurrency":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const currency = getComponent(entity, "Currency")
+                  if (!currency) {
+                    return entity
+                  }
+                  const newCurrency = CurrencyComponent.make({
+                    copper: currency.copper + mutation.copper,
+                    silver: currency.silver + mutation.silver,
+                    gold: currency.gold + mutation.gold
+                  })
+                  return setComponent(entity, newCurrency)
+                }))
               break
 
             case "AddItem":

@@ -158,29 +158,14 @@ export function createComponentFromMutation(
     })
   }
 
-  if (mutation._tag === "TransferCurrency") {
-    // This mutation affects TWO entities, so we need special handling
-    // For now, we'll just update the "from" entity's currency
-    return Effect.gen(function*() {
-      const entity = yield* store.get(mutation.fromEntityId).pipe(
-        Effect.orElseSucceed(() =>
-          Entity.make({
-            id: mutation.fromEntityId,
-            components: []
-          })
-        )
-      )
-      const existing = getComponent(entity, "Currency")
-      const base = existing instanceof Components.CurrencyComponent
-        ? existing
-        : Components.CurrencyComponent.make({ copper: 0, silver: 0, gold: 0 })
+  if (mutation._tag === "DebitCurrency" || mutation._tag === "CreditCurrency") {
+    // These mutations are handled directly in GameState.applyMutation
+    return Effect.die(`DebitCurrency/CreditCurrency should not reach createComponentFromMutation`)
+  }
 
-      return Components.CurrencyComponent.make({
-        copper: base.copper - mutation.copper,
-        silver: base.silver - mutation.silver,
-        gold: base.gold - mutation.gold
-      })
-    })
+  if (mutation._tag === "DealDamage" || mutation._tag === "RemoveComponent") {
+    // These mutations are handled directly in GameState.applyMutation
+    return Effect.die(`${mutation._tag} should not reach createComponentFromMutation`)
   }
 
   // Should never reach here - only called for mutations that create components

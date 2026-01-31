@@ -7,6 +7,7 @@ import type { Entity, WeaponGroup } from "../components.js"
 import { getComponent } from "../components.js"
 import { SystemName } from "../entities.js"
 import { DomainError } from "../errors.js"
+import { AttackPerformed } from "../events.js"
 import { DealDamageMutation, SetHealthMutation } from "../mutations.js"
 import { CombatResolver } from "../services/CombatResolver.js"
 import type { System } from "./types.js"
@@ -20,16 +21,16 @@ function getSpecializationBonus(
   return spec.weaponGroups.includes(weaponGroup) ? spec.bonusDamage : 0
 }
 
-export const combatToHitSystem: System = (state, pendingMutations) =>
+export const combatToHitSystem: System = (state, events, _accumulatedMutations) =>
   Effect.gen(function*() {
-    const attackMutations = Chunk.filter(
-      pendingMutations,
-      (m) => m._tag === "PerformAttack"
+    const attackEvents = Chunk.filter(
+      events,
+      (event): event is AttackPerformed => event._tag === "AttackPerformed"
     )
 
     const combat = yield* CombatResolver
 
-    const damageMutations = yield* Effect.forEach(attackMutations, (attack) =>
+    const damageMutations = yield* Effect.forEach(attackEvents, (attack) =>
       Effect.gen(function*() {
         const attacker = yield* state.getEntity(attack.attackerId).pipe(
           Effect.orElseFail(() =>
@@ -106,10 +107,10 @@ export const combatToHitSystem: System = (state, pendingMutations) =>
     )
   })
 
-export const traumaSystem: System = (state, pendingMutations) =>
+export const traumaSystem: System = (state, _events, accumulatedMutations) =>
   Effect.gen(function*() {
     const damageMutations = Chunk.filter(
-      pendingMutations,
+      accumulatedMutations,
       (m) => m._tag === "DealDamage"
     )
 

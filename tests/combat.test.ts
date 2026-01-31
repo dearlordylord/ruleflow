@@ -2,20 +2,21 @@
  * Combat system tests
  */
 import { describe, expect, it } from "@effect/vitest"
-import { Chunk, Effect } from "effect"
+import { Chunk, Effect, Schema } from "effect"
 
 import {
   AttributesComponent,
   CombatStatsComponent,
+  DiceNotation,
   Entity,
   HealthComponent,
   WeaponComponent
 } from "../src/domain/components.js"
 import { EntityId } from "../src/domain/entities.js"
+import { AttackPerformed } from "../src/domain/events.js"
 import { GameState } from "../src/domain/infrastructure/GameState.js"
 import { ReadModelStore } from "../src/domain/infrastructure/ReadModelStore.js"
 import type { SetHealthMutation } from "../src/domain/mutations.js"
-import { PerformAttackMutation } from "../src/domain/mutations.js"
 import { IdGenerator } from "../src/domain/services/IdGenerator.js"
 import { combatToHitSystem, traumaSystem } from "../src/domain/systems/index.js"
 import { deterministicTestLayer, maxRollTestLayer } from "./layers.js"
@@ -79,7 +80,7 @@ describe("Combat To-Hit System", () => {
           components: [
             WeaponComponent.make({
               name: "Longsword",
-              damageDice: "1d8",
+              damageDice: Schema.decodeSync(DiceNotation)("1d8"),
               weaponGroup: "Blades",
               traits: []
             })
@@ -88,7 +89,7 @@ describe("Combat To-Hit System", () => {
       )
 
       // Attack roll: 10 (roll) + 2 (bonus) + 3 (STR) = 15 (hit vs AC 15)
-      const attackMutation = PerformAttackMutation.make({
+      const attackMutation = AttackPerformed.make({
         attackerId,
         targetId,
         weaponId,
@@ -96,7 +97,7 @@ describe("Combat To-Hit System", () => {
         isCritical: false
       })
 
-      const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation))
+      const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation), Chunk.empty())
 
       expect(Chunk.size(mutations)).toBe(1)
       const damage = Chunk.unsafeHead(mutations)
@@ -157,7 +158,7 @@ describe("Combat To-Hit System", () => {
           components: [
             WeaponComponent.make({
               name: "Longsword",
-              damageDice: "1d8",
+              damageDice: Schema.decodeSync(DiceNotation)("1d8"),
               weaponGroup: "Blades",
               traits: []
             })
@@ -166,7 +167,7 @@ describe("Combat To-Hit System", () => {
       )
 
       // Attack: 10 + 0 + 0 = 10 (miss vs AC 20)
-      const attackMutation = PerformAttackMutation.make({
+      const attackMutation = AttackPerformed.make({
         attackerId,
         targetId,
         weaponId,
@@ -174,7 +175,7 @@ describe("Combat To-Hit System", () => {
         isCritical: false
       })
 
-      const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation))
+      const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation), Chunk.empty())
 
       expect(Chunk.isEmpty(mutations)).toBe(true)
     }).pipe(Effect.provide(deterministicTestLayer([10]))))
@@ -228,7 +229,7 @@ describe("Combat To-Hit System", () => {
           components: [
             WeaponComponent.make({
               name: "Longsword",
-              damageDice: "1d8",
+              damageDice: Schema.decodeSync(DiceNotation)("1d8"),
               weaponGroup: "Blades",
               traits: []
             })
@@ -236,7 +237,7 @@ describe("Combat To-Hit System", () => {
         })
       )
 
-      const attackMutation = PerformAttackMutation.make({
+      const attackMutation = AttackPerformed.make({
         attackerId,
         targetId,
         weaponId,
@@ -244,7 +245,7 @@ describe("Combat To-Hit System", () => {
         isCritical: true
       })
 
-      const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation))
+      const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation), Chunk.empty())
 
       expect(Chunk.size(mutations)).toBe(1)
       const damage = Chunk.unsafeHead(mutations)
@@ -285,7 +286,7 @@ describe("Trauma System", () => {
         source: EntityId.make(yield* idGen.generate())
       }
 
-      const mutations = yield* traumaSystem(state, Chunk.of(damageMutation))
+      const mutations = yield* traumaSystem(state, Chunk.empty(), Chunk.of(damageMutation))
 
       expect(Chunk.size(mutations)).toBe(1)
       const trauma = Chunk.unsafeHead(mutations) as typeof SetHealthMutation.Type
