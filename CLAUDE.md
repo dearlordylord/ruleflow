@@ -1,5 +1,9 @@
 # Effect Project Instructions
 
+## Package Manager
+
+**Use pnpm, not npm.** This project uses pnpm-lock.yaml.
+
 <!-- effect-solutions:start -->
 ## Effect Best Practices
 
