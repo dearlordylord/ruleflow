@@ -2,13 +2,14 @@
  * Combat system tests
  */
 import { describe, expect, it } from "@effect/vitest"
-import { Effect, Chunk } from "effect"
+import { Effect, Chunk, Schema } from "effect"
 import {
   Entity,
   AttributesComponent,
   CombatStatsComponent,
   HealthComponent,
-  WeaponComponent
+  WeaponComponent,
+  DiceNotation
 } from "../src/domain/components.js"
 import { EntityId } from "../src/domain/entities.js"
 import { PerformAttackMutation } from "../src/domain/mutations.js"
@@ -77,7 +78,7 @@ describe("Combat To-Hit System", () => {
           components: [
             WeaponComponent.make({
               name: "Longsword",
-              damageDice: "1d8",
+              damageDice: Schema.decodeSync(DiceNotation)("1d8"),
               weaponGroup: "Blades",
               traits: []
             })
@@ -155,7 +156,7 @@ describe("Combat To-Hit System", () => {
           components: [
             WeaponComponent.make({
               name: "Longsword",
-              damageDice: "1d8",
+              damageDice: Schema.decodeSync(DiceNotation)("1d8"),
               weaponGroup: "Blades",
               traits: []
             })
@@ -227,7 +228,7 @@ describe("Combat To-Hit System", () => {
           components: [
             WeaponComponent.make({
               name: "Longsword",
-              damageDice: "1d8",
+              damageDice: Schema.decodeSync(DiceNotation)("1d8"),
               weaponGroup: "Blades",
               traits: []
             })

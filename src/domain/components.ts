@@ -2,6 +2,7 @@
  * Phase 1 Components: Attributes, Health, Class, Combat Stats, Weapon, Item
  */
 import { Schema } from "effect"
+import { type } from "arktype"
 import { EntityId } from "./entities.js"
 
 // OSR formula: (attribute - 10) / 2 rounded down
@@ -49,6 +50,25 @@ export class CombatStatsComponent extends Schema.TaggedClass<CombatStatsComponen
   armorClass: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
 }) {}
 
+// Dice notation validator using ArkType's regex performance
+const arktypeDiceValidator = type(/^\d+d\d+(?:[+-]\d+)?$/)
+
+/**
+ * Dice notation string (e.g., "1d8", "2d6+3", "1d20-2")
+ * Validated with ArkType regex, branded for type safety
+ */
+export const DiceNotation = Schema.String.pipe(
+  Schema.filter((input): input is string => {
+    const result = arktypeDiceValidator(input)
+    // ArkType returns validated value on success, ArkErrors on failure
+    return !(result instanceof type.errors)
+  }, {
+    message: () => "Invalid dice notation (expected: NdN, NdN+M, or NdN-M)"
+  }),
+  Schema.brand("DiceNotation")
+)
+export type DiceNotation = typeof DiceNotation.Type
+
 export const WeaponGroup = Schema.Literal(
   "Axes", "Blades", "Bows", "Brawling", "Clubs", "Crossbows",
   "Flails", "Polearms", "Slings", "Spears", "Staves", "Thrown"
@@ -57,7 +77,7 @@ export type WeaponGroup = typeof WeaponGroup.Type
 
 export class WeaponComponent extends Schema.TaggedClass<WeaponComponent>()("Weapon", {
   name: Schema.NonEmptyString,
-  damageDice: Schema.NonEmptyString, // e.g. "1d8", "2d6"
+  damageDice: DiceNotation,
   weaponGroup: WeaponGroup,
   traits: Schema.Array(Schema.String)
 }) {}
