@@ -15,7 +15,8 @@ import {
   WeaponComponent
 } from "../src/domain/components.js"
 import { EntityId } from "../src/domain/entities.js"
-import { AttackPerformed, CurrencyTransferred } from "../src/domain/combat/events.js"
+import { AttackPerformed } from "../src/domain/combat/events.js"
+import { CurrencyTransferred } from "../src/domain/events.js"
 import { Committer } from "../src/domain/infrastructure/Committer.js"
 import { GameState } from "../src/domain/infrastructure/GameState.js"
 import { ReadModelStore } from "../src/domain/infrastructure/ReadModelStore.js"
@@ -358,8 +359,7 @@ describe("Event Replay", () => {
         attackerId,
         targetId,
         weaponId,
-        attackRoll: 18,
-        isCritical: false
+        attackRoll: 18
       })
       const mutations2 = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attack2))
       const entry2 = yield* committer.commit(attack2, mutations2)

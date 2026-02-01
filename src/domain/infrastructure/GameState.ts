@@ -141,13 +141,33 @@ export class GameState extends Context.Tag("@game/State")<
 
             case "DamageEquipment":
             case "ReloadWeapon":
-              // These mutations operate on equipment entities directly
-              // They should be handled by their own systems, not in GameState default case
-              // For now, skip them to avoid type errors
+            case "ConsumeAmmunition":
+            case "AddCondition":
+            case "RemoveCondition":
+            case "SetGrappleState":
+            case "RollInitiative":
+            case "UseAction":
+            case "EquipWeapon":
+            case "UnequipWeapon":
+            case "EquipArmor":
+            case "EquipShield":
+            case "StartCombatRound":
+            case "AdvanceSide":
+            case "AdvanceTurn":
+            case "ResetActionEconomy":
+            case "SetDistance":
+            case "SetReadyAction":
+            case "ClearReadyAction":
+            case "SetDefenseStance":
+            case "SetMoraleResult":
+            case "SetMysteryCasting":
+            case "ClearMysteryCasting":
+              // TODO: Implement handlers for combat mutations
+              // For now, these are no-ops
               break
 
             default: {
-              // SetAttributes, SetHealth, SetClass
+              // SetAttributes, SetHealth, SetClass, SetSkills, SetSavingThrows
               const component = yield* createComponentFromMutation(mutation, store)
               yield* store.update(mutation.entityId, (entity) => Effect.succeed(setComponent(entity, component)))
             }
