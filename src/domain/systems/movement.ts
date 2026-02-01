@@ -5,7 +5,7 @@ import { Chunk, Effect } from "effect"
 
 import { getComponent } from "../components.js"
 import { MovementPerformed } from "../combat/encounterEvents.js"
-import { SetDistanceMutation } from "../combat/encounterMutations.js"
+import type { Mutation } from "../mutations.js"
 import { SystemName } from "../entities.js"
 import { DomainError } from "../errors.js"
 import type { System } from "./types.js"
@@ -22,7 +22,7 @@ export const movementSystem: System = (state, events, _accumulatedMutations) =>
       (event): event is MovementPerformed => event._tag === "MovementPerformed"
     )
 
-    const mutations: Array<any> = []
+    const mutations: Array<Mutation> = []
     const errors: Array<DomainError> = []
 
     for (const moveEvent of movementEvents) {
@@ -33,7 +33,6 @@ export const movementSystem: System = (state, events, _accumulatedMutations) =>
       if (!entity) continue
 
       const movement = getComponent(entity, "Movement")
-      const conditions = getComponent(entity, "Conditions")
 
       if (!movement) {
         errors.push(

@@ -13,7 +13,7 @@ export class CombatResolver extends Context.Tag("@game/CombatResolver")<
       strengthMod: number,
       specializationBonus: number,
       isCritical: boolean
-    ) => Effect.Effect<number>
+    ) => Effect.Effect<number, Error>
     readonly resolveToHit: (
       attackRoll: number,
       attackBonus: number,

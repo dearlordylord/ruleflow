@@ -67,6 +67,34 @@ export class CurrencyTransferred extends Schema.TaggedClass<CurrencyTransferred>
   }
 ) {}
 
+// Re-export events for convenience
+export {
+  AttackPerformed,
+  DamageDealt,
+  GrappleAttempted,
+  CombatStarted,
+  CombatEnded,
+  InitiativeRolled,
+  WeaponDamaged,
+  ArmorDamaged,
+  CombatRoundStarted,
+  CombatRoundEnded,
+  TurnStarted,
+  TurnEnded,
+  MysteryCastDeclared,
+  WithdrawalDeclared,
+  RetreatDeclared,
+  MovementPerformed,
+  DefenseStanceTaken,
+  ReadyActionDeclared,
+  ReadyActionTriggered,
+  DisarmAttempted,
+  PushAttempted,
+  MysteryResolved,
+  ConcentrationBroken,
+  MoraleChecked
+}
+
 export const DomainEvent = Schema.Union(
   // Combat events
   AttackPerformed,

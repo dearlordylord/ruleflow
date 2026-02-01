@@ -67,7 +67,7 @@ export class DiceRoller extends Context.Tag("@game/DiceRoller")<
         const match = dice.match(/^(\d+)d(\d+)(?:([+-])(\d+))?$/)
         if (!match) return 0
 
-        const [_, countStr, sidesStr, operator, modStr] = match
+        const [_, countStr, _sidesStr, operator, modStr] = match
         const count = Number(countStr)
         const modifier = modStr ? Number(modStr) : 0
 

@@ -4,7 +4,6 @@
 import { Chunk, Effect } from "effect"
 
 import { getComponent } from "../components.js"
-import { DealDamageMutation } from "../character/mutations.js"
 import { RemoveConditionMutation } from "../combat/mutations.js"
 import { ConcentrationBroken } from "../combat/concentrationEvents.js"
 import type { System } from "./types.js"

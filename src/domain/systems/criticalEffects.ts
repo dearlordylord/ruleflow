@@ -4,10 +4,8 @@
 import { Chunk, Effect } from "effect"
 
 import { getComponent } from "../components.js"
-import { AttackPerformed, WeaponDamaged, ArmorDamaged } from "../combat/events.js"
+import { AttackPerformed } from "../combat/events.js"
 import { DamageEquipmentMutation } from "../combat/mutations.js"
-import { SystemName } from "../entities.js"
-import { DomainError } from "../errors.js"
 import type { System } from "./types.js"
 
 /**
@@ -24,11 +22,10 @@ export const criticalEffectsSystem: System = (state, events, _accumulatedMutatio
     )
 
     const mutations: Array<any> = []
-    const errors: Array<DomainError> = []
 
     for (const attack of attackEvents) {
       // Natural 20: damage armor/shield
-      if (attack.criticalType === "Natural20") {
+      if (attack.attackRoll === 20) {
         const target = yield* state.getEntity(attack.targetId).pipe(
           Effect.orElseSucceed(() => null)
         )
@@ -48,7 +45,7 @@ export const criticalEffectsSystem: System = (state, events, _accumulatedMutatio
       }
 
       // Natural 1: damage weapon
-      if (attack.isNatural1) {
+      if (attack.attackRoll === 1) {
         mutations.push(
           // Weapon durability damage
           DamageEquipmentMutation.make({

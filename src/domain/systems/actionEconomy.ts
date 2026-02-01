@@ -6,6 +6,7 @@ import { Chunk, Effect } from "effect"
 import { getComponent } from "../components.js"
 import { MovementPerformed } from "../combat/encounterEvents.js"
 import { UseActionMutation } from "../combat/mutations.js"
+import type { Mutation } from "../mutations.js"
 import { SystemName } from "../entities.js"
 import { DomainError } from "../errors.js"
 import type { System } from "./types.js"
@@ -18,7 +19,7 @@ import type { System } from "./types.js"
  */
 export const actionEconomySystem: System = (state, events, _accumulatedMutations) =>
   Effect.gen(function*() {
-    const mutations: Array<any> = []
+    const mutations: Array<Mutation> = []
     const errors: Array<DomainError> = []
 
     // Check main action events

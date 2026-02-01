@@ -139,6 +139,13 @@ export class GameState extends Context.Tag("@game/State")<
               break
             }
 
+            case "DamageEquipment":
+            case "ReloadWeapon":
+              // These mutations operate on equipment entities directly
+              // They should be handled by their own systems, not in GameState default case
+              // For now, skip them to avoid type errors
+              break
+
             default: {
               // SetAttributes, SetHealth, SetClass
               const component = yield* createComponentFromMutation(mutation, store)

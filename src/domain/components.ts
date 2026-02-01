@@ -34,6 +34,9 @@ import {
 import {
   EquippedWeaponsComponent
 } from "./combat/weapons.js"
+import {
+  MovementComponent
+} from "./world/movement.js"
 
 // OSR formula: (attribute - 10) / 2 rounded down
 const calculateModifier = (attribute: number): number => Math.floor((attribute - 10) / 2)
@@ -205,7 +208,9 @@ export const Component = Schema.Union(
   GrappleStateComponent,
   InitiativeComponent,
   ActionEconomyComponent,
-  EquippedWeaponsComponent
+  EquippedWeaponsComponent,
+  // World components
+  MovementComponent
 )
 export type Component = typeof Component.Type
 
@@ -245,7 +250,9 @@ export const ComponentTag = Schema.Literal(
   "GrappleState",
   "Initiative",
   "ActionEconomy",
-  "EquippedWeapons"
+  "EquippedWeapons",
+  // World tags
+  "Movement"
 )
 export type ComponentTag = typeof ComponentTag.Type
 

@@ -74,22 +74,24 @@ export const combatToHitSystem: System = (state, events, _accumulatedMutations) 
           return Option.none()
         }
 
-        const hit = combat.resolveToHit(
-          attack.attackRoll,
-          combatStats.meleeAttackBonus,
-          attrs.strengthMod,
-          targetCombat.armorClass
-        )
+        const totalAttackRoll = attack.attackRoll + combatStats.meleeAttackBonus + attrs.strengthMod
+        const hit = totalAttackRoll >= targetCombat.armorClass
 
-        if (!hit) {
+        if (!hit && attack.attackRoll !== 20) {
+          // Miss (unless natural 20, which always hits)
           return Option.none()
         }
+
+        // Determine critical type
+        const isNatural20 = attack.attackRoll === 20
+        const isMarginCritical = totalAttackRoll >= targetCombat.armorClass + 10
+        const isCritical = isNatural20 || isMarginCritical
 
         const damage = yield* combat.calculateDamage(
           weaponComp.damageDice,
           attrs.strengthMod,
           getSpecializationBonus(attacker, weaponComp.weaponGroup),
-          attack.isCritical
+          isCritical
         )
 
         return Option.some(
