@@ -4,11 +4,11 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../components.js"
-import { SystemName } from "../entities.js"
-import { DomainError } from "../errors.js"
-import { WeaponDamaged, ArmorDamaged, EquipmentRepaired } from "../combat/events.js"
+import { ArmorDamaged, EquipmentRepaired, WeaponDamaged } from "../combat/events.js"
 import { DamageEquipmentMutation, RepairEquipmentMutation } from "../combat/mutations.js"
+import { SystemName } from "../entities.js"
+import { getComponent } from "../entity.js"
+import { DomainError } from "../errors.js"
 import { UseConsumableMutation } from "../inventory/mutations.js"
 import type { System } from "./types.js"
 
@@ -34,7 +34,7 @@ export const durabilitySystem: System = (state, events, _accumulatedMutations) =
       weaponDamagedEvents,
       (event) =>
         Effect.gen(function*() {
-          const weapon = yield* state.getEntity(event.weaponId).pipe(
+          const _weapon = yield* state.getEntity(event.weaponId).pipe(
             Effect.orElseFail(() =>
               Chunk.of(
                 DomainError.make({
@@ -69,7 +69,7 @@ export const durabilitySystem: System = (state, events, _accumulatedMutations) =
       armorDamagedEvents,
       (event) =>
         Effect.gen(function*() {
-          const armor = yield* state.getEntity(event.armorId).pipe(
+          const _armor = yield* state.getEntity(event.armorId).pipe(
             Effect.orElseFail(() =>
               Chunk.of(
                 DomainError.make({
@@ -104,7 +104,7 @@ export const durabilitySystem: System = (state, events, _accumulatedMutations) =
       equipmentRepairedEvents,
       (event) =>
         Effect.gen(function*() {
-          const repairer = yield* state.getEntity(event.repairerId).pipe(
+          const _repairer = yield* state.getEntity(event.repairerId).pipe(
             Effect.orElseFail(() =>
               Chunk.of(
                 DomainError.make({
@@ -222,8 +222,8 @@ export const durabilitySystem: System = (state, events, _accumulatedMutations) =
     )
 
     // Combine all mutations
-    return Chunk.flatten(weaponDamagedMutations).pipe(
-      Chunk.appendAll(Chunk.flatten(armorDamagedMutations)),
-      Chunk.appendAll(Chunk.flatten(equipmentRepairedMutations))
+    return Chunk.flatten(Chunk.unsafeFromArray(weaponDamagedMutations)).pipe(
+      Chunk.appendAll(Chunk.flatten(Chunk.unsafeFromArray(armorDamagedMutations))),
+      Chunk.appendAll(Chunk.flatten(Chunk.unsafeFromArray(equipmentRepairedMutations)))
     )
   })

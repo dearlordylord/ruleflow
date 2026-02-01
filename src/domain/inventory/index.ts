@@ -11,6 +11,11 @@ export * from "./currency.js"
 // Consumables
 export * from "./consumables.js"
 
-// Mutations and events
-export * from "./mutations.js"
+// Looting components
+export * from "./looting.js"
+
+// Events only (mutations exported from top-level mutations.ts)
 export * from "./events.js"
+
+// Looting events
+export * from "./loot-events.js"

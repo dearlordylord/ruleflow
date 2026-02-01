@@ -4,26 +4,19 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../components.js"
-import { SystemName } from "../entities.js"
-import { DomainError } from "../errors.js"
+import { ArmorEquipped, ShieldEquipped, WeaponEquipped } from "../combat/events.js"
 import {
-  WeaponEquipped,
-  WeaponUnequipped,
-  ArmorEquipped,
-  ArmorUnequipped,
-  ShieldEquipped,
-  ShieldUnequipped
-} from "../combat/events.js"
-import {
-  EquipWeaponMutation,
-  UnequipWeaponMutation,
   EquipArmorMutation,
-  UnequipArmorMutation,
   EquipShieldMutation,
+  EquipWeaponMutation,
+  UnequipArmorMutation,
   UnequipShieldMutation,
+  UnequipWeaponMutation,
   UpdateCombatStatsMutation
 } from "../combat/mutations.js"
+import { SystemName } from "../entities.js"
+import { getComponent } from "../entity.js"
+import { DomainError } from "../errors.js"
 import type { System } from "./types.js"
 
 export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
@@ -59,7 +52,7 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
             )
           )
 
-          const weapon = yield* state.getEntity(event.weaponId).pipe(
+          const _weapon = yield* state.getEntity(event.weaponId).pipe(
             Effect.orElseFail(() =>
               Chunk.of(
                 DomainError.make({
@@ -105,6 +98,7 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
           const muts = Chunk.empty<
             | typeof UnequipWeaponMutation.Type
             | typeof EquipWeaponMutation.Type
+            | typeof UnequipShieldMutation.Type
             | typeof UpdateCombatStatsMutation.Type
           >()
 
@@ -327,8 +321,10 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
             muts,
             UpdateCombatStatsMutation.make({
               entityId: event.entityId,
-              ac: newAC,  // ACTUAL calculation
-              attackBonus: combatStats?.attackBonus ?? 0
+              armorClass: newAC,
+              meleeAttackBonus: combatStats?.meleeAttackBonus ?? 0,
+              rangedAttackBonus: combatStats?.rangedAttackBonus ?? 0,
+              initiativeModifier: combatStats?.initiativeModifier ?? 0
             })
           )
 
@@ -412,8 +408,10 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
               muts,
               UpdateCombatStatsMutation.make({
                 entityId: event.entityId,
-                ac: combatStats.ac + shieldComp.acBonus,  // ACTUAL calculation
-                attackBonus: combatStats.attackBonus
+                armorClass: combatStats.armorClass + shieldComp.acBonus,
+                meleeAttackBonus: combatStats.meleeAttackBonus,
+                rangedAttackBonus: combatStats.rangedAttackBonus,
+                initiativeModifier: combatStats.initiativeModifier
               })
             )
           }
@@ -424,8 +422,8 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
     )
 
     // Combine all mutations
-    return Chunk.flatten(weaponEquipMutations).pipe(
-      Chunk.appendAll(Chunk.flatten(armorEquipMutations)),
-      Chunk.appendAll(Chunk.flatten(shieldEquipMutations))
+    return Chunk.flatten(Chunk.unsafeFromArray(weaponEquipMutations)).pipe(
+      Chunk.appendAll(Chunk.flatten(Chunk.unsafeFromArray(armorEquipMutations))),
+      Chunk.appendAll(Chunk.flatten(Chunk.unsafeFromArray(shieldEquipMutations)))
     )
   })

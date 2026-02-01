@@ -4,7 +4,6 @@
 import { Schema } from "effect"
 
 import { EntityId } from "../entities.js"
-import type { Condition } from "./conditions.js"
 
 export class AddConditionMutation extends Schema.TaggedClass<AddConditionMutation>()(
   "AddCondition",
@@ -167,7 +166,9 @@ export class UpdateCombatStatsMutation extends Schema.TaggedClass<UpdateCombatSt
   "UpdateCombatStats",
   {
     entityId: EntityId,
-    ac: Schema.Int.pipe(Schema.greaterThanOrEqualTo(10)),
-    attackBonus: Schema.Int
+    armorClass: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
+    meleeAttackBonus: Schema.Int,
+    rangedAttackBonus: Schema.Int,
+    initiativeModifier: Schema.Int
   }
 ) {}

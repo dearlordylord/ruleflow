@@ -3,31 +3,24 @@
  */
 import { Schema } from "effect"
 
-import { AttributesComponent, ClassComponent, Component, ComponentTag, HealthComponent } from "./components.js"
+import { AttributesComponent, ClassComponent, HealthComponent } from "./character/index.js"
+import { SetSavingThrowsMutation, SetSkillsMutation, UpdateCharacterCreationMutation } from "./character/mutations.js"
 import {
-  UpdateCharacterCreationMutation,
-  SetSkillsMutation,
-  SetSavingThrowsMutation
-} from "./character/mutations.js"
-import {
-  TransferItemMutation,
-  UseConsumableMutation,
-  UpdateInventoryLoadMutation
-} from "./inventory/mutations.js"
-import {
-  EquipWeaponMutation,
-  UnequipWeaponMutation,
-  EquipArmorMutation,
-  UnequipArmorMutation,
-  EquipShieldMutation,
-  UnequipShieldMutation,
+  ConsumeAmmunitionMutation,
   DamageEquipmentMutation,
-  RepairEquipmentMutation,
-  UpdateCombatStatsMutation,
+  EquipArmorMutation,
+  EquipShieldMutation,
+  EquipWeaponMutation,
   ReloadWeaponMutation,
-  ConsumeAmmunitionMutation
+  RepairEquipmentMutation,
+  UnequipArmorMutation,
+  UnequipShieldMutation,
+  UnequipWeaponMutation,
+  UpdateCombatStatsMutation
 } from "./combat/mutations.js"
 import { EntityId } from "./entities.js"
+import { Component, ComponentTag, Entity } from "./entity.js"
+import { UpdateInventoryLoadMutation, UseConsumableMutation } from "./inventory/mutations.js"
 
 export class SetAttributesMutation extends Schema.TaggedClass<SetAttributesMutation>()(
   "SetAttributes",
@@ -84,7 +77,8 @@ export class DebitCurrencyMutation extends Schema.TaggedClass<DebitCurrencyMutat
     entityId: EntityId,
     copper: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
     silver: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
-    gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
+    gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
+    platinum: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
   }
 ) {}
 
@@ -94,7 +88,8 @@ export class CreditCurrencyMutation extends Schema.TaggedClass<CreditCurrencyMut
     entityId: EntityId,
     copper: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
     silver: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
-    gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
+    gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
+    platinum: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
   }
 ) {}
 
@@ -103,6 +98,30 @@ export class RemoveComponentMutation extends Schema.TaggedClass<RemoveComponentM
   {
     entityId: EntityId,
     componentTag: ComponentTag
+  }
+) {}
+
+/**
+ * Create new entity in game state
+ * Emitted by discovery/creation systems
+ */
+export class CreateEntityMutation extends Schema.TaggedClass<CreateEntityMutation>()(
+  "CreateEntity",
+  {
+    entity: Entity
+  }
+) {}
+
+/**
+ * Transfer item between entities
+ * Atomic operation that removes from one inventory and adds to another
+ */
+export class TransferItemMutation extends Schema.TaggedClass<TransferItemMutation>()(
+  "TransferItem",
+  {
+    itemId: EntityId,
+    fromEntityId: EntityId,
+    toEntityId: EntityId
   }
 ) {}
 
@@ -129,6 +148,7 @@ export const Mutation = Schema.Union(
   UpdateCharacterCreationMutation,
   SetSkillsMutation,
   SetSavingThrowsMutation,
+  CreateEntityMutation,
   // Inventory mutations
   TransferItemMutation,
   UseConsumableMutation,

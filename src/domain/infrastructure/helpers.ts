@@ -3,18 +3,18 @@
  */
 import { Effect } from "effect"
 
-import { Entity, getComponent, Component } from "../entity.js"
 import {
   AttributesComponent,
-  CharacterCreationComponent,
-  SkillsComponent,
+  ClassComponent,
+  HealthComponent,
   SavingThrowsComponent,
-  Skill
+  Skill,
+  SkillsComponent
 } from "../character/index.js"
-import { HealthComponent, ClassComponent } from "../character/index.js"
-import { InventoryComponent } from "../inventory/items.js"
 import type { EntityId } from "../entities.js"
+import { type Component, Entity, getComponent } from "../entity.js"
 import type { EntityNotFound } from "../errors.js"
+import { InventoryComponent } from "../inventory/items.js"
 import type { Mutation } from "../mutations.js"
 
 export function createComponentFromMutation(
@@ -26,6 +26,7 @@ export function createComponentFromMutation(
       id: EntityId,
       f: (entity: Entity) => Effect.Effect<Entity>
     ) => Effect.Effect<void, EntityNotFound>
+    readonly clear: () => Effect.Effect<void>
   }
 ): Effect.Effect<Component, never> {
   if (mutation._tag === "SetAttributes") {
@@ -132,22 +133,22 @@ export function createComponentFromMutation(
       const base = existing instanceof SkillsComponent
         ? existing
         : SkillsComponent.make({
-            melee: defaultSkill,
-            might: defaultSkill,
-            accuracy: defaultSkill,
-            movement: defaultSkill,
-            sleightOfHand: defaultSkill,
-            stealth: defaultSkill,
-            alchemy: defaultSkill,
-            craft: defaultSkill,
-            knowledge: defaultSkill,
-            medicine: defaultSkill,
-            awareness: defaultSkill,
-            survival: defaultSkill,
-            occultism: defaultSkill,
-            performance: defaultSkill,
-            animalHandling: defaultSkill
-          })
+          melee: defaultSkill,
+          might: defaultSkill,
+          accuracy: defaultSkill,
+          movement: defaultSkill,
+          sleightOfHand: defaultSkill,
+          stealth: defaultSkill,
+          alchemy: defaultSkill,
+          craft: defaultSkill,
+          knowledge: defaultSkill,
+          medicine: defaultSkill,
+          awareness: defaultSkill,
+          survival: defaultSkill,
+          occultism: defaultSkill,
+          performance: defaultSkill,
+          animalHandling: defaultSkill
+        })
 
       return SkillsComponent.make({
         melee: mutation.data.melee ?? base.melee,
@@ -183,14 +184,14 @@ export function createComponentFromMutation(
       const base = existing instanceof SavingThrowsComponent
         ? existing
         : SavingThrowsComponent.make({
-            baseSaveBonus: 0,
-            restraintModifier: 0,
-            exhaustionModifier: 0,
-            dodgeModifier: 0,
-            suppressionModifier: 0,
-            confusionModifier: 0,
-            curseModifier: 0
-          })
+          baseSaveBonus: 0,
+          restraintModifier: 0,
+          exhaustionModifier: 0,
+          dodgeModifier: 0,
+          suppressionModifier: 0,
+          confusionModifier: 0,
+          curseModifier: 0
+        })
 
       return SavingThrowsComponent.make({
         baseSaveBonus: mutation.data.baseSaveBonus ?? base.baseSaveBonus,
@@ -264,10 +265,10 @@ export function createComponentFromMutation(
   }
 
   if (
-    mutation._tag === "DealDamage" ||
-    mutation._tag === "RemoveComponent" ||
-    mutation._tag === "SetMultipleComponents" ||
-    mutation._tag === "UpdateCharacterCreation"
+    mutation._tag === "DealDamage"
+    || mutation._tag === "RemoveComponent"
+    || mutation._tag === "SetMultipleComponents"
+    || mutation._tag === "UpdateCharacterCreation"
   ) {
     // These mutations are handled directly in GameState.applyMutation
     return Effect.die(`${mutation._tag} should not reach createComponentFromMutation`)

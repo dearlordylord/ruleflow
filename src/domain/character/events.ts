@@ -40,3 +40,27 @@ export class SkillImproved extends Schema.TaggedClass<SkillImproved>()(
     newBonus: Schema.Int
   }
 ) {}
+
+export class WeaponSpecializationSelected extends Schema.TaggedClass<WeaponSpecializationSelected>()(
+  "WeaponSpecializationSelected",
+  {
+    entityId: EntityId,
+    weaponGroup: Schema.NonEmptyString
+  }
+) {}
+
+export class LuckPointBurned extends Schema.TaggedClass<LuckPointBurned>()(
+  "LuckPointBurned",
+  {
+    entityId: EntityId,
+    points: Schema.Int.pipe(Schema.greaterThan(0))
+  }
+) {}
+
+export class LuckPointRecovered extends Schema.TaggedClass<LuckPointRecovered>()(
+  "LuckPointRecovered",
+  {
+    entityId: EntityId,
+    amount: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
+  }
+) {}

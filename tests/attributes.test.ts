@@ -4,7 +4,7 @@
 import { describe, expect, it } from "@effect/vitest"
 import { Effect } from "effect"
 
-import { AttributesComponent } from "../src/domain/components.js"
+import { AttributesComponent } from "../src/domain/character/index.js"
 import { deterministicTestLayer } from "./layers.js"
 
 describe("Attributes Component", () => {

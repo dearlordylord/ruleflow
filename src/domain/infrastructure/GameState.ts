@@ -3,16 +3,18 @@
  */
 import { Context, Effect, Layer } from "effect"
 
-import { Entity, getComponent, removeComponent, setComponent } from "../entity.js"
+import { HealthComponent } from "../character/health.js"
+import { CharacterCreationComponent } from "../character/index.js"
+import { ArmorComponent, EquippedArmorComponent, ShieldComponent } from "../combat/index.js"
+import { CombatStatsComponent } from "../combat/stats.js"
+import { EquippedWeaponsComponent, WeaponComponent } from "../combat/weapons.js"
+import type { EntityId } from "../entities.js"
+import type { Entity } from "../entity.js"
+import { getComponent, removeComponent, setComponent } from "../entity.js"
+import type { EntityNotFound } from "../errors.js"
+import { ConsumableComponent } from "../inventory/consumables.js"
 import { CurrencyComponent } from "../inventory/currency.js"
 import { InventoryComponent } from "../inventory/items.js"
-import { ConsumableComponent } from "../inventory/consumables.js"
-import { HealthComponent, CharacterCreationComponent } from "../character/index.js"
-import { WeaponComponent, EquippedWeaponsComponent } from "../combat/weapons.js"
-import { ArmorComponent, ShieldComponent, EquippedArmorComponent } from "../combat/index.js"
-import { CombatStatsComponent } from "../combat/stats.js"
-import type { EntityId } from "../entities.js"
-import type { EntityNotFound } from "../errors.js"
 import type { Mutation } from "../mutations.js"
 import { createComponentFromMutation } from "./helpers.js"
 import { ReadModelStore } from "./ReadModelStore.js"
@@ -86,7 +88,8 @@ export class GameState extends Context.Tag("@game/State")<
                   const newCurrency = CurrencyComponent.make({
                     copper: currency.copper - mutation.copper,
                     silver: currency.silver - mutation.silver,
-                    gold: currency.gold - mutation.gold
+                    gold: currency.gold - mutation.gold,
+                    platinum: currency.platinum - mutation.platinum
                   })
                   return setComponent(entity, newCurrency)
                 }))
@@ -102,7 +105,8 @@ export class GameState extends Context.Tag("@game/State")<
                   const newCurrency = CurrencyComponent.make({
                     copper: currency.copper + mutation.copper,
                     silver: currency.silver + mutation.silver,
-                    gold: currency.gold + mutation.gold
+                    gold: currency.gold + mutation.gold,
+                    platinum: currency.platinum + mutation.platinum
                   })
                   return setComponent(entity, newCurrency)
                 }))
@@ -136,11 +140,56 @@ export class GameState extends Context.Tag("@game/State")<
                 }))
               break
 
+            case "CreateEntity":
+              // Validate entity doesn't already exist
+              yield* store.get(mutation.entity.id).pipe(
+                Effect.matchEffect({
+                  onFailure: () => {
+                    // Entity doesn't exist - good, create it
+                    return store.set(mutation.entity)
+                  },
+                  onSuccess: () => {
+                    // Entity already exists - fail
+                    return Effect.die(
+                      new Error(`Entity ${mutation.entity.id} already exists`)
+                    )
+                  }
+                })
+              )
+              break
+
+            case "TransferItem":
+              // Transfer item from one inventory to another
+              // Remove from source
+              yield* store.update(mutation.fromEntityId, (fromEntity) =>
+                Effect.gen(function*() {
+                  const fromInventory = getComponent(fromEntity, "Inventory")
+                  if (!fromInventory) {
+                    return fromEntity
+                  }
+                  const newItems = fromInventory.items.filter((id) =>
+                    id !== mutation.itemId
+                  )
+                  const updated = { ...fromInventory, items: newItems }
+                  return setComponent(fromEntity, updated as typeof fromInventory)
+                }))
+              // Add to destination
+              yield* store.update(mutation.toEntityId, (toEntity) =>
+                Effect.gen(function*() {
+                  const toInventory = getComponent(toEntity, "Inventory")
+                  if (!toInventory) {
+                    return toEntity
+                  }
+                  const newItems = [...toInventory.items, mutation.itemId]
+                  const updated = { ...toInventory, items: newItems }
+                  return setComponent(toEntity, updated as typeof toInventory)
+                }))
+              break
+
             case "AddItem":
             case "RemoveItem": {
               const component = yield* createComponentFromMutation(mutation, store)
-              yield* store.update(mutation.entityId, (entity) =>
-                Effect.succeed(setComponent(entity, component)))
+              yield* store.update(mutation.entityId, (entity) => Effect.succeed(setComponent(entity, component)))
               break
             }
 
@@ -352,16 +401,11 @@ export class GameState extends Context.Tag("@game/State")<
             case "UpdateCombatStats":
               yield* store.update(mutation.entityId, (entity) =>
                 Effect.gen(function*() {
-                  const combatStats = getComponent(entity, "CombatStats")
-                  const base = combatStats ?? CombatStatsComponent.make({
-                    ac: 11,
-                    attackBonus: 0,
-                    initiativeBonus: 0
-                  })
                   const newCombatStats = CombatStatsComponent.make({
-                    ac: mutation.ac,
-                    attackBonus: mutation.attackBonus,
-                    initiativeBonus: base.initiativeBonus
+                    armorClass: mutation.armorClass,
+                    meleeAttackBonus: mutation.meleeAttackBonus,
+                    rangedAttackBonus: mutation.rangedAttackBonus,
+                    initiativeModifier: mutation.initiativeModifier
                   })
                   return setComponent(entity, newCombatStats)
                 }))

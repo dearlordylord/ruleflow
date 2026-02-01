@@ -3,7 +3,7 @@
  */
 import { Context, Effect, Layer } from "effect"
 
-import type { WeaponGroup } from "../components.js"
+import type { WeaponGroup } from "../combat/weapons.js"
 
 export interface WeaponTemplate {
   readonly name: string

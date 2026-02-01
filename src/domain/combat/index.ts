@@ -19,5 +19,5 @@ export * from "./conditions.js"
 export * from "./ranged.js"
 
 // Mutations and events
-export * from "./mutations.js"
 export * from "./events.js"
+export * from "./mutations.js"

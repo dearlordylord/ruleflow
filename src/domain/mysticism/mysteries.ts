@@ -1162,7 +1162,7 @@ export const MYSTERY_DEFINITIONS: Record<string, MysteryData> = {
 /**
  * Get mysteries by sphere
  */
-export function getMysteryBySphere(sphere: MysterySphere, tier?: MysteryTier): MysteryData[] {
+export function getMysteryBySphere(sphere: MysterySphere, tier?: MysteryTier): Array<MysteryData> {
   return Object.values(MYSTERY_DEFINITIONS)
     .filter(m => m.sphere === sphere && (tier === undefined || m.tier === tier))
 }

@@ -4,18 +4,13 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../components.js"
 import { SystemName } from "../entities.js"
+import { getComponent } from "../entity.js"
 import { DomainError } from "../errors.js"
-import { ItemPurchased } from "../inventory/events.js"
-import {
-  DebitCurrencyMutation,
-  CreditCurrencyMutation,
-  AddItemMutation,
-  TransferItemMutation,
-  UpdateInventoryLoadMutation
-} from "../mutations.js"
 import { hasSufficientFunds } from "../inventory/currency.js"
+import { ItemPurchased } from "../inventory/events.js"
+import { UpdateInventoryLoadMutation } from "../inventory/mutations.js"
+import { AddItemMutation, CreditCurrencyMutation, DebitCurrencyMutation, TransferItemMutation } from "../mutations.js"
 import type { System } from "./types.js"
 
 export const itemPurchaseSystem: System = (state, events, _accumulatedMutations) =>
@@ -197,5 +192,5 @@ export const itemPurchaseSystem: System = (state, events, _accumulatedMutations)
       { concurrency: "unbounded" }
     )
 
-    return Chunk.flatten(mutations)
+    return Chunk.flatten(Chunk.unsafeFromArray(mutations))
   })

@@ -3,8 +3,6 @@
  */
 import { Schema } from "effect"
 
-import { EntityId } from "../entities.js"
-
 /**
  * Ammunition tracking
  */

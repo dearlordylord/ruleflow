@@ -40,7 +40,7 @@ export function calculateCurrentSpeed(
   baseSpeed: number,
   armorPenalty: number,
   encumbrancePenalty: number,
-  conditions: string[] // e.g., ["Prone", "Exhausted"]
+  conditions: Array<string> // e.g., ["Prone", "Exhausted"]
 ): number {
   let speed = baseSpeed - armorPenalty - encumbrancePenalty
 

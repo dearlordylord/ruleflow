@@ -3,7 +3,7 @@
  */
 import { Schema } from "effect"
 
-import type { EntityId } from "../entities.js"
+import { EntityId } from "../entities.js"
 
 /**
  * Loyalty value for followers
@@ -30,10 +30,15 @@ export class LoyaltyComponent extends Schema.TaggedClass<LoyaltyComponent>()("Lo
  */
 export function getPaymentModifier(paymentStatus: string): number {
   switch (paymentStatus) {
-    case "Overpaid": return +2
-    case "Paid": return 0
-    case "Underpaid": return -2
-    case "Unpaid": return -4
-    default: return 0
+    case "Overpaid":
+      return +2
+    case "Paid":
+      return 0
+    case "Underpaid":
+      return -2
+    case "Unpaid":
+      return -4
+    default:
+      return 0
   }
 }

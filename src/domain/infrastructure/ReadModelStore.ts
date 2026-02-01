@@ -3,8 +3,8 @@
  */
 import { Context, Effect, Layer, Option, SynchronizedRef } from "effect"
 
-import type { Entity } from "../components.js"
 import type { EntityId } from "../entities.js"
+import type { Entity } from "../entity.js"
 import { EntityNotFound } from "../errors.js"
 
 export class ReadModelStore extends Context.Tag("@game/ReadModelStore")<
@@ -61,8 +61,7 @@ export class ReadModelStore extends Context.Tag("@game/ReadModelStore")<
             return newMap
           }))
 
-      const clear = () =>
-        SynchronizedRef.update(store, () => new Map<EntityId, Entity>())
+      const clear = () => SynchronizedRef.update(store, () => new Map<EntityId, Entity>())
 
       return ReadModelStore.of({ get, set, update, clear })
     })
