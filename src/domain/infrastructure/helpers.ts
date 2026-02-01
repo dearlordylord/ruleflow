@@ -115,34 +115,34 @@ export function createComponentFromMutation(
           })
         )
       )
-      const existing = getComponent(entity, "Components.Skills")
+      const existing = getComponent(entity, "Skills")
 
       const defaultSkill = Components.Skill.make({
         proficiency: "Untrained",
         levelBonus: 0
       })
 
-      const base = existing instanceof Components.Components.SkillsComponent
+      const base = existing instanceof Components.SkillsComponent
         ? existing
-        : Components.Components.SkillsComponent.make({
-            melee: defaultComponents.Skill,
-            might: defaultComponents.Skill,
-            accuracy: defaultComponents.Skill,
-            movement: defaultComponents.Skill,
-            sleightOfHand: defaultComponents.Skill,
-            stealth: defaultComponents.Skill,
-            alchemy: defaultComponents.Skill,
-            craft: defaultComponents.Skill,
-            knowledge: defaultComponents.Skill,
-            medicine: defaultComponents.Skill,
-            awareness: defaultComponents.Skill,
-            survival: defaultComponents.Skill,
-            occultism: defaultComponents.Skill,
-            performance: defaultComponents.Skill,
-            animalHandling: defaultComponents.Skill
+        : Components.SkillsComponent.make({
+            melee: defaultSkill,
+            might: defaultSkill,
+            accuracy: defaultSkill,
+            movement: defaultSkill,
+            sleightOfHand: defaultSkill,
+            stealth: defaultSkill,
+            alchemy: defaultSkill,
+            craft: defaultSkill,
+            knowledge: defaultSkill,
+            medicine: defaultSkill,
+            awareness: defaultSkill,
+            survival: defaultSkill,
+            occultism: defaultSkill,
+            performance: defaultSkill,
+            animalHandling: defaultSkill
           })
 
-      return Components.Components.SkillsComponent.make({
+      return Components.SkillsComponent.make({
         melee: mutation.data.melee ?? base.melee,
         might: mutation.data.might ?? base.might,
         accuracy: mutation.data.accuracy ?? base.accuracy,

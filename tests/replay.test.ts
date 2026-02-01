@@ -15,7 +15,7 @@ import {
   WeaponComponent
 } from "../src/domain/components.js"
 import { EntityId } from "../src/domain/entities.js"
-import { AttackPerformed, CurrencyTransferred } from "../src/domain/events.js"
+import { AttackPerformed, CurrencyTransferred } from "../src/domain/combat/events.js"
 import { Committer } from "../src/domain/infrastructure/Committer.js"
 import { GameState } from "../src/domain/infrastructure/GameState.js"
 import { ReadModelStore } from "../src/domain/infrastructure/ReadModelStore.js"
