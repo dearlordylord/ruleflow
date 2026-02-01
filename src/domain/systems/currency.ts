@@ -20,13 +20,15 @@ export const currencyTransferSystem: System = (state, events, _accumulatedMutati
           entityId: transfer.fromEntityId,
           copper: transfer.copper,
           silver: transfer.silver,
-          gold: transfer.gold
+          gold: transfer.gold,
+          platinum: 0
         }),
         CreditCurrencyMutation.make({
           entityId: transfer.toEntityId,
           copper: transfer.copper,
           silver: transfer.silver,
-          gold: transfer.gold
+          gold: transfer.gold,
+          platinum: 0
         })
       )
     )

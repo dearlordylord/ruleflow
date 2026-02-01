@@ -137,6 +137,7 @@ export const traumaSystem: System = (state, _events, accumulatedMutations) =>
             SetHealthMutation.make({
               entityId: damage.entityId,
               data: {
+                current: newHP,
                 traumaActive: true,
                 traumaEffect: "Bleeding"
               }
