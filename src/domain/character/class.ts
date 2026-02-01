@@ -63,6 +63,46 @@ export class ForbiddenKnowledgeComponent extends Schema.TaggedClass<ForbiddenKno
 }) {}
 
 /**
+ * Calculate number of extra attacks per round for Combat Superiority
+ * Level 2: 1, Level 4: 2, Level 6: 3, etc.
+ */
+export function calculateCombatSuperiorityExtraAttacks(level: number): number {
+  if (level < 2) return 0
+  return Math.floor((level - 1) / 2)
+}
+
+/**
+ * Calculate sneak attack dice for Specialist
+ * Level 1: 1d6, Level 3: 2d6, Level 6: 3d6, Level 9: 4d6
+ */
+export function calculateSneakAttackDice(level: number): number {
+  if (level >= 9) return 4
+  if (level >= 6) return 3
+  if (level >= 3) return 2
+  return 1
+}
+
+/**
+ * Calculate luck point recovery die size for Specialist
+ * Level 1: 1d4, Level 3: 1d6, Level 5: 1d8, Level 7: 1d10, Level 9: 1d12
+ */
+export function calculateLuckySkillRecoveryDie(level: number): number {
+  return Math.min(12, 4 + Math.floor((level - 1) / 2) * 2)
+}
+
+/**
+ * Calculate max mystery tier available for Mystic
+ * Level 1-2: Tier 1, Level 3-4: Tier 2, Level 5-6: Tier 3, Level 7-8: Tier 4, Level 9-10: Tier 5
+ */
+export function calculateMaxMysteryTier(level: number): 1 | 2 | 3 | 4 | 5 {
+  if (level >= 9) return 5
+  if (level >= 7) return 4
+  if (level >= 5) return 3
+  if (level >= 3) return 2
+  return 1
+}
+
+/**
  * HP Die Tables
  * Level 1: Fixed die + fixed bonus
  * Per level after: Rolling die

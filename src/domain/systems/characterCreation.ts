@@ -1,7 +1,7 @@
 /**
  * Character Creation System - processes all character creation events
  */
-import { Chunk, Effect, HashMap } from "effect"
+import { Chunk, Effect, HashMap, Option } from "effect"
 
 import { getComponent } from "../components.js"
 import {
@@ -19,7 +19,11 @@ import {
   ForbiddenKnowledgeComponent,
   Skill,
   calculateSkillLevelBonus,
-  calculateBaseSaveBonus
+  calculateBaseSaveBonus,
+  calculateCombatSuperiorityExtraAttacks,
+  calculateSneakAttackDice,
+  calculateLuckySkillRecoveryDie,
+  calculateMaxMysteryTier
 } from "../character/index.js"
 import {
   CharacterCreationStarted,
@@ -42,6 +46,18 @@ import { CurrencyComponent, InventoryComponent } from "../inventory/index.js"
 import { KnownMysteriesComponent, ConcentrationComponent, calculateMaxConcentrationPoints } from "../mysticism/index.js"
 import type { Component } from "../components.js"
 import type { System } from "./types.js"
+
+/**
+ * Type for validated character creation with all required fields
+ */
+type ValidatedCharacterCreation = CharacterCreationComponent & {
+  attributes: NonNullable<CharacterCreationComponent["attributes"]>
+  class: NonNullable<CharacterCreationComponent["class"]>
+  skills: NonNullable<CharacterCreationComponent["skills"]>
+  hitPoints: NonNullable<CharacterCreationComponent["hitPoints"]>
+  alignment: NonNullable<CharacterCreationComponent["alignment"]>
+  name: NonNullable<CharacterCreationComponent["name"]>
+}
 
 /**
  * Single character creation system handling all creation events
@@ -183,21 +199,31 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
         case "EquipmentPurchased": {
           const e = event as EquipmentPurchased
-          const entity = yield* state.getEntity(e.entityId)
+          const entityResult = yield* state.getEntity(e.entityId).pipe(Effect.option)
+
+          if (Option.isNone(entityResult)) {
+            yield* Effect.logError(`Entity ${e.entityId} not found for equipment purchase`)
+            break
+          }
+
+          const entity = entityResult.value
           const creation = getComponent(entity, "CharacterCreation")
 
-          if (creation) {
-            mutations.push(
-              UpdateCharacterCreationMutation.make({
-                entityId: e.entityId,
-                data: {
-                  currentStep: "EquipmentPhase",
-                  remainingMoney: creation.remainingMoney - e.costInSilver,
-                  purchasedItems: [...creation.purchasedItems, e.itemId]
-                }
-              })
-            )
+          if (!creation) {
+            yield* Effect.logError(`CharacterCreation component not found for equipment purchase`)
+            break
           }
+
+          mutations.push(
+            UpdateCharacterCreationMutation.make({
+              entityId: e.entityId,
+              data: {
+                currentStep: "EquipmentPhase",
+                remainingMoney: creation.remainingMoney - e.costInSilver,
+                purchasedItems: [...creation.purchasedItems, e.itemId]
+              }
+            })
+          )
           break
         }
 
@@ -258,11 +284,23 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
         case "CharacterCreationCompleted": {
           const e = event as CharacterCreationCompleted
-          const entity = yield* state.getEntity(e.entityId)
+          const entityResult = yield* state.getEntity(e.entityId).pipe(Effect.option)
+
+          if (Option.isNone(entityResult)) {
+            yield* Effect.logError(`Entity ${e.entityId} not found for character creation completion`)
+            break
+          }
+
+          const entity = entityResult.value
           const creation = getComponent(entity, "CharacterCreation")
 
+          if (!creation) {
+            yield* Effect.logError(`CharacterCreation component not found for entity ${e.entityId}`)
+            break
+          }
+
+          // Validate all required fields
           if (
-            !creation ||
             !creation.attributes ||
             !creation.class ||
             !creation.skills ||
@@ -270,16 +308,34 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
             !creation.alignment ||
             !creation.name
           ) {
-            // Validation failure
+            yield* Effect.logError(
+              `Character creation incomplete for ${e.entityId}: missing ${
+                !creation.attributes ? "attributes" :
+                !creation.class ? "class" :
+                !creation.skills ? "skills" :
+                !creation.hitPoints ? "hitPoints" :
+                !creation.alignment ? "alignment" : "name"
+              }`
+            )
             break
           }
 
           // Validate Mystic has mysteries
           if (creation.class === "Mystic" && (!creation.mysteries || creation.mysteries.length === 0)) {
+            yield* Effect.logError(`Mystic character ${e.entityId} missing mysteries`)
             break
           }
 
-          const components = buildFinalCharacterComponents(creation)
+          // Validate non-Mystics don't have mysteries
+          if (creation.class !== "Mystic" && creation.mysteries && creation.mysteries.length > 0) {
+            yield* Effect.logError(`Non-Mystic character ${e.entityId} has mysteries`)
+            break
+          }
+
+          // Type-narrow: at this point we know all fields are non-null
+          const validatedCreation: ValidatedCharacterCreation = creation as ValidatedCharacterCreation
+
+          const components = buildFinalCharacterComponents(validatedCreation)
           mutations.push(
             SetMultipleComponentsMutation.make({
               entityId: e.entityId,
@@ -293,16 +349,14 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
     }
 
     return Chunk.fromIterable(mutations)
-  }).pipe(
-    Effect.catchAll(() => Effect.succeed(Chunk.empty()))
-  )
+  })
 
 /**
- * Build all final character components from creation data
+ * Build all final character components from validated creation data
  */
-function buildFinalCharacterComponents(creation: CharacterCreationComponent): Component[] {
+function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Component[] {
   const level = creation.startingLevel
-  const attrs = creation.attributes!
+  const attrs = creation.attributes
   const components: Component[] = []
 
   // 1. Attributes
@@ -320,13 +374,13 @@ function buildFinalCharacterComponents(creation: CharacterCreationComponent): Co
   // 2. Class
   components.push(
     ClassComponent.make({
-      class: creation.class!,
+      class: creation.class,
       level
     })
   )
 
   // 3. Skills
-  components.push(buildSkillsComponent(creation.skills!, level))
+  components.push(buildSkillsComponent(creation.skills, level))
 
   // 4. Saving Throws
   components.push(buildSavingThrowsComponent(level))
@@ -342,8 +396,8 @@ function buildFinalCharacterComponents(creation: CharacterCreationComponent): Co
   // 6. Health
   components.push(
     HealthComponent.make({
-      current: creation.hitPoints!.total,
-      max: creation.hitPoints!.total,
+      current: creation.hitPoints.total,
+      max: creation.hitPoints.total,
       traumaActive: false,
       traumaEffect: null
     })
@@ -396,38 +450,34 @@ function buildSkillsComponent(
   skills: { readonly primary: readonly string[]; readonly secondary: readonly string[] },
   level: number
 ): SkillsComponent {
-  const allSkillNames = [
-    "melee",
-    "might",
-    "accuracy",
-    "movement",
-    "sleightOfHand",
-    "stealth",
-    "alchemy",
-    "knowledge",
-    "medicine",
-    "awareness",
-    "survival",
-    "occultism",
-    "performance",
-    "animalHandling"
-  ] as const
-
-  const skillData: Record<string, Skill> = {}
-
-  for (const skillName of allSkillNames) {
+  const createSkill = (skillName: string) => {
     const isPrimary = skills.primary.includes(skillName)
     const isSecondary = skills.secondary.includes(skillName)
-
     const proficiency = isPrimary ? "Primary" : isSecondary ? "Secondary" : "Untrained"
 
-    skillData[skillName] = Skill.make({
+    return Skill.make({
       proficiency,
       levelBonus: calculateSkillLevelBonus(proficiency, level)
     })
   }
 
-  return SkillsComponent.make(skillData as any)
+  return SkillsComponent.make({
+    melee: createSkill("melee"),
+    might: createSkill("might"),
+    accuracy: createSkill("accuracy"),
+    movement: createSkill("movement"),
+    sleightOfHand: createSkill("sleightOfHand"),
+    stealth: createSkill("stealth"),
+    alchemy: createSkill("alchemy"),
+    craft: createSkill("craft"),
+    knowledge: createSkill("knowledge"),
+    medicine: createSkill("medicine"),
+    awareness: createSkill("awareness"),
+    survival: createSkill("survival"),
+    occultism: createSkill("occultism"),
+    performance: createSkill("performance"),
+    animalHandling: createSkill("animalHandling")
+  })
 }
 
 /**
@@ -461,7 +511,7 @@ function buildClassSpecificComponents(
     case "Fighter":
       // Combat Superiority starts at level 2
       if (level >= 2) {
-        const extraAttacks = Math.floor((level - 1) / 2)
+        const extraAttacks = calculateCombatSuperiorityExtraAttacks(level)
         components.push(
           CombatSuperiorityComponent.make({
             extraAttacksPerRound: extraAttacks,
@@ -474,7 +524,7 @@ function buildClassSpecificComponents(
 
     case "Specialist":
       // Sneak Attack
-      const sneakDice = level >= 9 ? 4 : level >= 6 ? 3 : level >= 3 ? 2 : 1
+      const sneakDice = calculateSneakAttackDice(level)
       components.push(
         SneakAttackComponent.make({
           extraDamageDice: sneakDice
@@ -482,7 +532,7 @@ function buildClassSpecificComponents(
       )
 
       // Lucky Skill
-      const recoveryDie = Math.min(12, 4 + Math.floor((level - 1) / 2) * 2)
+      const recoveryDie = calculateLuckySkillRecoveryDie(level)
       const maxPoints = 5 + level
       components.push(
         LuckySkillComponent.make({
@@ -503,7 +553,7 @@ function buildClassSpecificComponents(
       )
 
       // Known Mysteries
-      const maxTier = level >= 9 ? 5 : level >= 7 ? 4 : level >= 5 ? 3 : level >= 3 ? 2 : 1
+      const maxTier = calculateMaxMysteryTier(level)
       components.push(
         KnownMysteriesComponent.make({
           knownMysteries: Array.from(mysteries || []),
