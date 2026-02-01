@@ -64,11 +64,11 @@ export class ForbiddenKnowledgeComponent extends Schema.TaggedClass<ForbiddenKno
 
 /**
  * Calculate number of extra attacks per round for Combat Superiority
- * Level 2: 1, Level 4: 2, Level 6: 3, etc.
+ * Level 2: 1, Level 4: 2, Level 6: 3, Level 8: 4, Level 10: 5
  */
 export function calculateCombatSuperiorityExtraAttacks(level: number): number {
   if (level < 2) return 0
-  return Math.floor((level - 1) / 2)
+  return Math.floor(level / 2)
 }
 
 /**
@@ -140,40 +140,9 @@ export function getHPDieNotation(characterClass: CharacterClass, level: number):
 }
 
 /**
- * Fighter: Extra attacks per round
- * Formula: floor(level/2) - 1, minimum 0
- */
-export function getExtraAttacksPerRound(level: number): number {
-  return Math.max(0, Math.floor(level / 2) - 1)
-}
-
-/**
  * Fighter: Weapon specialization bonus progression
  * Levels 1-2: +1, 3-4: +2, 5-6: +3, 7-8: +4, 9-10: +5
  */
 export function getWeaponSpecializationBonus(level: number): number {
   return Math.min(5, Math.floor((level + 1) / 2))
-}
-
-/**
- * Specialist: Sneak attack dice progression
- * Level 1-2: 1d6, 3-5: 2d6, 6-8: 3d6, 9-10: 4d6
- */
-export function getSneakAttackDice(level: number): 1 | 2 | 3 | 4 {
-  if (level >= 9) return 4
-  if (level >= 6) return 3
-  if (level >= 3) return 2
-  return 1
-}
-
-/**
- * Specialist: Luck recovery die progression
- * Level 1-2: d4, 3-4: d6, 5-6: d8, 7-8: d10, 9-10: d12
- */
-export function getLuckRecoveryDie(level: number): 4 | 6 | 8 | 10 | 12 {
-  if (level >= 9) return 12
-  if (level >= 7) return 10
-  if (level >= 5) return 8
-  if (level >= 3) return 6
-  return 4
 }

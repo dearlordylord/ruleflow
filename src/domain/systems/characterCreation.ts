@@ -60,6 +60,22 @@ type ValidatedCharacterCreation = CharacterCreationComponent & {
 }
 
 /**
+ * Type guard for validated character creation
+ */
+function isValidatedCreation(
+  creation: CharacterCreationComponent
+): creation is ValidatedCharacterCreation {
+  return !!(
+    creation.attributes &&
+    creation.class &&
+    creation.skills &&
+    creation.hitPoints &&
+    creation.alignment &&
+    creation.name
+  )
+}
+
+/**
  * Single character creation system handling all creation events
  */
 export const characterCreationSystem: System = (state, events, _accumulated) =>
@@ -210,7 +226,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
           const creation = getComponent(entity, "CharacterCreation")
 
           if (!creation) {
-            yield* Effect.logError(`CharacterCreation component not found for equipment purchase`)
+            yield* Effect.logError(`CharacterCreation component not found for equipment purchase at entity ${e.entityId}`)
             break
           }
 
@@ -299,15 +315,8 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
             break
           }
 
-          // Validate all required fields
-          if (
-            !creation.attributes ||
-            !creation.class ||
-            !creation.skills ||
-            !creation.hitPoints ||
-            !creation.alignment ||
-            !creation.name
-          ) {
+          // Validate all required fields using type guard
+          if (!isValidatedCreation(creation)) {
             yield* Effect.logError(
               `Character creation incomplete for ${e.entityId}: missing ${
                 !creation.attributes ? "attributes" :
@@ -320,6 +329,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
             break
           }
 
+          // At this point TypeScript knows creation is ValidatedCharacterCreation
           // Validate Mystic has mysteries
           if (creation.class === "Mystic" && (!creation.mysteries || creation.mysteries.length === 0)) {
             yield* Effect.logError(`Mystic character ${e.entityId} missing mysteries`)
@@ -332,10 +342,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
             break
           }
 
-          // Type-narrow: at this point we know all fields are non-null
-          const validatedCreation: ValidatedCharacterCreation = creation as ValidatedCharacterCreation
-
-          const components = buildFinalCharacterComponents(validatedCreation)
+          const components = buildFinalCharacterComponents(creation)
           mutations.push(
             SetMultipleComponentsMutation.make({
               entityId: e.entityId,
