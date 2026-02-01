@@ -31,6 +31,7 @@ export const initiativeSystem: System = (state, events, _accumulatedMutations) =
 
     // Store initiative for each entity
     for (const initEvent of initiativeEvents) {
+      // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
       mutations.push(
         RollInitiativeMutation.make({
           entityId: initEvent.entityId,

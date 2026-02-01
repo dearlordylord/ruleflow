@@ -35,6 +35,7 @@ export const movementSystem: System = (state, events, _accumulatedMutations) =>
       const movement = getComponent(entity, "Movement")
 
       if (!movement) {
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         errors.push(
           DomainError.make({
             systemName: SystemName.make("Movement"),
@@ -55,6 +56,7 @@ export const movementSystem: System = (state, events, _accumulatedMutations) =>
 
       // Validate distance
       if (moveEvent.distanceMoved > allowedDistance) {
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         errors.push(
           DomainError.make({
             systemName: SystemName.make("Movement"),

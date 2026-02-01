@@ -37,6 +37,11 @@ pnpm tsc --noEmit && pnpm lint --fix && pnpm test
 
 If any fail, fix and re-run the full chain. Don't commit until all three pass.
 
+**Lint warnings = 0.** If a warning is an intentional architectural choice, add `eslint-disable-next-line` with explanation:
+```typescript
+// eslint-disable-next-line functional/immutable-data -- local mutation, converted to Chunk on return
+```
+
 ## Domain Events
 
 **Domain events = observable in-game actions with business/rules significance.**

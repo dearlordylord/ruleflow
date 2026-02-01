@@ -25,6 +25,7 @@ export const maneuversSystem: System = (state, events, _accumulatedMutations) =>
       if (!disarm.success) continue
 
       if (disarm.itemDisarmed) {
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         mutations.push(
           UnequipWeaponMutation.make({
             entityId: disarm.targetId,
@@ -45,6 +46,7 @@ export const maneuversSystem: System = (state, events, _accumulatedMutations) =>
       if (!push.success) continue
 
       if (push.knockedProne) {
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         mutations.push(
           AddConditionMutation.make({
             entityId: push.targetId,

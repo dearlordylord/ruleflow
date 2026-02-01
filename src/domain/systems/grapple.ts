@@ -26,6 +26,7 @@ export const grappleSystem: System = (state, events, _accumulatedMutations) =>
     for (const grapple of grappleEvents) {
       if (!grapple.success) continue
 
+      // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
       mutations.push(
         // Set grapple state for target (grappled by grappler)
         SetGrappleStateMutation.make({

@@ -42,6 +42,7 @@ export const mysteryCastingSystem: System = (state, events, _accumulatedMutation
       // Check if still concentrating (not broken)
       if (!conditions || !hasCondition(conditions.conditions, "Concentrating")) {
         // Concentration was broken, mystery fails
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         mutations.push(
           SetMysteryCastingMutation.make({
             entityId: turnStart.entityId,
@@ -55,6 +56,7 @@ export const mysteryCastingSystem: System = (state, events, _accumulatedMutation
       }
 
       // Resolve mystery
+      // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
       _mysteryResolvedEvents.push(
         MysteryResolved.make({
           entityId: turnStart.entityId,
@@ -63,6 +65,7 @@ export const mysteryCastingSystem: System = (state, events, _accumulatedMutation
         })
       )
 
+      // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
       mutations.push(
         SetMysteryCastingMutation.make({
           entityId: turnStart.entityId,

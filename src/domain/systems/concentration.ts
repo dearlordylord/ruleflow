@@ -45,6 +45,7 @@ export const concentrationSystem: System = (state, events, accumulatedMutations)
       const saveFailed = true // TODO: implement save rolling
 
       if (saveFailed) {
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         _concentrationBreaks.push(
           ConcentrationBroken.make({
             entityId: damage.entityId,
@@ -54,6 +55,7 @@ export const concentrationSystem: System = (state, events, accumulatedMutations)
           })
         )
 
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         mutations.push(
           RemoveConditionMutation.make({
             entityId: damage.entityId,

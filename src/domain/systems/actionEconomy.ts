@@ -55,6 +55,7 @@ export const actionEconomySystem: System = (state, events, _accumulatedMutations
           || hasCondition(conditions.conditions, "Paralyzed")
           || hasCondition(conditions.conditions, "Unconscious")
         if (cannotAct) {
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           errors.push(
             DomainError.make({
               systemName: SystemName.make("ActionEconomy"),
@@ -67,6 +68,7 @@ export const actionEconomySystem: System = (state, events, _accumulatedMutations
 
       // Check if main action available
       if (actionEconomy && actionEconomy.mainActionsAvailable <= 0) {
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         errors.push(
           DomainError.make({
             systemName: SystemName.make("ActionEconomy"),
@@ -76,6 +78,7 @@ export const actionEconomySystem: System = (state, events, _accumulatedMutations
         continue
       }
 
+      // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
       mutations.push(
         UseActionMutation.make({
           entityId,
@@ -105,6 +108,7 @@ export const actionEconomySystem: System = (state, events, _accumulatedMutations
         conditions
         && (hasCondition(conditions.conditions, "Grappled") || hasCondition(conditions.conditions, "Restrained"))
       ) {
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         errors.push(
           DomainError.make({
             systemName: SystemName.make("ActionEconomy"),
@@ -116,6 +120,7 @@ export const actionEconomySystem: System = (state, events, _accumulatedMutations
 
       // Check if movement action available
       if (actionEconomy && actionEconomy.movementActionsAvailable <= 0) {
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         errors.push(
           DomainError.make({
             systemName: SystemName.make("ActionEconomy"),
@@ -125,6 +130,7 @@ export const actionEconomySystem: System = (state, events, _accumulatedMutations
         continue
       }
 
+      // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
       mutations.push(
         UseActionMutation.make({
           entityId: moveEvent.entityId,

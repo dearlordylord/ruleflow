@@ -22,6 +22,7 @@ export const defenseStanceSystem: System = (state, events, _accumulatedMutations
     )
 
     for (const defenseEvent of defenseEvents) {
+      // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
       mutations.push(
         SetDefenseStanceMutation.make({
           entityId: defenseEvent.entityId,
@@ -47,6 +48,7 @@ export const defenseStanceSystem: System = (state, events, _accumulatedMutations
 
       const defenseStance = getComponent(entity, "DefenseStance")
       if (defenseStance?.active && defenseStance.expiresOnTurnOf === turnStart.entityId) {
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         mutations.push(
           SetDefenseStanceMutation.make({
             entityId: turnStart.entityId,

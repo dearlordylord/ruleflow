@@ -28,6 +28,7 @@ export const declarationPhaseSystem: System = (state, events, _accumulatedMutati
     )
 
     for (const mysteryEvent of mysteryCastEvents) {
+      // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
       mutations.push(
         // Mark caster as vulnerable until their turn
         AddConditionMutation.make({
@@ -61,6 +62,7 @@ export const declarationPhaseSystem: System = (state, events, _accumulatedMutati
 
     for (const retreatEvent of retreatEvents) {
       // Mark retreater as vulnerable until their turn
+      // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
       mutations.push(
         AddConditionMutation.make({
           entityId: retreatEvent.entityId,

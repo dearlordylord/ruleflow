@@ -39,12 +39,14 @@ export const criticalEffectsSystem: System = (state, events, _accumulatedMutatio
         // For now, just emit ArmorDamaged event without mutation
         // Armor/shield durability tracking needs equipment system integration
 
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         mutations.push() // Placeholder: would need to find equipped armor/shield
         // DamageEquipmentMutation for shield or armor
       }
 
       // Natural 1: damage weapon
       if (attack.attackRoll === 1) {
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         mutations.push(
           // Weapon durability damage
           DamageEquipmentMutation.make({

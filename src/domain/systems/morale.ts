@@ -31,6 +31,7 @@ export const moraleSystem: System = (state, events, _accumulatedMutations) =>
     const mutations: Array<typeof SetMoraleResultMutation.Type> = []
 
     for (const moraleEvent of moraleEvents) {
+      // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
       mutations.push(
         SetMoraleResultMutation.make({
           entityId: moraleEvent.entityId,

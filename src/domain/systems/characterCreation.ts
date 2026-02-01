@@ -86,6 +86,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
       switch (event._tag) {
         case "CharacterCreationStarted": {
           const e = event as CharacterCreationStarted
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             SetMultipleComponentsMutation.make({
               entityId: e.entityId,
@@ -116,6 +117,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
         case "AttributesRolled": {
           const e = event as AttributesRolled
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
               entityId: e.entityId,
@@ -137,6 +139,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
         case "ClassChosen": {
           const e = event as ClassChosen
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
               entityId: e.entityId,
@@ -151,6 +154,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
         case "SkillsChosen": {
           const e = event as SkillsChosen
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
               entityId: e.entityId,
@@ -168,6 +172,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
         case "TraitChosen": {
           const e = event as TraitChosen
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
               entityId: e.entityId,
@@ -183,6 +188,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         case "HitPointsRolled": {
           const e = event as HitPointsRolled
           const total = Math.max(1, e.rolledValue + e.constitutionModifier)
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
               entityId: e.entityId,
@@ -201,6 +207,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
         case "StartingMoneyRolled": {
           const e = event as StartingMoneyRolled
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
               entityId: e.entityId,
@@ -232,6 +239,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
             break
           }
 
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
               entityId: e.entityId,
@@ -247,6 +255,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
         case "LanguagesChosen": {
           const e = event as LanguagesChosen
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
               entityId: e.entityId,
@@ -261,6 +270,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
         case "AlignmentChosen": {
           const e = event as AlignmentChosen
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
               entityId: e.entityId,
@@ -275,6 +285,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
         case "NameChosen": {
           const e = event as NameChosen
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
               entityId: e.entityId,
@@ -289,6 +300,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
         case "MysteriesChosen": {
           const e = event as MysteriesChosen
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
               entityId: e.entityId,
@@ -351,6 +363,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
           }
 
           const components = buildFinalCharacterComponents(creation)
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             SetMultipleComponentsMutation.make({
               entityId: e.entityId,
@@ -375,6 +388,7 @@ function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Ar
   const components: Array<Component> = []
 
   // 1. Attributes
+  // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
   components.push(
     AttributesComponent.make({
       strength: attrs.strength,
@@ -387,6 +401,7 @@ function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Ar
   )
 
   // 2. Class
+  // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
   components.push(
     ClassComponent.make({
       class: creation.class,
@@ -395,12 +410,15 @@ function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Ar
   )
 
   // 3. Skills
+  // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
   components.push(buildSkillsComponent(creation.skills, level))
 
   // 4. Saving Throws
+  // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
   components.push(buildSavingThrowsComponent(level))
 
   // 5. Traits
+  // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
   components.push(
     TraitsComponent.make({
       activeTrait: creation.trait ? [creation.trait] : [],
@@ -409,6 +427,7 @@ function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Ar
   )
 
   // 6. Health
+  // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
   components.push(
     HealthComponent.make({
       current: creation.hitPoints.total,
@@ -419,6 +438,7 @@ function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Ar
   )
 
   // 7. Currency (remaining money)
+  // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
   components.push(
     CurrencyComponent.make({
       copper: 0,
@@ -429,6 +449,7 @@ function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Ar
   )
 
   // 8. Inventory
+  // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
   components.push(
     InventoryComponent.make({
       items: creation.purchasedItems,
@@ -438,6 +459,7 @@ function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Ar
   )
 
   // 9. Experience
+  // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
   components.push(
     ExperienceComponent.make({
       currentXP: 0,
@@ -453,6 +475,7 @@ function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Ar
     attrs.will,
     creation.mysteries
   )
+  // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
   components.push(...classComponents)
 
   return components
@@ -527,6 +550,7 @@ function buildClassSpecificComponents(
       // Combat Superiority starts at level 2
       if (level >= 2) {
         const extraAttacks = calculateCombatSuperiorityExtraAttacks(level)
+        // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
         components.push(
           CombatSuperiorityComponent.make({
             extraAttacksPerRound: extraAttacks,
@@ -540,6 +564,7 @@ function buildClassSpecificComponents(
     case "Specialist":
       // Sneak Attack
       const sneakDice = calculateSneakAttackDice(level)
+      // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
       components.push(
         SneakAttackComponent.make({
           extraDamageDice: sneakDice
@@ -549,6 +574,7 @@ function buildClassSpecificComponents(
       // Lucky Skill
       const recoveryDie = calculateLuckySkillRecoveryDie(level)
       const maxPoints = 5 + level
+      // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
       components.push(
         LuckySkillComponent.make({
           maxPoints,
@@ -560,6 +586,7 @@ function buildClassSpecificComponents(
 
     case "Mystic":
       // Forbidden Knowledge
+      // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
       components.push(
         ForbiddenKnowledgeComponent.make({
           identificationBonus: 0,
@@ -569,6 +596,7 @@ function buildClassSpecificComponents(
 
       // Known Mysteries
       const maxTier = calculateMaxMysteryTier(level)
+      // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
       components.push(
         KnownMysteriesComponent.make({
           knownMysteries: Array.from(mysteries || []),
@@ -579,6 +607,7 @@ function buildClassSpecificComponents(
       // Concentration
       const willMod = Math.floor((will - 10) / 2)
       const maxCP = calculateMaxConcentrationPoints(level, willMod)
+      // eslint-disable-next-line functional/immutable-data -- local mutation within function, returned as immutable array
       components.push(
         ConcentrationComponent.make({
           maxPoints: maxCP,

@@ -45,6 +45,7 @@ export const turnManagementSystem: System = (state, events, _accumulatedMutation
 
       // Remove Vulnerable at start of entity's turn (if it was from first turn/declaration)
       if (conditions && hasCondition(conditions.conditions, "Vulnerable")) {
+        // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
         mutations.push(
           RemoveConditionMutation.make({
             entityId: turnStart.entityId,
@@ -54,6 +55,7 @@ export const turnManagementSystem: System = (state, events, _accumulatedMutation
       }
 
       // Reset action economy
+      // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
       mutations.push(
         ResetActionEconomyMutation.make({
           entityId: turnStart.entityId

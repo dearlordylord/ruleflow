@@ -29,6 +29,7 @@ export const readyActionSystem: System = (state, events, _accumulatedMutations) 
     )
 
     for (const readyEvent of readyEvents) {
+      // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
       mutations.push(
         SetReadyActionMutation.make({
           entityId: readyEvent.entityId,
