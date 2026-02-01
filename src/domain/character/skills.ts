@@ -1,5 +1,5 @@
 /**
- * Skills System - All 14 OSR skills with progression
+ * Skills System - All 15 OSR skills with progression
  */
 import { Schema } from "effect"
 
@@ -33,7 +33,7 @@ export class Skill extends Schema.Class<Skill>("Skill")({
 }) {}
 
 /**
- * All 14 skills attached to a character
+ * All 15 skills attached to a character
  */
 export class SkillsComponent extends Schema.TaggedClass<SkillsComponent>()("Skills", {
   // Physical Skills (Strength)
@@ -48,6 +48,7 @@ export class SkillsComponent extends Schema.TaggedClass<SkillsComponent>()("Skil
 
   // Mental Skills (Intelligence)
   alchemy: Skill, // Alchemy - substance/compound knowledge
+  craft: Skill, // Craft - creating/repairing objects, artisan work
   knowledge: Skill, // Knowledge - languages, ancient texts, ciphers, history, mythology
   medicine: Skill, // Medicine - wound treatment, poisoning, disease, anatomy
 

@@ -17,3 +17,16 @@ Topics: quick-start, project-setup, tsconfig, basics, services-and-layers, data-
 
 Never guess at Effect patterns - check the guide first.
 <!-- effect-solutions:end -->
+
+## Domain Events
+
+**Domain events = observable in-game actions with business/rules significance.**
+
+They represent what players/NPCs **do** in the game world, NOT infrastructure operations.
+
+Examples:
+- ✅ `AttackPerformed`, `CurrencyTransferred`, `MysteryCast` - game actions
+- ❌ `EntityCreated`, `ComponentSet`, `AttributesSet` - setup/infrastructure
+
+**Rule:** If you can say "When [EVENT] happens, the [SYSTEM] should..." → It's a domain event.
+If you need words like "setup" or "initialize" to explain it → It's infrastructure, not an event.
