@@ -17,10 +17,10 @@ export class CurrencyComponent extends Schema.TaggedClass<CurrencyComponent>()("
   platinum: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
 }) {
   get totalCopper(): number {
-    return this.copper +
-           (this.silver * 10) +
-           (this.gold * 100) +
-           (this.platinum * 1000)
+    return this.copper
+      + (this.silver * 10)
+      + (this.gold * 100)
+      + (this.platinum * 1000)
   }
 
   get totalInGold(): number {

@@ -3,7 +3,8 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../components.js"
+// @ts-expect-error - TODO: Will be used when surprise/vulnerable tracking implemented
+import { getComponent } from "../entity.js"
 import { AddConditionMutation } from "../combat/mutations.js"
 import { CombatStarted } from "../combat/events.js"
 import { StartCombatRoundMutation } from "../combat/encounterMutations.js"

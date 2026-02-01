@@ -139,3 +139,36 @@ export class ConsumeAmmunitionMutation extends Schema.TaggedClass<ConsumeAmmunit
     quantity: Schema.Int.pipe(Schema.greaterThan(0))
   }
 ) {}
+
+export class UnequipArmorMutation extends Schema.TaggedClass<UnequipArmorMutation>()(
+  "UnequipArmor",
+  {
+    entityId: EntityId
+  }
+) {}
+
+export class UnequipShieldMutation extends Schema.TaggedClass<UnequipShieldMutation>()(
+  "UnequipShield",
+  {
+    entityId: EntityId
+  }
+) {}
+
+export class RepairEquipmentMutation extends Schema.TaggedClass<RepairEquipmentMutation>()(
+  "RepairEquipment",
+  {
+    equipmentId: EntityId,
+    durabilityRestored: Schema.Int.pipe(Schema.greaterThan(0))
+  }
+) {}
+
+export class UpdateCombatStatsMutation extends Schema.TaggedClass<UpdateCombatStatsMutation>()(
+  "UpdateCombatStats",
+  {
+    entityId: EntityId,
+    armorClass: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
+    meleeAttackBonus: Schema.Int,
+    rangedAttackBonus: Schema.Int,
+    initiativeModifier: Schema.Int
+  }
+) {}

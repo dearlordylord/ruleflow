@@ -9,10 +9,23 @@ import { GameState } from "../infrastructure/GameState.js"
 import type { Mutation } from "../mutations.js"
 import type { System } from "./types.js"
 
+export { characterCreationSystem } from "./characterCreation.js"
 export { combatToHitSystem, traumaSystem } from "./combat.js"
 export { currencyTransferSystem } from "./currency.js"
+export { durabilitySystem } from "./durability.js"
 export { attributeModifierSystem, encumbranceValidationSystem } from "./encumbrance.js"
-export { characterCreationSystem } from "./characterCreation.js"
+export { equipmentSystem } from "./equipment.js"
+export { itemPurchaseSystem } from "./itemPurchase.js"
+export {
+  containerDiscoverySystem,
+  containerLockDiscoverySystem,
+  containerSearchSystem,
+  corpseCreationSystem,
+  itemDiscoverySystem,
+  itemDropSystem,
+  itemLootingSystem,
+  lootDistributionSystem
+} from "./looting.js"
 export type { System } from "./types.js"
 
 // Combat encounter systems

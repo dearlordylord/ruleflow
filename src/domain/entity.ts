@@ -5,69 +5,11 @@ import { Schema } from "effect"
 
 import * as Character from "./character/index.js"
 import * as Combat from "./combat/index.js"
+import { EntityId } from "./entities.js"
 import * as Inventory from "./inventory/index.js"
 import * as Mysticism from "./mysticism/index.js"
 import * as NPC from "./npc/index.js"
 import * as World from "./world/index.js"
-import { EntityId } from "./entities.js"
-
-/**
- * Union of all possible components across all domains
- */
-export const Component = Schema.Union(
-  // Character domain
-  Character.AttributesComponent,
-  Character.HealthComponent,
-  Character.TraumaStateComponent,
-  Character.ClassComponent,
-  Character.CombatSuperiorityComponent,
-  Character.SneakAttackComponent,
-  Character.LuckySkillComponent,
-  Character.ForbiddenKnowledgeComponent,
-  Character.SkillsComponent,
-  Character.TraitsComponent,
-  Character.SavingThrowsComponent,
-  Character.ExperienceComponent,
-  Character.TraitProgressionComponent,
-  Character.CharacterCreationComponent,
-
-  // Combat domain
-  Combat.CombatStatsComponent,
-  Combat.WeaponComponent,
-  Combat.WeaponSpecializationComponent,
-  Combat.EquippedWeaponsComponent,
-  Combat.ArmorComponent,
-  Combat.ShieldComponent,
-  Combat.ConditionsComponent,
-  Combat.GrappleStateComponent,
-  Combat.InitiativeComponent,
-  Combat.ActionEconomyComponent,
-  Combat.AmmunitionComponent,
-  Combat.ReloadStateComponent,
-
-  // Inventory domain
-  Inventory.ItemComponent,
-  Inventory.InventoryComponent,
-  Inventory.CurrencyComponent,
-  Inventory.ConsumableComponent,
-
-  // Mysticism domain
-  Mysticism.KnownMysteriesComponent,
-  Mysticism.ConcentrationComponent,
-  Mysticism.ArtifactComponent,
-
-  // NPC domain
-  NPC.MoraleComponent,
-  NPC.ReactionComponent,
-  NPC.LoyaltyComponent,
-
-  // World domain
-  World.MovementComponent,
-  World.PositionComponent,
-  World.LightSourceComponent,
-  World.VisionComponent
-)
-export type Component = typeof Component.Type
 
 /**
  * Component tag for type-safe lookups
@@ -88,12 +30,12 @@ export const ComponentTag = Schema.Literal(
   "Experience",
   "TraitProgression",
   "CharacterCreation",
-
   // Combat
   "CombatStats",
   "Weapon",
   "WeaponSpecialization",
   "EquippedWeapons",
+  "EquippedArmor",
   "Armor",
   "Shield",
   "Conditions",
@@ -102,23 +44,28 @@ export const ComponentTag = Schema.Literal(
   "ActionEconomy",
   "Ammunition",
   "ReloadState",
-
+  // Combat Encounter
+  "CombatEncounter",
+  "Distance",
+  "ReadyAction",
+  "DefenseStance",
+  "MysteryCasting",
   // Inventory
   "Item",
   "Inventory",
   "Currency",
   "Consumable",
-
+  "Corpse",
+  "Container",
+  "DroppedItem",
   // Mysticism
   "KnownMysteries",
   "Concentration",
   "Artifact",
-
   // NPC
   "Morale",
   "Reaction",
   "Loyalty",
-
   // World
   "Movement",
   "Position",
@@ -126,6 +73,69 @@ export const ComponentTag = Schema.Literal(
   "Vision"
 )
 export type ComponentTag = typeof ComponentTag.Type
+
+/**
+ * Union of all possible components across all domains
+ */
+export const Component = Schema.Union(
+  // Character domain
+  Character.AttributesComponent,
+  Character.HealthComponent,
+  Character.TraumaStateComponent,
+  Character.ClassComponent,
+  Character.CombatSuperiorityComponent,
+  Character.SneakAttackComponent,
+  Character.LuckySkillComponent,
+  Character.ForbiddenKnowledgeComponent,
+  Character.SkillsComponent,
+  Character.TraitsComponent,
+  Character.SavingThrowsComponent,
+  Character.ExperienceComponent,
+  Character.TraitProgressionComponent,
+  Character.CharacterCreationComponent,
+  // Combat domain
+  Combat.CombatStatsComponent,
+  Combat.WeaponComponent,
+  Combat.WeaponSpecializationComponent,
+  Combat.EquippedWeaponsComponent,
+  Combat.EquippedArmorComponent,
+  Combat.ArmorComponent,
+  Combat.ShieldComponent,
+  Combat.ConditionsComponent,
+  Combat.GrappleStateComponent,
+  Combat.InitiativeComponent,
+  Combat.ActionEconomyComponent,
+  Combat.AmmunitionComponent,
+  Combat.ReloadStateComponent,
+  // Combat Encounter domain
+  Combat.CombatEncounterComponent,
+  Combat.DistanceComponent,
+  Combat.ReadyActionComponent,
+  Combat.DefenseStanceComponent,
+  Combat.MysteryCastingComponent,
+  // Inventory domain
+  Inventory.ItemComponent,
+  Inventory.InventoryComponent,
+  Inventory.CurrencyComponent,
+  Inventory.ConsumableComponent,
+  Inventory.CorpseComponent,
+  Inventory.ContainerComponent,
+  Inventory.DroppedItemComponent,
+  // Mysticism domain
+  Mysticism.KnownMysteriesComponent,
+  Mysticism.ConcentrationComponent,
+  Mysticism.ArtifactComponent,
+  // NPC domain
+  NPC.MoraleComponent,
+  NPC.ReactionComponent,
+  NPC.LoyaltyComponent,
+  // World domain
+  World.MovementComponent,
+  World.PositionComponent,
+  World.LightSourceComponent,
+  World.VisionComponent
+)
+export type Component = typeof Component.Type
 
 /**
  * Entity class with component array
@@ -182,13 +192,4 @@ export function removeComponent<T extends ComponentTag>(
   })
 }
 
-/**
- * Helper: Remove all components by tag (returns new entity)
- */
-export class RemoveComponentMutation extends Schema.TaggedClass<RemoveComponentMutation>()(
-  "RemoveComponent",
-  {
-    entityId: EntityId,
-    componentTag: ComponentTag
-  }
-) {}
+// RemoveComponentMutation is in mutations.ts

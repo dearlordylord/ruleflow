@@ -4,23 +4,16 @@
 import { describe, expect, it } from "@effect/vitest"
 import { Chunk, Effect, Schema } from "effect"
 
-import {
-  AttributesComponent,
-  CombatStatsComponent,
-  CurrencyComponent,
-  DiceNotation,
-  Entity,
-  getComponent,
-  HealthComponent,
-  WeaponComponent
-} from "../src/domain/components.js"
+import { AttributesComponent, HealthComponent } from "../src/domain/character/index.js"
+import { CombatStatsComponent, DiceNotation, WeaponComponent } from "../src/domain/combat/index.js"
 import { EntityId } from "../src/domain/entities.js"
-import { AttackPerformed } from "../src/domain/combat/events.js"
-import { CurrencyTransferred } from "../src/domain/events.js"
+import { Entity, getComponent } from "../src/domain/entity.js"
+import { AttackPerformed, CurrencyTransferred } from "../src/domain/events.js"
 import { Committer } from "../src/domain/infrastructure/Committer.js"
 import { GameState } from "../src/domain/infrastructure/GameState.js"
 import { ReadModelStore } from "../src/domain/infrastructure/ReadModelStore.js"
 import { Replayer } from "../src/domain/infrastructure/Replayer.js"
+import { CurrencyComponent } from "../src/domain/inventory/index.js"
 import { IdGenerator } from "../src/domain/services/IdGenerator.js"
 import { combatToHitSystem, currencyTransferSystem, runSystemsPipeline } from "../src/domain/systems/index.js"
 import { deterministicTestLayer } from "./layers.js"
@@ -51,7 +44,8 @@ describe("Event Replay", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 2,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -71,7 +65,8 @@ describe("Event Replay", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 0,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -85,8 +80,16 @@ describe("Event Replay", () => {
             WeaponComponent.make({
               name: "Longsword",
               damageDice: Schema.decodeSync(DiceNotation)("1d8"),
+              damageType: ["Slashing"],
               weaponGroup: "Blades",
-              traits: []
+              size: "Medium",
+              traits: [],
+              reach: 5,
+              rangeClose: null,
+              rangeMedium: null,
+              rangeLong: null,
+              durability: 10,
+              maxDurability: 10
             })
           ]
         })
@@ -97,7 +100,8 @@ describe("Event Replay", () => {
         attackerId,
         targetId,
         weaponId,
-        attackRoll: 15
+        attackRoll: 15,
+        isCritical: false
       })
 
       const mutations = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attackEvent))
@@ -126,7 +130,8 @@ describe("Event Replay", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 2,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -144,7 +149,8 @@ describe("Event Replay", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 0,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -156,8 +162,16 @@ describe("Event Replay", () => {
             WeaponComponent.make({
               name: "Longsword",
               damageDice: Schema.decodeSync(DiceNotation)("1d8"),
+              damageType: ["Slashing"],
               weaponGroup: "Blades",
-              traits: []
+              size: "Medium",
+              traits: [],
+              reach: 5,
+              rangeClose: null,
+              rangeMedium: null,
+              rangeLong: null,
+              durability: 10,
+              maxDurability: 10
             })
           ]
         })
@@ -169,7 +183,7 @@ describe("Event Replay", () => {
       const healthAfterReplay = getComponent(targetAfterReplay, "Health")
 
       expect(healthAfterReplay?.current).toBe(healthAfterCommit?.current)
-    }).pipe(Effect.provide(deterministicTestLayer([5, 5])))  // Damage rolls for commit + replay
+    }).pipe(Effect.provide(deterministicTestLayer([5, 5]))) // Damage rolls for commit + replay
   )
 
   it.effect("replays currency transfer event atomically", () =>
@@ -189,7 +203,8 @@ describe("Event Replay", () => {
             CurrencyComponent.make({
               copper: 100,
               silver: 50,
-              gold: 10
+              gold: 10,
+              platinum: 0
             })
           ]
         })
@@ -203,7 +218,8 @@ describe("Event Replay", () => {
             CurrencyComponent.make({
               copper: 0,
               silver: 0,
-              gold: 0
+              gold: 0,
+              platinum: 0
             })
           ]
         })
@@ -215,7 +231,8 @@ describe("Event Replay", () => {
         toEntityId: toId,
         copper: 50,
         silver: 25,
-        gold: 5
+        gold: 5,
+        platinum: 0
       })
 
       const mutations = yield* runSystemsPipeline([currencyTransferSystem], Chunk.of(transferEvent))
@@ -244,7 +261,8 @@ describe("Event Replay", () => {
             CurrencyComponent.make({
               copper: 100,
               silver: 50,
-              gold: 10
+              gold: 10,
+              platinum: 0
             })
           ]
         })
@@ -256,7 +274,8 @@ describe("Event Replay", () => {
             CurrencyComponent.make({
               copper: 0,
               silver: 0,
-              gold: 0
+              gold: 0,
+              platinum: 0
             })
           ]
         })
@@ -276,8 +295,7 @@ describe("Event Replay", () => {
       expect(toCurrencyAfterReplay?.copper).toBe(toCurrencyAfterCommit?.copper)
       expect(toCurrencyAfterReplay?.silver).toBe(toCurrencyAfterCommit?.silver)
       expect(toCurrencyAfterReplay?.gold).toBe(toCurrencyAfterCommit?.gold)
-    }).pipe(Effect.provide(deterministicTestLayer([])))
-  )
+    }).pipe(Effect.provide(deterministicTestLayer([]))))
 
   it.effect("replays multiple events in sequence", () =>
     Effect.gen(function*() {
@@ -304,7 +322,8 @@ describe("Event Replay", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 2,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -324,7 +343,8 @@ describe("Event Replay", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 0,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -338,8 +358,16 @@ describe("Event Replay", () => {
             WeaponComponent.make({
               name: "Longsword",
               damageDice: Schema.decodeSync(DiceNotation)("1d8"),
+              damageType: ["Slashing"],
               weaponGroup: "Blades",
-              traits: []
+              size: "Medium",
+              traits: [],
+              reach: 5,
+              rangeClose: null,
+              rangeMedium: null,
+              rangeLong: null,
+              durability: 10,
+              maxDurability: 10
             })
           ]
         })
@@ -350,7 +378,8 @@ describe("Event Replay", () => {
         attackerId,
         targetId,
         weaponId,
-        attackRoll: 15
+        attackRoll: 15,
+        isCritical: false
       })
       const mutations1 = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attack1))
       const entry1 = yield* committer.commit(attack1, mutations1)
@@ -359,7 +388,8 @@ describe("Event Replay", () => {
         attackerId,
         targetId,
         weaponId,
-        attackRoll: 18
+        attackRoll: 18,
+        isCritical: false
       })
       const mutations2 = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attack2))
       const entry2 = yield* committer.commit(attack2, mutations2)
@@ -385,7 +415,8 @@ describe("Event Replay", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 2,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -403,7 +434,8 @@ describe("Event Replay", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 0,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -415,8 +447,16 @@ describe("Event Replay", () => {
             WeaponComponent.make({
               name: "Longsword",
               damageDice: Schema.decodeSync(DiceNotation)("1d8"),
+              damageType: ["Slashing"],
               weaponGroup: "Blades",
-              traits: []
+              size: "Medium",
+              traits: [],
+              reach: 5,
+              rangeClose: null,
+              rangeMedium: null,
+              rangeLong: null,
+              durability: 10,
+              maxDurability: 10
             })
           ]
         })
@@ -429,6 +469,6 @@ describe("Event Replay", () => {
       const healthReplayed = getComponent(targetReplayed, "Health")
 
       expect(healthReplayed?.current).toBe(healthFinal?.current)
-    }).pipe(Effect.provide(deterministicTestLayer([5, 6, 5, 6])))  // Damage rolls for 2 attacks * 2 (commit + replay)
+    }).pipe(Effect.provide(deterministicTestLayer([5, 6, 5, 6]))) // Damage rolls for 2 attacks * 2 (commit + replay)
   )
 })

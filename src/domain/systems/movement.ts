@@ -3,7 +3,7 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../components.js"
+import { getComponent } from "../entity.js"
 import { MovementPerformed } from "../combat/encounterEvents.js"
 import type { Mutation } from "../mutations.js"
 import { SystemName } from "../entities.js"

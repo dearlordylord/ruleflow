@@ -96,13 +96,15 @@ export class WeaponComponent extends Schema.TaggedClass<WeaponComponent>()("Weap
 /**
  * Weapon Specialization tracking (Fighter class)
  */
-export class WeaponSpecializationComponent extends Schema.TaggedClass<WeaponSpecializationComponent>()("WeaponSpecialization", {
-  // Map weapon group to damage bonus (+1 per specialization level)
-  specializations: Schema.HashMap({
-    key: WeaponGroup,
-    value: Schema.Int.pipe(Schema.greaterThan(0))
+export class WeaponSpecializationComponent
+  extends Schema.TaggedClass<WeaponSpecializationComponent>()("WeaponSpecialization", {
+    // Map weapon group to damage bonus (+1 per specialization level)
+    specializations: Schema.HashMap({
+      key: WeaponGroup,
+      value: Schema.Int.pipe(Schema.greaterThan(0))
+    })
   })
-}) {}
+{}
 
 /**
  * Equipped weapon tracking
@@ -122,114 +124,114 @@ export const WEAPON_DEFINITIONS = {
   // AXES
   "Battle Axe": {
     damageDice: "1d8" as DiceNotation,
-    damageType: ["Slashing"] as DamageType[],
+    damageType: ["Slashing"] as Array<DamageType>,
     weaponGroup: "Axes" as WeaponGroup,
     size: "Medium" as WeaponSize,
-    traits: ["Versatile"] as WeaponTrait[]
+    traits: ["Versatile"] as Array<WeaponTrait>
   },
   "Hand Axe": {
     damageDice: "1d6" as DiceNotation,
-    damageType: ["Slashing"] as DamageType[],
+    damageType: ["Slashing"] as Array<DamageType>,
     weaponGroup: "Axes" as WeaponGroup,
     size: "Small" as WeaponSize,
-    traits: ["Light", "Thrown"] as WeaponTrait[]
+    traits: ["Light", "Thrown"] as Array<WeaponTrait>
   },
   Greataxe: {
     damageDice: "1d10" as DiceNotation,
-    damageType: ["Slashing"] as DamageType[],
+    damageType: ["Slashing"] as Array<DamageType>,
     weaponGroup: "Axes" as WeaponGroup,
     size: "Large" as WeaponSize,
-    traits: ["TwoHanded"] as WeaponTrait[]
+    traits: ["TwoHanded"] as Array<WeaponTrait>
   },
 
   // CLUBS
   Club: {
     damageDice: "1d4" as DiceNotation,
-    damageType: ["Crushing"] as DamageType[],
+    damageType: ["Crushing"] as Array<DamageType>,
     weaponGroup: "Clubs" as WeaponGroup,
     size: "Small" as WeaponSize,
-    traits: ["Light"] as WeaponTrait[]
+    traits: ["Light"] as Array<WeaponTrait>
   },
   Mace: {
     damageDice: "1d8" as DiceNotation,
-    damageType: ["Crushing"] as DamageType[],
+    damageType: ["Crushing"] as Array<DamageType>,
     weaponGroup: "Clubs" as WeaponGroup,
     size: "Medium" as WeaponSize,
-    traits: [] as WeaponTrait[]
+    traits: [] as Array<WeaponTrait>
   },
 
   // BLADES (LIGHT)
   Dagger: {
     damageDice: "1d4" as DiceNotation,
-    damageType: ["Piercing", "Slashing"] as DamageType[],
+    damageType: ["Piercing", "Slashing"] as Array<DamageType>,
     weaponGroup: "Blades" as WeaponGroup,
     size: "Miniature" as WeaponSize,
-    traits: ["Light", "Finesse", "Thrown"] as WeaponTrait[]
+    traits: ["Light", "Finesse", "Thrown"] as Array<WeaponTrait>
   },
   "Short Sword": {
     damageDice: "1d6" as DiceNotation,
-    damageType: ["Piercing", "Slashing"] as DamageType[],
+    damageType: ["Piercing", "Slashing"] as Array<DamageType>,
     weaponGroup: "Blades" as WeaponGroup,
     size: "Small" as WeaponSize,
-    traits: ["Light", "Finesse"] as WeaponTrait[]
+    traits: ["Light", "Finesse"] as Array<WeaponTrait>
   },
 
   // BLADES (HEAVY)
   Longsword: {
     damageDice: "1d8" as DiceNotation,
-    damageType: ["Slashing"] as DamageType[],
+    damageType: ["Slashing"] as Array<DamageType>,
     weaponGroup: "HeavyBlades" as WeaponGroup,
     size: "Medium" as WeaponSize,
-    traits: ["Versatile"] as WeaponTrait[]
+    traits: ["Versatile"] as Array<WeaponTrait>
   },
   Greatsword: {
     damageDice: "1d10" as DiceNotation,
-    damageType: ["Slashing"] as DamageType[],
+    damageType: ["Slashing"] as Array<DamageType>,
     weaponGroup: "HeavyBlades" as WeaponGroup,
     size: "Large" as WeaponSize,
-    traits: ["TwoHanded"] as WeaponTrait[]
+    traits: ["TwoHanded"] as Array<WeaponTrait>
   },
 
   // POLEARMS
   Spear: {
     damageDice: "1d8" as DiceNotation,
-    damageType: ["Piercing"] as DamageType[],
+    damageType: ["Piercing"] as Array<DamageType>,
     weaponGroup: "Polearms" as WeaponGroup,
     size: "Medium" as WeaponSize,
-    traits: ["Versatile", "Thrown", "BraceForCharge"] as WeaponTrait[]
+    traits: ["Versatile", "Thrown", "BraceForCharge"] as Array<WeaponTrait>
   },
   Halberd: {
     damageDice: "1d10" as DiceNotation,
-    damageType: ["Slashing", "Piercing"] as DamageType[],
+    damageType: ["Slashing", "Piercing"] as Array<DamageType>,
     weaponGroup: "Polearms" as WeaponGroup,
     size: "Large" as WeaponSize,
-    traits: ["TwoHanded", "Reach", "Trip", "BraceForCharge"] as WeaponTrait[]
+    traits: ["TwoHanded", "Reach", "Trip", "BraceForCharge"] as Array<WeaponTrait>
   },
   Glaive: {
     damageDice: "1d10" as DiceNotation,
-    damageType: ["Slashing"] as DamageType[],
+    damageType: ["Slashing"] as Array<DamageType>,
     weaponGroup: "Polearms" as WeaponGroup,
     size: "Large" as WeaponSize,
-    traits: ["TwoHanded", "Reach"] as WeaponTrait[]
+    traits: ["TwoHanded", "Reach"] as Array<WeaponTrait>
   },
 
   // BOWS
   "Short Bow": {
     damageDice: "1d6" as DiceNotation,
-    damageType: ["Piercing"] as DamageType[],
+    damageType: ["Piercing"] as Array<DamageType>,
     weaponGroup: "Bows" as WeaponGroup,
     size: "Medium" as WeaponSize,
-    traits: ["TwoHanded", "Ammunition"] as WeaponTrait[],
+    traits: ["TwoHanded", "Ammunition"] as Array<WeaponTrait>,
     rangeClose: 50,
     rangeMedium: 150,
     rangeLong: 300
   },
   Longbow: {
     damageDice: "1d6" as DiceNotation,
-    damageType: ["Piercing"] as DamageType[],
+    damageType: ["Piercing"] as Array<DamageType>,
     weaponGroup: "Bows" as WeaponGroup,
     size: "Large" as WeaponSize,
-    traits: ["TwoHanded", "Ammunition"] as WeaponTrait[],
+    traits: ["TwoHanded", "Ammunition"] as Array<WeaponTrait>,
     rangeClose: 50,
     rangeMedium: 400,
     rangeLong: 800
@@ -238,20 +240,20 @@ export const WEAPON_DEFINITIONS = {
   // CROSSBOWS
   "Light Crossbow": {
     damageDice: "1d6" as DiceNotation,
-    damageType: ["Piercing"] as DamageType[],
+    damageType: ["Piercing"] as Array<DamageType>,
     weaponGroup: "Crossbows" as WeaponGroup,
     size: "Medium" as WeaponSize,
-    traits: ["TwoHanded", "Ammunition", "Loading"] as WeaponTrait[],
+    traits: ["TwoHanded", "Ammunition", "Loading"] as Array<WeaponTrait>,
     rangeClose: 50,
     rangeMedium: 200,
     rangeLong: 400
   },
   "Heavy Crossbow": {
     damageDice: "1d8" as DiceNotation,
-    damageType: ["Piercing"] as DamageType[],
+    damageType: ["Piercing"] as Array<DamageType>,
     weaponGroup: "Crossbows" as WeaponGroup,
     size: "Large" as WeaponSize,
-    traits: ["TwoHanded", "Ammunition", "Loading"] as WeaponTrait[],
+    traits: ["TwoHanded", "Ammunition", "Loading"] as Array<WeaponTrait>,
     rangeClose: 50,
     rangeMedium: 300,
     rangeLong: 600
@@ -260,20 +262,20 @@ export const WEAPON_DEFINITIONS = {
   // FIREARMS
   Arquebus: {
     damageDice: "1d10" as DiceNotation,
-    damageType: ["Piercing"] as DamageType[],
+    damageType: ["Piercing"] as Array<DamageType>,
     weaponGroup: "Firearms" as WeaponGroup,
     size: "Large" as WeaponSize,
-    traits: ["TwoHanded", "Ammunition", "Loading", "MisfireRisk"] as WeaponTrait[],
+    traits: ["TwoHanded", "Ammunition", "Loading", "MisfireRisk"] as Array<WeaponTrait>,
     rangeClose: 50,
     rangeMedium: 200,
     rangeLong: 400
   },
   Pistol: {
     damageDice: "1d8" as DiceNotation,
-    damageType: ["Piercing"] as DamageType[],
+    damageType: ["Piercing"] as Array<DamageType>,
     weaponGroup: "Firearms" as WeaponGroup,
     size: "Small" as WeaponSize,
-    traits: ["Ammunition", "Loading", "MisfireRisk"] as WeaponTrait[],
+    traits: ["Ammunition", "Loading", "MisfireRisk"] as Array<WeaponTrait>,
     rangeClose: 25,
     rangeMedium: 50,
     rangeLong: 100

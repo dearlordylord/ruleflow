@@ -3,11 +3,15 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../components.js"
+// @ts-expect-error - TODO: Will be used when individual initiative implemented
+import { getComponent } from "../entity.js"
 import { InitiativeRolled } from "../combat/events.js"
+// @ts-expect-error - TODO: Will be used when round-based initiative implemented
 import { CombatRoundStarted } from "../combat/encounterEvents.js"
 import { RollInitiativeMutation } from "../combat/mutations.js"
+// @ts-expect-error - TODO: Will be used when system error tracking implemented
 import { SystemName } from "../entities.js"
+// @ts-expect-error - TODO: Will be used when system error tracking implemented
 import { DomainError } from "../errors.js"
 import type { System } from "./types.js"
 

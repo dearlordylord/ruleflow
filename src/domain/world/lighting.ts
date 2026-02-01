@@ -59,14 +59,22 @@ export class VisionComponent extends Schema.TaggedClass<VisionComponent>()("Visi
  */
 export function getLightRadius(lightType: LightSourceType): number {
   switch (lightType) {
-    case "Torch": return 20
-    case "Candle": return 5
-    case "Lamp": return 30
-    case "Lantern": return 40
-    case "GlowingStick": return 10
-    case "Daylight": return 999999
-    case "Darkness": return 0
-    default: return 0
+    case "Torch":
+      return 20
+    case "Candle":
+      return 5
+    case "Lamp":
+      return 30
+    case "Lantern":
+      return 40
+    case "GlowingStick":
+      return 10
+    case "Daylight":
+      return 999999
+    case "Darkness":
+      return 0
+    default:
+      return 0
   }
 }
 

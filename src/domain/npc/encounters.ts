@@ -23,7 +23,8 @@ export type TerrainType = typeof TerrainType.Type
  */
 export function getEncounterChance(terrain: TerrainType): number {
   switch (terrain) {
-    case "Bog": return 4
+    case "Bog":
+      return 4
     case "Forest":
     case "Mountain":
     case "Hill":
@@ -34,7 +35,8 @@ export function getEncounterChance(terrain: TerrainType): number {
     case "City":
     case "Dungeon":
       return 1
-    default: return 1
+    default:
+      return 1
   }
 }
 

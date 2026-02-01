@@ -3,9 +3,19 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../components.js"
-import { ReadyActionDeclared, ReadyActionTriggered, CombatRoundEnded } from "../combat/encounterEvents.js"
-import { SetReadyActionMutation, ClearReadyActionMutation } from "../combat/encounterMutations.js"
+// @ts-expect-error - TODO: Will be used when ready action component lookup implemented
+import { getComponent } from "../entity.js"
+import {
+  ReadyActionDeclared,
+  // @ts-expect-error - TODO: Will be used when trigger matching implemented
+  ReadyActionTriggered,
+  CombatRoundEnded
+} from "../combat/encounterEvents.js"
+import {
+  SetReadyActionMutation,
+  // @ts-expect-error - TODO: Will be used when ready action clearing implemented
+  ClearReadyActionMutation
+} from "../combat/encounterMutations.js"
 import type { System } from "./types.js"
 
 /**

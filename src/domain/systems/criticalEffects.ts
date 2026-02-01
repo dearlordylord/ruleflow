@@ -3,7 +3,7 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../components.js"
+import { getComponent } from "../entity.js"
 import { AttackPerformed } from "../combat/events.js"
 import { DamageEquipmentMutation } from "../combat/mutations.js"
 import type { System } from "./types.js"
@@ -33,6 +33,7 @@ export const criticalEffectsSystem: System = (state, events, _accumulatedMutatio
         if (!target) continue
 
         // Check for equipped armor or shield
+        // @ts-expect-error - TODO: Will be used when armor/shield tracking implemented
         const equippedWeapons = getComponent(target, "EquippedWeapons")
         // TODO: Get armor/shield components
         // For now, just emit ArmorDamaged event without mutation

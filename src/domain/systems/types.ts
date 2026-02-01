@@ -3,8 +3,8 @@
  */
 import type { Chunk, Effect } from "effect"
 
-import type { Entity } from "../components.js"
 import type { EntityId } from "../entities.js"
+import type { Entity } from "../entity.js"
 import type { DomainError, EntityNotFound } from "../errors.js"
 import type { DomainEvent } from "../events.js"
 import type { Mutation } from "../mutations.js"

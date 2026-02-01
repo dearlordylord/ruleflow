@@ -26,7 +26,16 @@ export class ConcentrationComponent extends Schema.TaggedClass<ConcentrationComp
  * Base CP per level (before Will modifier bonus)
  */
 export const MYSTIC_CONCENTRATION_POINTS_BASE = [
-  2, 4, 7, 10, 14, 18, 23, 28, 34, 40 // Levels 1-10
+  2,
+  4,
+  7,
+  10,
+  14,
+  18,
+  23,
+  28,
+  34,
+  40 // Levels 1-10
 ] as const
 
 /**
@@ -56,7 +65,7 @@ export const MYSTERY_SLOTS_BY_LEVEL = [
   [3, 2, 2, 1, 0], // Level 7
   [3, 2, 2, 2, 0], // Level 8
   [3, 3, 2, 2, 1], // Level 9
-  [3, 3, 2, 2, 2]  // Level 10
+  [3, 3, 2, 2, 2] // Level 10
 ] as const
 
 /**
@@ -64,19 +73,19 @@ export const MYSTERY_SLOTS_BY_LEVEL = [
  * Complex table from rulebook p.82
  */
 const INT_MODIFIER_SLOT_BONUS: Record<string, [number, number, number, number, number]> = {
-  '-3': [0, 0, 0, 0, 0],
-  '-2': [0, 0, 0, 0, 0],
-  '-1': [0, 0, 0, 0, 0],
-  '0': [0, 0, 0, 0, 0],
-  '1': [1, 0, 0, 0, 0],
-  '2': [1, 1, 0, 0, 0],
-  '3': [1, 1, 1, 0, 0],
-  '4': [1, 1, 1, 1, 0],
-  '5': [2, 1, 1, 1, 1],
-  '6': [2, 2, 1, 1, 1],
-  '7': [2, 2, 2, 1, 1],
-  '8': [2, 2, 2, 2, 1],
-  '9': [3, 2, 2, 2, 2]
+  "-3": [0, 0, 0, 0, 0],
+  "-2": [0, 0, 0, 0, 0],
+  "-1": [0, 0, 0, 0, 0],
+  "0": [0, 0, 0, 0, 0],
+  "1": [1, 0, 0, 0, 0],
+  "2": [1, 1, 0, 0, 0],
+  "3": [1, 1, 1, 0, 0],
+  "4": [1, 1, 1, 1, 0],
+  "5": [2, 1, 1, 1, 1],
+  "6": [2, 2, 1, 1, 1],
+  "7": [2, 2, 2, 1, 1],
+  "8": [2, 2, 2, 2, 1],
+  "9": [3, 2, 2, 2, 2]
 }
 
 /**

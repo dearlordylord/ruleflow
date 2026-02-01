@@ -4,6 +4,7 @@
 import { Schema } from "effect"
 
 import { EntityId } from "../entities.js"
+import { Entity } from "../entity.js"
 
 export class AddItemMutation extends Schema.TaggedClass<AddItemMutation>()(
   "AddItem",
@@ -43,6 +44,22 @@ export class CreditCurrencyMutation extends Schema.TaggedClass<CreditCurrencyMut
   }
 ) {}
 
+export class TransferItemMutation extends Schema.TaggedClass<TransferItemMutation>()(
+  "TransferItem",
+  {
+    itemId: EntityId,
+    fromEntityId: EntityId,
+    toEntityId: EntityId
+  }
+) {}
+
+export class CreateEntityMutation extends Schema.TaggedClass<CreateEntityMutation>()(
+  "CreateEntity",
+  {
+    entity: Entity
+  }
+) {}
+
 export class UseConsumableMutation extends Schema.TaggedClass<UseConsumableMutation>()(
   "UseConsumable",
   {
@@ -52,11 +69,10 @@ export class UseConsumableMutation extends Schema.TaggedClass<UseConsumableMutat
   }
 ) {}
 
-export class TransferItemMutation extends Schema.TaggedClass<TransferItemMutation>()(
-  "TransferItem",
+export class UpdateInventoryLoadMutation extends Schema.TaggedClass<UpdateInventoryLoadMutation>()(
+  "UpdateInventoryLoad",
   {
-    itemId: EntityId,
-    fromEntityId: EntityId,
-    toEntityId: EntityId
+    entityId: EntityId,
+    newLoad: Schema.Number.pipe(Schema.greaterThanOrEqualTo(0))
   }
 ) {}

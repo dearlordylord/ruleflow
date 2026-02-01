@@ -3,7 +3,7 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { CurrencyTransferred } from "../events.js"
+import type { CurrencyTransferred } from "../events.js"
 import { CreditCurrencyMutation, DebitCurrencyMutation } from "../mutations.js"
 import type { System } from "./types.js"
 
@@ -21,15 +21,14 @@ export const currencyTransferSystem: System = (state, events, _accumulatedMutati
           copper: transfer.copper,
           silver: transfer.silver,
           gold: transfer.gold,
-          platinum: 0
+          platinum: transfer.platinum
         }),
         CreditCurrencyMutation.make({
           entityId: transfer.toEntityId,
           copper: transfer.copper,
           silver: transfer.silver,
           gold: transfer.gold,
-          platinum: 0
+          platinum: transfer.platinum
         })
-      )
-    )
+      ))
   })

@@ -3,7 +3,7 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../components.js"
+import { getComponent } from "../entity.js"
 import { TurnStarted } from "../combat/encounterEvents.js"
 import { MysteryResolved } from "../combat/mysteryEvents.js"
 import { SetMysteryCastingMutation } from "../combat/encounterMutations.js"

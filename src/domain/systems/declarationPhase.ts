@@ -6,6 +6,7 @@ import { Chunk, Effect } from "effect"
 import { AddConditionMutation } from "../combat/mutations.js"
 import {
   MysteryCastDeclared,
+  // @ts-expect-error - TODO: Will be used when withdrawal system implemented
   WithdrawalDeclared,
   RetreatDeclared
 } from "../combat/encounterEvents.js"

@@ -3,32 +3,41 @@
  */
 import { Schema } from "effect"
 
-import { EntityId } from "./entities.js"
 import {
-  CharacterCreationStarted,
-  AttributesRolled,
-  ClassChosen,
-  SkillsChosen,
-  TraitChosen,
-  HitPointsRolled,
-  StartingMoneyRolled,
-  EquipmentPurchased,
-  LanguagesChosen,
   AlignmentChosen,
-  NameChosen,
+  AttributesRolled,
+  CharacterCreationCompleted,
+  CharacterCreationStarted,
+  ClassChosen,
+  EquipmentPurchased,
+  HitPointsRolled,
+  LanguagesChosen,
   MysteriesChosen,
-  CharacterCreationCompleted
+  NameChosen,
+  SkillsChosen,
+  StartingMoneyRolled,
+  TraitChosen
 } from "./character/creationEvents.js"
+import { CharacterDied } from "./character/events.js"
 import {
-  AttackPerformed,
-  DamageDealt,
-  GrappleAttempted,
-  CombatStarted,
+  ArmorDamaged,
+  ArmorEquipped,
+  ArmorUnequipped,
   CombatEnded,
+  CombatStarted,
+  DamageDealt,
+  EquipmentRepaired,
+  GrappleAttempted,
   InitiativeRolled,
+  ShieldEquipped,
+  ShieldUnequipped,
   WeaponDamaged,
-  ArmorDamaged
+  WeaponEquipped,
+  WeaponUnequipped
 } from "./combat/events.js"
+import {
+  ConcentrationBroken
+} from "./combat/concentrationEvents.js"
 import {
   CombatRoundStarted,
   CombatRoundEnded,
@@ -47,14 +56,33 @@ import {
   PushAttempted
 } from "./combat/maneuverEvents.js"
 import {
-  MysteryResolved
-} from "./combat/mysteryEvents.js"
-import {
-  ConcentrationBroken
-} from "./combat/concentrationEvents.js"
-import {
   MoraleChecked
 } from "./combat/moraleEvents.js"
+import {
+  MysteryResolved
+} from "./combat/mysteryEvents.js"
+import { EntityId } from "./entities.js"
+import { ConsumableUsed, ItemDiscarded, ItemPurchased, ItemSold } from "./inventory/events.js"
+import {
+  ContainerDiscovered,
+  ContainerLockDiscovered,
+  ContainerSearched,
+  ItemDiscovered,
+  ItemDropped,
+  ItemLooted,
+  LootDistributed
+} from "./inventory/loot-events.js"
+
+export class AttackPerformed extends Schema.TaggedClass<AttackPerformed>()(
+  "AttackPerformed",
+  {
+    attackerId: EntityId,
+    targetId: EntityId,
+    weaponId: EntityId,
+    attackRoll: Schema.Int.pipe(Schema.between(1, 20)),
+    isCritical: Schema.Boolean
+  }
+) {}
 
 export class CurrencyTransferred extends Schema.TaggedClass<CurrencyTransferred>()(
   "CurrencyTransferred",
@@ -63,13 +91,13 @@ export class CurrencyTransferred extends Schema.TaggedClass<CurrencyTransferred>
     toEntityId: EntityId,
     copper: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
     silver: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
-    gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
+    gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
+    platinum: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
   }
 ) {}
 
 // Re-export events for convenience
 export {
-  AttackPerformed,
   DamageDealt,
   GrappleAttempted,
   CombatStarted,
@@ -77,6 +105,13 @@ export {
   InitiativeRolled,
   WeaponDamaged,
   ArmorDamaged,
+  WeaponEquipped,
+  WeaponUnequipped,
+  ArmorEquipped,
+  ArmorUnequipped,
+  ShieldEquipped,
+  ShieldUnequipped,
+  EquipmentRepaired,
   CombatRoundStarted,
   CombatRoundEnded,
   TurnStarted,
@@ -92,10 +127,27 @@ export {
   PushAttempted,
   MysteryResolved,
   ConcentrationBroken,
-  MoraleChecked
+  MoraleChecked,
+  CharacterDied
 }
 
 export const DomainEvent = Schema.Union(
+  // Character creation events
+  CharacterCreationStarted,
+  AttributesRolled,
+  ClassChosen,
+  SkillsChosen,
+  TraitChosen,
+  HitPointsRolled,
+  StartingMoneyRolled,
+  EquipmentPurchased,
+  LanguagesChosen,
+  AlignmentChosen,
+  NameChosen,
+  MysteriesChosen,
+  CharacterCreationCompleted,
+  CharacterDied,
+
   // Combat events
   AttackPerformed,
   DamageDealt,
@@ -103,8 +155,6 @@ export const DomainEvent = Schema.Union(
   CombatStarted,
   CombatEnded,
   InitiativeRolled,
-  WeaponDamaged,
-  ArmorDamaged,
 
   // Combat encounter events
   CombatRoundStarted,
@@ -135,19 +185,30 @@ export const DomainEvent = Schema.Union(
   // Currency events
   CurrencyTransferred,
 
-  // Character creation events
-  CharacterCreationStarted,
-  AttributesRolled,
-  ClassChosen,
-  SkillsChosen,
-  TraitChosen,
-  HitPointsRolled,
-  StartingMoneyRolled,
-  EquipmentPurchased,
-  LanguagesChosen,
-  AlignmentChosen,
-  NameChosen,
-  MysteriesChosen,
-  CharacterCreationCompleted
+  // Inventory events
+  ItemPurchased,
+  ItemSold,
+  ConsumableUsed,
+  ItemDiscarded,
+
+  // Looting events
+  ItemDiscovered,
+  ContainerDiscovered,
+  ItemLooted,
+  ItemDropped,
+  ContainerSearched,
+  ContainerLockDiscovered,
+  LootDistributed,
+
+  // Combat/Equipment events
+  WeaponEquipped,
+  WeaponUnequipped,
+  ArmorEquipped,
+  ArmorUnequipped,
+  ShieldEquipped,
+  ShieldUnequipped,
+  EquipmentRepaired,
+  WeaponDamaged,
+  ArmorDamaged
 )
 export type DomainEvent = typeof DomainEvent.Type

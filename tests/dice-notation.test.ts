@@ -4,7 +4,7 @@
 import { describe, expect, it } from "@effect/vitest"
 import { Schema } from "effect"
 
-import { DiceNotation } from "../src/domain/components.js"
+import { DiceNotation } from "../src/domain/combat/index.js"
 
 describe("DiceNotation Schema", () => {
   it("validates correct dice notation formats", () => {

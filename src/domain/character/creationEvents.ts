@@ -4,8 +4,8 @@
 import { Schema } from "effect"
 
 import { EntityId } from "../entities.js"
-import { Alignment } from "./creation.js"
 import { CharacterClass } from "./class.js"
+import { Alignment } from "./creation.js"
 
 export class CharacterCreationStarted extends Schema.TaggedClass<CharacterCreationStarted>()(
   "CharacterCreationStarted",

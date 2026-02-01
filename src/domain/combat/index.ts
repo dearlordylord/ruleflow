@@ -10,6 +10,7 @@ export * from "./weapons.js"
 
 // Armor and shields
 export * from "./armor.js"
+export * from "./equippedArmor.js"
 
 // Conditions and status effects
 export * from "./conditions.js"
@@ -18,8 +19,8 @@ export * from "./conditions.js"
 export * from "./ranged.js"
 
 // Mutations and events
-export * from "./mutations.js"
 export * from "./events.js"
+export * from "./mutations.js"
 
 // Encounter events
 export * from "./encounterEvents.js"

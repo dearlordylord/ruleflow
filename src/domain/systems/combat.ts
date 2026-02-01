@@ -1,13 +1,14 @@
 /**
  * Combat Systems
  */
-import { Chunk, Effect, Option } from "effect"
+import { Chunk, Effect, HashMap, Option } from "effect"
 
-import type { Entity, WeaponGroup } from "../components.js"
-import { getComponent } from "../components.js"
+import type { WeaponGroup } from "../combat/weapons.js"
 import { SystemName } from "../entities.js"
+import type { Entity } from "../entity.js"
+import { getComponent } from "../entity.js"
 import { DomainError } from "../errors.js"
-import { AttackPerformed } from "../events.js"
+import type { AttackPerformed } from "../events.js"
 import { DealDamageMutation, SetHealthMutation } from "../mutations.js"
 import { CombatResolver } from "../services/CombatResolver.js"
 import type { System } from "./types.js"
@@ -16,9 +17,11 @@ function getSpecializationBonus(
   entity: Entity,
   weaponGroup: WeaponGroup
 ): number {
-  const spec = getComponent(entity, "Specialization")
+  const spec = getComponent(entity, "WeaponSpecialization")
   if (!spec) return 0
-  return spec.weaponGroups.includes(weaponGroup) ? spec.bonusDamage : 0
+  return HashMap.get(spec.specializations, weaponGroup).pipe(
+    Option.getOrElse(() => 0)
+  )
 }
 
 export const combatToHitSystem: System = (state, events, _accumulatedMutations) =>

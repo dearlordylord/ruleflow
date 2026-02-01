@@ -3,48 +3,48 @@
  */
 import { Chunk, Effect, HashMap, Option } from "effect"
 
-import { getComponent } from "../components.js"
+import type {
+  AlignmentChosen,
+  AttributesRolled,
+  CharacterCreationCompleted,
+  CharacterCreationStarted,
+  ClassChosen,
+  EquipmentPurchased,
+  HitPointsRolled,
+  LanguagesChosen,
+  MysteriesChosen,
+  NameChosen,
+  SkillsChosen,
+  StartingMoneyRolled,
+  TraitChosen
+} from "../character/creationEvents.js"
 import {
   AttributesComponent,
-  CharacterCreationComponent,
-  HealthComponent,
-  SkillsComponent,
-  SavingThrowsComponent,
-  TraitsComponent,
-  ExperienceComponent,
-  ClassComponent,
-  CombatSuperiorityComponent,
-  SneakAttackComponent,
-  LuckySkillComponent,
-  ForbiddenKnowledgeComponent,
-  Skill,
-  calculateSkillLevelBonus,
   calculateBaseSaveBonus,
   calculateCombatSuperiorityExtraAttacks,
-  calculateSneakAttackDice,
   calculateLuckySkillRecoveryDie,
-  calculateMaxMysteryTier
+  calculateMaxMysteryTier,
+  calculateSkillLevelBonus,
+  calculateSneakAttackDice,
+  CharacterCreationComponent,
+  ClassComponent,
+  CombatSuperiorityComponent,
+  ExperienceComponent,
+  ForbiddenKnowledgeComponent,
+  HealthComponent,
+  LuckySkillComponent,
+  SavingThrowsComponent,
+  Skill,
+  SkillsComponent,
+  SneakAttackComponent,
+  TraitsComponent
 } from "../character/index.js"
-import {
-  CharacterCreationStarted,
-  AttributesRolled,
-  ClassChosen,
-  SkillsChosen,
-  TraitChosen,
-  HitPointsRolled,
-  StartingMoneyRolled,
-  EquipmentPurchased,
-  LanguagesChosen,
-  AlignmentChosen,
-  NameChosen,
-  MysteriesChosen,
-  CharacterCreationCompleted
-} from "../character/creationEvents.js"
 import { UpdateCharacterCreationMutation } from "../character/mutations.js"
-import { SetMultipleComponentsMutation } from "../mutations.js"
+import type { Component } from "../entity.js"
+import { getComponent } from "../entity.js"
 import { CurrencyComponent, InventoryComponent } from "../inventory/index.js"
-import { KnownMysteriesComponent, ConcentrationComponent, calculateMaxConcentrationPoints } from "../mysticism/index.js"
-import type { Component } from "../components.js"
+import { SetMultipleComponentsMutation } from "../mutations.js"
+import { calculateMaxConcentrationPoints, ConcentrationComponent, KnownMysteriesComponent } from "../mysticism/index.js"
 import type { System } from "./types.js"
 
 /**
@@ -66,12 +66,12 @@ function isValidatedCreation(
   creation: CharacterCreationComponent
 ): creation is ValidatedCharacterCreation {
   return !!(
-    creation.attributes &&
-    creation.class &&
-    creation.skills &&
-    creation.hitPoints &&
-    creation.alignment &&
-    creation.name
+    creation.attributes
+    && creation.class
+    && creation.skills
+    && creation.hitPoints
+    && creation.alignment
+    && creation.name
   )
 }
 
@@ -226,7 +226,9 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
           const creation = getComponent(entity, "CharacterCreation")
 
           if (!creation) {
-            yield* Effect.logError(`CharacterCreation component not found for equipment purchase at entity ${e.entityId}`)
+            yield* Effect.logError(
+              `CharacterCreation component not found for equipment purchase at entity ${e.entityId}`
+            )
             break
           }
 
@@ -319,11 +321,17 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
           if (!isValidatedCreation(creation)) {
             yield* Effect.logError(
               `Character creation incomplete for ${e.entityId}: missing ${
-                !creation.attributes ? "attributes" :
-                !creation.class ? "class" :
-                !creation.skills ? "skills" :
-                !creation.hitPoints ? "hitPoints" :
-                !creation.alignment ? "alignment" : "name"
+                !creation.attributes
+                  ? "attributes"
+                  : !creation.class
+                  ? "class"
+                  : !creation.skills
+                  ? "skills"
+                  : !creation.hitPoints
+                  ? "hitPoints"
+                  : !creation.alignment
+                  ? "alignment"
+                  : "name"
               }`
             )
             break
@@ -361,10 +369,10 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 /**
  * Build all final character components from validated creation data
  */
-function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Component[] {
+function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Array<Component> {
   const level = creation.startingLevel
   const attrs = creation.attributes
-  const components: Component[] = []
+  const components: Array<Component> = []
 
   // 1. Attributes
   components.push(
@@ -454,7 +462,7 @@ function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Co
  * Build skills component from chosen skills
  */
 function buildSkillsComponent(
-  skills: { readonly primary: readonly string[]; readonly secondary: readonly string[] },
+  skills: { readonly primary: ReadonlyArray<string>; readonly secondary: ReadonlyArray<string> },
   level: number
 ): SkillsComponent {
   const createSkill = (skillName: string) => {
@@ -510,9 +518,9 @@ function buildClassSpecificComponents(
   level: number,
   intelligence: number,
   will: number,
-  mysteries: readonly string[] | null
-): Component[] {
-  const components: Component[] = []
+  mysteries: ReadonlyArray<string> | null
+): Array<Component> {
+  const components: Array<Component> = []
 
   switch (characterClass) {
     case "Fighter":
