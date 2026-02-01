@@ -9,6 +9,7 @@ import { actionEconomySystem } from "./actionEconomy.js"
 import { characterCreationSystem } from "./characterCreation.js"
 import { combatToHitSystem, traumaSystem } from "./combat.js"
 import { concentrationSystem } from "./concentration.js"
+import { creatureDiscoverySystem } from "./creatureDiscovery.js"
 import { criticalEffectsSystem } from "./criticalEffects.js"
 import { currencyTransferSystem } from "./currency.js"
 import { declarationPhaseSystem } from "./declarationPhase.js"
@@ -91,7 +92,10 @@ export const SystemRegistry = [
   { name: "itemDrop", system: itemDropSystem, _R: {} as never },
   { name: "containerSearch", system: containerSearchSystem, _R: {} as never },
   { name: "containerLockDiscovery", system: containerLockDiscoverySystem, _R: {} as never },
-  { name: "lootDistribution", system: lootDistributionSystem, _R: {} as never }
+  { name: "lootDistribution", system: lootDistributionSystem, _R: {} as never },
+
+  // NPC systems
+  { name: "creatureDiscovery", system: creatureDiscoverySystem, _R: {} as never }
 ] as const satisfies ReadonlyArray<SystemEntry<unknown>>
 
 /**

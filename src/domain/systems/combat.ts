@@ -79,7 +79,8 @@ export const combatToHitSystem: System<CombatResolverType> = (state, events, _ac
           return Option.none()
         }
 
-        const totalAttackRoll = attack.attackRoll + combatStats.meleeAttackBonus + getStrengthMod(attrs)
+        // Per rules: attack bonus = skill bonus (which already includes attribute modifier)
+        const totalAttackRoll = attack.attackRoll + combatStats.meleeAttackBonus
         const hit = totalAttackRoll >= targetCombat.armorClass
 
         if (!hit && attack.attackRoll !== 20) {

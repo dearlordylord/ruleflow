@@ -14,6 +14,7 @@ import type { System } from "./types.js"
 // Re-export individual systems for backward compatibility
 export { characterCreationSystem } from "./characterCreation.js"
 export { combatToHitSystem, traumaSystem } from "./combat.js"
+export { creatureDiscoverySystem } from "./creatureDiscovery.js"
 export { currencyTransferSystem } from "./currency.js"
 export { durabilitySystem } from "./durability.js"
 export { attributeModifierSystem, encumbranceValidationSystem } from "./encumbrance.js"

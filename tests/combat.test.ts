@@ -23,7 +23,8 @@ describe("Combat To-Hit System", () => {
       const store = yield* ReadModelStore
       const idGen = yield* IdGenerator
 
-      // Setup: Create attacker with STR 16 (+3), melee bonus +2
+      // Setup: Create attacker with STR 16 (+3), skill bonus +2
+      // meleeAttackBonus = skill +2 + STR +3 = 5
       const attackerId = EntityId.make(yield* idGen.generate())
       yield* store.set(
         Entity.make({
@@ -38,7 +39,7 @@ describe("Combat To-Hit System", () => {
               charisma: 10
             }),
             CombatStatsComponent.make({
-              meleeAttackBonus: 2,
+              meleeAttackBonus: 5, // skill +2 + STR +3
               rangedAttackBonus: 0,
               armorClass: 15,
               initiativeModifier: 0
@@ -93,7 +94,7 @@ describe("Combat To-Hit System", () => {
         })
       )
 
-      // Attack roll: 10 (roll) + 2 (bonus) + 3 (STR) = 15 (hit vs AC 15)
+      // Attack roll: 10 (roll) + 5 (meleeAttackBonus includes STR) = 15 (hit vs AC 15)
       const attackMutation = AttackPerformed.make({
         attackerId,
         targetId,
@@ -180,7 +181,7 @@ describe("Combat To-Hit System", () => {
         })
       )
 
-      // Attack: 10 + 0 + 0 = 10 (miss vs AC 20)
+      // Attack: 10 (roll) + 0 (meleeAttackBonus with STR +0) = 10 (miss vs AC 20)
       const attackMutation = AttackPerformed.make({
         attackerId,
         targetId,

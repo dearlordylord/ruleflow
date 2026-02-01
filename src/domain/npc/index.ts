@@ -3,6 +3,7 @@
  */
 
 export * from "./encounters.js"
+export * from "./events.js"
 export * from "./loyalty.js"
 export * from "./morale.js"
 export * from "./reactions.js"
