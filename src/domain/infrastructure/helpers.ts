@@ -105,7 +105,7 @@ export function createComponentFromMutation(
     })
   }
 
-  if (mutation._tag === "SetSkills") {
+  if (mutation._tag === "SetComponents.Skills") {
     return Effect.gen(function*() {
       const entity = yield* store.get(mutation.entityId).pipe(
         Effect.orElseSucceed(() =>
@@ -115,34 +115,34 @@ export function createComponentFromMutation(
           })
         )
       )
-      const existing = getComponent(entity, "Skills")
+      const existing = getComponent(entity, "Components.Skills")
 
-      const defaultSkill = Skill.make({
+      const defaultSkill = Components.Skill.make({
         proficiency: "Untrained",
         levelBonus: 0
       })
 
-      const base = existing instanceof SkillsComponent
+      const base = existing instanceof Components.Components.SkillsComponent
         ? existing
-        : SkillsComponent.make({
-            melee: defaultSkill,
-            might: defaultSkill,
-            accuracy: defaultSkill,
-            movement: defaultSkill,
-            sleightOfHand: defaultSkill,
-            stealth: defaultSkill,
-            alchemy: defaultSkill,
-            craft: defaultSkill,
-            knowledge: defaultSkill,
-            medicine: defaultSkill,
-            awareness: defaultSkill,
-            survival: defaultSkill,
-            occultism: defaultSkill,
-            performance: defaultSkill,
-            animalHandling: defaultSkill
+        : Components.Components.SkillsComponent.make({
+            melee: defaultComponents.Skill,
+            might: defaultComponents.Skill,
+            accuracy: defaultComponents.Skill,
+            movement: defaultComponents.Skill,
+            sleightOfHand: defaultComponents.Skill,
+            stealth: defaultComponents.Skill,
+            alchemy: defaultComponents.Skill,
+            craft: defaultComponents.Skill,
+            knowledge: defaultComponents.Skill,
+            medicine: defaultComponents.Skill,
+            awareness: defaultComponents.Skill,
+            survival: defaultComponents.Skill,
+            occultism: defaultComponents.Skill,
+            performance: defaultComponents.Skill,
+            animalHandling: defaultComponents.Skill
           })
 
-      return SkillsComponent.make({
+      return Components.Components.SkillsComponent.make({
         melee: mutation.data.melee ?? base.melee,
         might: mutation.data.might ?? base.might,
         accuracy: mutation.data.accuracy ?? base.accuracy,
@@ -173,9 +173,9 @@ export function createComponentFromMutation(
         )
       )
       const existing = getComponent(entity, "SavingThrows")
-      const base = existing instanceof SavingThrowsComponent
+      const base = existing instanceof Components.SavingThrowsComponent
         ? existing
-        : SavingThrowsComponent.make({
+        : Components.SavingThrowsComponent.make({
             baseSaveBonus: 0,
             restraintModifier: 0,
             exhaustionModifier: 0,
@@ -185,7 +185,7 @@ export function createComponentFromMutation(
             curseModifier: 0
           })
 
-      return SavingThrowsComponent.make({
+      return Components.SavingThrowsComponent.make({
         baseSaveBonus: mutation.data.baseSaveBonus ?? base.baseSaveBonus,
         restraintModifier: mutation.data.restraintModifier ?? base.restraintModifier,
         exhaustionModifier: mutation.data.exhaustionModifier ?? base.exhaustionModifier,

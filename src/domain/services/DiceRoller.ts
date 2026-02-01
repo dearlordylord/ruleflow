@@ -6,7 +6,7 @@ import { Context, Effect, Layer, Random } from "effect"
 export class DiceRoller extends Context.Tag("@game/DiceRoller")<
   DiceRoller,
   {
-    readonly roll: (dice: string) => Effect.Effect<number>
+    readonly roll: (dice: string) => Effect.Effect<number, Error>
     readonly d20: () => Effect.Effect<number>
   }
 >() {
