@@ -3,6 +3,8 @@
  */
 import { Schema } from "effect"
 
+import { EntityId } from "../entities.js"
+
 /**
  * Combat conditions that affect actions
  */
@@ -45,10 +47,10 @@ export class ConditionsComponent extends Schema.TaggedClass<ConditionsComponent>
  */
 export class GrappleStateComponent extends Schema.TaggedClass<GrappleStateComponent>()("GrappleState", {
   // Who is grappling this entity
-  grappledBy: Schema.NullOr(Schema.String), // EntityId
+  grappledBy: Schema.NullOr(EntityId),
 
   // Who this entity is grappling
-  grappling: Schema.Array(Schema.String), // EntityIds
+  grappling: Schema.Array(EntityId),
 
   // Pinned state (grappler succeeded in pinning)
   isPinned: Schema.Boolean,
