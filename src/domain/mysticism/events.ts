@@ -3,7 +3,7 @@
  */
 import { Schema } from "effect"
 
-import type { EntityId } from "../entities.js"
+import { EntityId } from "../entities.js"
 
 export class MysteryCast extends Schema.TaggedClass<MysteryCast>()(
   "MysteryCast",

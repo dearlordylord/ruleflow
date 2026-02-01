@@ -3,7 +3,7 @@
  */
 import { Schema } from "effect"
 
-import type { EntityId } from "../entities.js"
+import { EntityId } from "../entities.js"
 
 export const LoadSize = Schema.Literal("Small", "Standard", "Large", "Massive")
 export type LoadSize = typeof LoadSize.Type

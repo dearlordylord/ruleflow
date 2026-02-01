@@ -3,7 +3,7 @@
  */
 import { Schema } from "effect"
 
-import type { EntityId } from "../entities.js"
+import { EntityId } from "../entities.js"
 import type { Condition } from "./conditions.js"
 
 export class AddConditionMutation extends Schema.TaggedClass<AddConditionMutation>()(
