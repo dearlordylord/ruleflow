@@ -42,6 +42,20 @@ If any fail, fix and re-run the full chain. Don't commit until all three pass.
 // eslint-disable-next-line functional/immutable-data -- local mutation, converted to Chunk on return
 ```
 
+## Rulebook is Source of Truth
+
+**When in doubt, grep the rulebook. When challenged, grep the rulebook. When confident, still grep the rulebook.**
+
+The `rulebook/` directory contains the authoritative game rules. Before making assumptions about:
+- Weapon groups, damage types, equipment stats
+- Class abilities, traits, skills
+- Combat formulas, modifiers, bonuses
+- Any game mechanic
+
+Search the rulebook first: `grep -ri "keyword" rulebook/`
+
+Don't trust assumptions. Don't trust memory. Verify against the source.
+
 ## Domain Events
 
 **Domain events = observable in-game actions with business/rules significance.**
