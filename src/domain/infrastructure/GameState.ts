@@ -5,11 +5,7 @@ import { Context, Effect, Layer } from "effect"
 
 import type { Entity } from "../components.js"
 import { CurrencyComponent, getComponent, HealthComponent, removeComponent, setComponent } from "../components.js"
-import {
-  CharacterCreationComponent,
-  SkillsComponent,
-  SavingThrowsComponent
-} from "../character/index.js"
+import { CharacterCreationComponent } from "../character/index.js"
 import type { EntityId } from "../entities.js"
 import type { EntityNotFound } from "../errors.js"
 import type { Mutation } from "../mutations.js"
@@ -130,40 +126,6 @@ export class GameState extends Context.Tag("@game/State")<
                     alignment: mutation.data.alignment !== undefined ? mutation.data.alignment : existing.alignment,
                     name: mutation.data.name !== undefined ? mutation.data.name : existing.name,
                     mysteries: mutation.data.mysteries !== undefined ? mutation.data.mysteries : existing.mysteries
-                  })
-                  return setComponent(entity, updated)
-                }))
-              break
-
-            case "SetSkills":
-              yield* store.update(mutation.entityId, (entity) =>
-                Effect.gen(function*() {
-                  const existing = getComponent(entity, "Skills")
-                  const base = existing || SkillsComponent.make({} as any)
-                  const updated = SkillsComponent.make({
-                    ...base,
-                    ...mutation.data
-                  } as any)
-                  return setComponent(entity, updated)
-                }))
-              break
-
-            case "SetSavingThrows":
-              yield* store.update(mutation.entityId, (entity) =>
-                Effect.gen(function*() {
-                  const existing = getComponent(entity, "SavingThrows")
-                  const base = existing || SavingThrowsComponent.make({
-                    baseSaveBonus: 0,
-                    restraintModifier: 0,
-                    exhaustionModifier: 0,
-                    dodgeModifier: 0,
-                    suppressionModifier: 0,
-                    confusionModifier: 0,
-                    curseModifier: 0
-                  })
-                  const updated = SavingThrowsComponent.make({
-                    ...base,
-                    ...mutation.data
                   })
                   return setComponent(entity, updated)
                 }))

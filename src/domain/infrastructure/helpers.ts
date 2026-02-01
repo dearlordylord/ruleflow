@@ -5,7 +5,7 @@ import { Effect } from "effect"
 
 import { Entity, getComponent } from "../components.js"
 import * as Components from "../components.js"
-import { CharacterCreationComponent, SkillsComponent, SavingThrowsComponent } from "../character/index.js"
+import { CharacterCreationComponent, SkillsComponent, SavingThrowsComponent, Skill } from "../character/index.js"
 import type { EntityId } from "../entities.js"
 import type { EntityNotFound } from "../errors.js"
 import type { Mutation } from "../mutations.js"
@@ -105,6 +105,98 @@ export function createComponentFromMutation(
     })
   }
 
+  if (mutation._tag === "SetSkills") {
+    return Effect.gen(function*() {
+      const entity = yield* store.get(mutation.entityId).pipe(
+        Effect.orElseSucceed(() =>
+          Entity.make({
+            id: mutation.entityId,
+            components: []
+          })
+        )
+      )
+      const existing = getComponent(entity, "Skills")
+
+      const defaultSkill = Skill.make({
+        proficiency: "Untrained",
+        levelBonus: 0
+      })
+
+      const base = existing instanceof SkillsComponent
+        ? existing
+        : SkillsComponent.make({
+            melee: defaultSkill,
+            might: defaultSkill,
+            accuracy: defaultSkill,
+            movement: defaultSkill,
+            sleightOfHand: defaultSkill,
+            stealth: defaultSkill,
+            alchemy: defaultSkill,
+            craft: defaultSkill,
+            knowledge: defaultSkill,
+            medicine: defaultSkill,
+            awareness: defaultSkill,
+            survival: defaultSkill,
+            occultism: defaultSkill,
+            performance: defaultSkill,
+            animalHandling: defaultSkill
+          })
+
+      return SkillsComponent.make({
+        melee: mutation.data.melee ?? base.melee,
+        might: mutation.data.might ?? base.might,
+        accuracy: mutation.data.accuracy ?? base.accuracy,
+        movement: mutation.data.movement ?? base.movement,
+        sleightOfHand: mutation.data.sleightOfHand ?? base.sleightOfHand,
+        stealth: mutation.data.stealth ?? base.stealth,
+        alchemy: mutation.data.alchemy ?? base.alchemy,
+        craft: mutation.data.craft ?? base.craft,
+        knowledge: mutation.data.knowledge ?? base.knowledge,
+        medicine: mutation.data.medicine ?? base.medicine,
+        awareness: mutation.data.awareness ?? base.awareness,
+        survival: mutation.data.survival ?? base.survival,
+        occultism: mutation.data.occultism ?? base.occultism,
+        performance: mutation.data.performance ?? base.performance,
+        animalHandling: mutation.data.animalHandling ?? base.animalHandling
+      })
+    })
+  }
+
+  if (mutation._tag === "SetSavingThrows") {
+    return Effect.gen(function*() {
+      const entity = yield* store.get(mutation.entityId).pipe(
+        Effect.orElseSucceed(() =>
+          Entity.make({
+            id: mutation.entityId,
+            components: []
+          })
+        )
+      )
+      const existing = getComponent(entity, "SavingThrows")
+      const base = existing instanceof SavingThrowsComponent
+        ? existing
+        : SavingThrowsComponent.make({
+            baseSaveBonus: 0,
+            restraintModifier: 0,
+            exhaustionModifier: 0,
+            dodgeModifier: 0,
+            suppressionModifier: 0,
+            confusionModifier: 0,
+            curseModifier: 0
+          })
+
+      return SavingThrowsComponent.make({
+        baseSaveBonus: mutation.data.baseSaveBonus ?? base.baseSaveBonus,
+        restraintModifier: mutation.data.restraintModifier ?? base.restraintModifier,
+        exhaustionModifier: mutation.data.exhaustionModifier ?? base.exhaustionModifier,
+        dodgeModifier: mutation.data.dodgeModifier ?? base.dodgeModifier,
+        suppressionModifier: mutation.data.suppressionModifier ?? base.suppressionModifier,
+        confusionModifier: mutation.data.confusionModifier ?? base.confusionModifier,
+        curseModifier: mutation.data.curseModifier ?? base.curseModifier
+      })
+    })
+  }
+
   if (mutation._tag === "AddItem") {
     return Effect.gen(function*() {
       const entity = yield* store.get(mutation.entityId).pipe(
@@ -164,7 +256,12 @@ export function createComponentFromMutation(
     return Effect.die(`DebitCurrency/CreditCurrency should not reach createComponentFromMutation`)
   }
 
-  if (mutation._tag === "DealDamage" || mutation._tag === "RemoveComponent" || mutation._tag === "SetMultipleComponents") {
+  if (
+    mutation._tag === "DealDamage" ||
+    mutation._tag === "RemoveComponent" ||
+    mutation._tag === "SetMultipleComponents" ||
+    mutation._tag === "UpdateCharacterCreation"
+  ) {
     // These mutations are handled directly in GameState.applyMutation
     return Effect.die(`${mutation._tag} should not reach createComponentFromMutation`)
   }
