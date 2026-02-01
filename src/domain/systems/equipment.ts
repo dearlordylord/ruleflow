@@ -4,6 +4,7 @@
  */
 import { Chunk, Effect } from "effect"
 
+import { getDexterityMod } from "../character/attributes.js"
 import { ArmorEquipped, ShieldEquipped, WeaponEquipped } from "../combat/events.js"
 import {
   EquipArmorMutation,
@@ -296,7 +297,7 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
 
           // Calculate new AC using existing equipped shield from EquippedArmorComp
           const combatStats = getComponent(entity, "CombatStats")
-          const dexMod = attributes?.dexterityMod ?? 0
+          const dexMod = attributes ? getDexterityMod(attributes) : 0
 
           // AC = baseAC + dexMod (capped by armor category) + shield bonus
           const dexModCapped =

@@ -15,17 +15,18 @@ export class CurrencyComponent extends Schema.TaggedClass<CurrencyComponent>()("
   silver: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
   gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
   platinum: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
-}) {
-  get totalCopper(): number {
-    return this.copper
-      + (this.silver * 10)
-      + (this.gold * 100)
-      + (this.platinum * 1000)
-  }
+}) {}
 
-  get totalInGold(): number {
-    return this.totalCopper / 100
-  }
+// Utility functions for currency calculations
+export function getTotalCopper(currency: CurrencyComponent): number {
+  return currency.copper
+    + (currency.silver * 10)
+    + (currency.gold * 100)
+    + (currency.platinum * 1000)
+}
+
+export function getTotalInGold(currency: CurrencyComponent): number {
+  return getTotalCopper(currency) / 100
 }
 
 /**
@@ -56,5 +57,5 @@ export function hasSufficientFunds(
   currency: CurrencyComponent,
   costInCopper: number
 ): boolean {
-  return currency.totalCopper >= costInCopper
+  return getTotalCopper(currency) >= costInCopper
 }

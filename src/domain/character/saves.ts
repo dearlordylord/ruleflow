@@ -3,6 +3,8 @@
  */
 import { Schema } from "effect"
 
+import type { SetSavingThrowsMutation } from "./mutations.js"
+
 /**
  * Six saving throw types matching OSR rules
  */
@@ -15,6 +17,16 @@ export const SaveType = Schema.Literal(
   "Curse" // Проклятие (Хар) - supernatural forces beyond direct control
 )
 export type SaveType = typeof SaveType.Type
+
+const DEFAULT_SAVING_THROWS = {
+  baseSaveBonus: 0,
+  restraintModifier: 0,
+  exhaustionModifier: 0,
+  dodgeModifier: 0,
+  suppressionModifier: 0,
+  confusionModifier: 0,
+  curseModifier: 0
+} as const
 
 /**
  * Saving throws component
@@ -32,7 +44,23 @@ export class SavingThrowsComponent extends Schema.TaggedClass<SavingThrowsCompon
   suppressionModifier: Schema.Int,
   confusionModifier: Schema.Int,
   curseModifier: Schema.Int
-}) {}
+}) {
+  static applyMutation(
+    existing: SavingThrowsComponent | null,
+    mutation: SetSavingThrowsMutation
+  ): SavingThrowsComponent {
+    const base = existing ?? SavingThrowsComponent.make(DEFAULT_SAVING_THROWS)
+    return SavingThrowsComponent.make({
+      baseSaveBonus: mutation.data.baseSaveBonus ?? base.baseSaveBonus,
+      restraintModifier: mutation.data.restraintModifier ?? base.restraintModifier,
+      exhaustionModifier: mutation.data.exhaustionModifier ?? base.exhaustionModifier,
+      dodgeModifier: mutation.data.dodgeModifier ?? base.dodgeModifier,
+      suppressionModifier: mutation.data.suppressionModifier ?? base.suppressionModifier,
+      confusionModifier: mutation.data.confusionModifier ?? base.confusionModifier,
+      curseModifier: mutation.data.curseModifier ?? base.curseModifier
+    })
+  }
+}
 
 /**
  * Calculate final save bonus

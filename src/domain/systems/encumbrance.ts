@@ -6,6 +6,7 @@ import { Chunk, Effect } from "effect"
 import { SystemName } from "../entities.js"
 import { getComponent } from "../entity.js"
 import { DomainError } from "../errors.js"
+import { getLoadValue } from "../inventory/items.js"
 import type { System } from "./types.js"
 
 export const encumbranceValidationSystem: System = (state, _events, accumulatedMutations) =>
@@ -46,7 +47,7 @@ export const encumbranceValidationSystem: System = (state, _events, accumulatedM
           return
         }
 
-        const newLoad = inventory.currentLoad + itemComp.loadValue
+        const newLoad = inventory.currentLoad + getLoadValue(itemComp)
 
         if (newLoad > inventory.loadCapacity) {
           return yield* Effect.fail(

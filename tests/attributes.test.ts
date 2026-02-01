@@ -4,7 +4,15 @@
 import { describe, expect, it } from "@effect/vitest"
 import { Effect } from "effect"
 
-import { AttributesComponent } from "../src/domain/character/index.js"
+import {
+  AttributesComponent,
+  getCharismaMod,
+  getConstitutionMod,
+  getDexterityMod,
+  getIntelligenceMod,
+  getStrengthMod,
+  getWillMod
+} from "../src/domain/character/index.js"
 import { deterministicTestLayer } from "./layers.js"
 
 describe("Attributes Component", () => {
@@ -19,12 +27,12 @@ describe("Attributes Component", () => {
         charisma: 18
       })
 
-      expect(attrs.strengthMod).toBe(3) // (16-10)/2 = 3
-      expect(attrs.dexterityMod).toBe(2) // (14-10)/2 = 2
-      expect(attrs.intelligenceMod).toBe(-1) // (8-10)/2 = -1
-      expect(attrs.willMod).toBe(0) // (10-10)/2 = 0
-      expect(attrs.constitutionMod).toBe(1) // (12-10)/2 = 1
-      expect(attrs.charismaMod).toBe(4) // (18-10)/2 = 4
+      expect(getStrengthMod(attrs)).toBe(3) // (16-10)/2 = 3
+      expect(getDexterityMod(attrs)).toBe(2) // (14-10)/2 = 2
+      expect(getIntelligenceMod(attrs)).toBe(-1) // (8-10)/2 = -1
+      expect(getWillMod(attrs)).toBe(0) // (10-10)/2 = 0
+      expect(getConstitutionMod(attrs)).toBe(1) // (12-10)/2 = 1
+      expect(getCharismaMod(attrs)).toBe(4) // (18-10)/2 = 4
     }).pipe(Effect.provide(deterministicTestLayer([10]))))
 
   it.effect("enforces attribute ranges (3-18)", () =>
@@ -57,6 +65,6 @@ describe("Attributes Component", () => {
         charisma: 3
       })
 
-      expect(attrs.strengthMod).toBe(-4) // (3-10)/2 = -3.5 → -4
+      expect(getStrengthMod(attrs)).toBe(-4) // (3-10)/2 = -3.5 → -4
     }).pipe(Effect.provide(deterministicTestLayer([10]))))
 })

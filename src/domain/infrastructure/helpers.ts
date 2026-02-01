@@ -8,7 +8,6 @@ import {
   ClassComponent,
   HealthComponent,
   SavingThrowsComponent,
-  Skill,
   SkillsComponent
 } from "../character/index.js"
 import type { EntityId } from "../entities.js"
@@ -16,6 +15,25 @@ import { type Component, Entity, getComponent } from "../entity.js"
 import type { EntityNotFound } from "../errors.js"
 import { InventoryComponent } from "../inventory/items.js"
 import type { Mutation } from "../mutations.js"
+
+/**
+ * Get existing component from store, handling entity not found
+ */
+function getExistingComponent<T extends Component["_tag"]>(
+  store: {
+    readonly get: (id: EntityId) => Effect.Effect<Entity, EntityNotFound>
+  },
+  entityId: EntityId,
+  componentTag: T
+): Effect.Effect<Extract<Component, { _tag: T }> | null, never> {
+  return store.get(entityId).pipe(
+    Effect.map(entity => {
+      const component = getComponent(entity, componentTag)
+      return component as Extract<Component, { _tag: T }> | null
+    }),
+    Effect.orElseSucceed(() => null)
+  )
+}
 
 export function createComponentFromMutation(
   mutation: Mutation,
@@ -30,233 +48,45 @@ export function createComponentFromMutation(
   }
 ): Effect.Effect<Component, never> {
   if (mutation._tag === "SetAttributes") {
-    return Effect.gen(function*() {
-      const entity = yield* store.get(mutation.entityId).pipe(
-        Effect.orElseSucceed(() =>
-          Entity.make({
-            id: mutation.entityId,
-            components: []
-          })
-        )
-      )
-      const existing = getComponent(entity, "Attributes")
-      const base = existing instanceof AttributesComponent
-        ? existing
-        : AttributesComponent.make({
-          strength: 10,
-          dexterity: 10,
-          intelligence: 10,
-          will: 10,
-          constitution: 10,
-          charisma: 10
-        })
-
-      return AttributesComponent.make({
-        strength: mutation.data.strength ?? base.strength,
-        dexterity: mutation.data.dexterity ?? base.dexterity,
-        intelligence: mutation.data.intelligence ?? base.intelligence,
-        will: mutation.data.will ?? base.will,
-        constitution: mutation.data.constitution ?? base.constitution,
-        charisma: mutation.data.charisma ?? base.charisma
-      })
-    })
+    return getExistingComponent(store, mutation.entityId, "Attributes").pipe(
+      Effect.map(existing => AttributesComponent.applyMutation(existing, mutation))
+    )
   }
 
   if (mutation._tag === "SetHealth") {
-    return Effect.gen(function*() {
-      const entity = yield* store.get(mutation.entityId).pipe(
-        Effect.orElseSucceed(() =>
-          Entity.make({
-            id: mutation.entityId,
-            components: []
-          })
-        )
-      )
-      const existing = getComponent(entity, "Health")
-      const base = existing instanceof HealthComponent
-        ? existing
-        : HealthComponent.make({
-          current: 10,
-          max: 10,
-          traumaActive: false,
-          traumaEffect: null
-        })
-
-      return HealthComponent.make({
-        current: mutation.data.current ?? base.current,
-        max: mutation.data.max ?? base.max,
-        traumaActive: mutation.data.traumaActive ?? base.traumaActive,
-        traumaEffect: mutation.data.traumaEffect ?? base.traumaEffect
-      })
-    })
+    return getExistingComponent(store, mutation.entityId, "Health").pipe(
+      Effect.map(existing => HealthComponent.applyMutation(existing, mutation))
+    )
   }
 
   if (mutation._tag === "SetClass") {
-    return Effect.gen(function*() {
-      const entity = yield* store.get(mutation.entityId).pipe(
-        Effect.orElseSucceed(() =>
-          Entity.make({
-            id: mutation.entityId,
-            components: []
-          })
-        )
-      )
-      const existing = getComponent(entity, "Class")
-      const base = existing instanceof ClassComponent
-        ? existing
-        : ClassComponent.make({ class: "Fighter", level: 1 })
-
-      return ClassComponent.make({
-        class: mutation.data.class ?? base.class,
-        level: mutation.data.level ?? base.level
-      })
-    })
+    return getExistingComponent(store, mutation.entityId, "Class").pipe(
+      Effect.map(existing => ClassComponent.applyMutation(existing, mutation))
+    )
   }
 
   if (mutation._tag === "SetSkills") {
-    return Effect.gen(function*() {
-      const entity = yield* store.get(mutation.entityId).pipe(
-        Effect.orElseSucceed(() =>
-          Entity.make({
-            id: mutation.entityId,
-            components: []
-          })
-        )
-      )
-      const existing = getComponent(entity, "Skills")
-
-      const defaultSkill = Skill.make({
-        proficiency: "Untrained",
-        levelBonus: 0
-      })
-
-      const base = existing instanceof SkillsComponent
-        ? existing
-        : SkillsComponent.make({
-          melee: defaultSkill,
-          might: defaultSkill,
-          accuracy: defaultSkill,
-          movement: defaultSkill,
-          sleightOfHand: defaultSkill,
-          stealth: defaultSkill,
-          alchemy: defaultSkill,
-          craft: defaultSkill,
-          knowledge: defaultSkill,
-          medicine: defaultSkill,
-          awareness: defaultSkill,
-          survival: defaultSkill,
-          occultism: defaultSkill,
-          performance: defaultSkill,
-          animalHandling: defaultSkill
-        })
-
-      return SkillsComponent.make({
-        melee: mutation.data.melee ?? base.melee,
-        might: mutation.data.might ?? base.might,
-        accuracy: mutation.data.accuracy ?? base.accuracy,
-        movement: mutation.data.movement ?? base.movement,
-        sleightOfHand: mutation.data.sleightOfHand ?? base.sleightOfHand,
-        stealth: mutation.data.stealth ?? base.stealth,
-        alchemy: mutation.data.alchemy ?? base.alchemy,
-        craft: mutation.data.craft ?? base.craft,
-        knowledge: mutation.data.knowledge ?? base.knowledge,
-        medicine: mutation.data.medicine ?? base.medicine,
-        awareness: mutation.data.awareness ?? base.awareness,
-        survival: mutation.data.survival ?? base.survival,
-        occultism: mutation.data.occultism ?? base.occultism,
-        performance: mutation.data.performance ?? base.performance,
-        animalHandling: mutation.data.animalHandling ?? base.animalHandling
-      })
-    })
+    return getExistingComponent(store, mutation.entityId, "Skills").pipe(
+      Effect.map(existing => SkillsComponent.applyMutation(existing, mutation))
+    )
   }
 
   if (mutation._tag === "SetSavingThrows") {
-    return Effect.gen(function*() {
-      const entity = yield* store.get(mutation.entityId).pipe(
-        Effect.orElseSucceed(() =>
-          Entity.make({
-            id: mutation.entityId,
-            components: []
-          })
-        )
-      )
-      const existing = getComponent(entity, "SavingThrows")
-      const base = existing instanceof SavingThrowsComponent
-        ? existing
-        : SavingThrowsComponent.make({
-          baseSaveBonus: 0,
-          restraintModifier: 0,
-          exhaustionModifier: 0,
-          dodgeModifier: 0,
-          suppressionModifier: 0,
-          confusionModifier: 0,
-          curseModifier: 0
-        })
-
-      return SavingThrowsComponent.make({
-        baseSaveBonus: mutation.data.baseSaveBonus ?? base.baseSaveBonus,
-        restraintModifier: mutation.data.restraintModifier ?? base.restraintModifier,
-        exhaustionModifier: mutation.data.exhaustionModifier ?? base.exhaustionModifier,
-        dodgeModifier: mutation.data.dodgeModifier ?? base.dodgeModifier,
-        suppressionModifier: mutation.data.suppressionModifier ?? base.suppressionModifier,
-        confusionModifier: mutation.data.confusionModifier ?? base.confusionModifier,
-        curseModifier: mutation.data.curseModifier ?? base.curseModifier
-      })
-    })
+    return getExistingComponent(store, mutation.entityId, "SavingThrows").pipe(
+      Effect.map(existing => SavingThrowsComponent.applyMutation(existing, mutation))
+    )
   }
 
   if (mutation._tag === "AddItem") {
-    return Effect.gen(function*() {
-      const entity = yield* store.get(mutation.entityId).pipe(
-        Effect.orElseSucceed(() =>
-          Entity.make({
-            id: mutation.entityId,
-            components: []
-          })
-        )
-      )
-      const existing = getComponent(entity, "Inventory")
-      const base = existing instanceof InventoryComponent
-        ? existing
-        : InventoryComponent.make({
-          items: [],
-          loadCapacity: 50,
-          currentLoad: 0
-        })
-
-      return InventoryComponent.make({
-        items: [...base.items, mutation.itemId],
-        loadCapacity: base.loadCapacity,
-        currentLoad: base.currentLoad // Will be updated by encumbrance system
-      })
-    })
+    return getExistingComponent(store, mutation.entityId, "Inventory").pipe(
+      Effect.map(existing => InventoryComponent.applyAddItem(existing, mutation))
+    )
   }
 
   if (mutation._tag === "RemoveItem") {
-    return Effect.gen(function*() {
-      const entity = yield* store.get(mutation.entityId).pipe(
-        Effect.orElseSucceed(() =>
-          Entity.make({
-            id: mutation.entityId,
-            components: []
-          })
-        )
-      )
-      const existing = getComponent(entity, "Inventory")
-      const base = existing instanceof InventoryComponent
-        ? existing
-        : InventoryComponent.make({
-          items: [],
-          loadCapacity: 50,
-          currentLoad: 0
-        })
-
-      return InventoryComponent.make({
-        items: base.items.filter(id => id !== mutation.itemId),
-        loadCapacity: base.loadCapacity,
-        currentLoad: base.currentLoad // Will be updated by encumbrance system
-      })
-    })
+    return getExistingComponent(store, mutation.entityId, "Inventory").pipe(
+      Effect.map(existing => InventoryComponent.applyRemoveItem(existing, mutation))
+    )
   }
 
   if (mutation._tag === "DebitCurrency" || mutation._tag === "CreditCurrency") {

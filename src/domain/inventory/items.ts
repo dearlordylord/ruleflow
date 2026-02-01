@@ -4,6 +4,7 @@
 import { Schema } from "effect"
 
 import { EntityId } from "../entities.js"
+import type { AddItem, RemoveItem } from "../mutations.js"
 
 export const LoadSize = Schema.Literal("Small", "Standard", "Large", "Massive")
 export type LoadSize = typeof LoadSize.Type
@@ -18,24 +19,55 @@ export class ItemComponent extends Schema.TaggedClass<ItemComponent>()("Item", {
 
   // Value in copper pieces
   valueInCopper: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
-}) {
-  get loadValue(): number {
-    const base = this.loadSize === "Small"
-      ? 0.5
-      : this.loadSize === "Large"
-      ? 2
-      : this.loadSize === "Massive"
-      ? 4
-      : 1 // Standard
-    return base * this.quantity
-  }
+}) {}
+
+// Utility function for load value calculation
+export function getLoadValue(item: ItemComponent): number {
+  const base = item.loadSize === "Small"
+    ? 0.5
+    : item.loadSize === "Large"
+    ? 2
+    : item.loadSize === "Massive"
+    ? 4
+    : 1 // Standard
+  return base * item.quantity
 }
+
+export const DEFAULT_INVENTORY = {
+  items: [] as Array<EntityId>,
+  loadCapacity: 50,
+  currentLoad: 0
+} as const
 
 export class InventoryComponent extends Schema.TaggedClass<InventoryComponent>()("Inventory", {
   items: Schema.Array(EntityId),
   loadCapacity: Schema.Number.pipe(Schema.greaterThan(0)),
   currentLoad: Schema.Number.pipe(Schema.greaterThanOrEqualTo(0))
-}) {}
+}) {
+  static applyAddItem(
+    existing: InventoryComponent | null,
+    mutation: AddItem
+  ): InventoryComponent {
+    const base = existing ?? InventoryComponent.make(DEFAULT_INVENTORY)
+    return InventoryComponent.make({
+      items: [...base.items, mutation.itemId],
+      loadCapacity: base.loadCapacity,
+      currentLoad: base.currentLoad
+    })
+  }
+
+  static applyRemoveItem(
+    existing: InventoryComponent | null,
+    mutation: RemoveItem
+  ): InventoryComponent {
+    const base = existing ?? InventoryComponent.make(DEFAULT_INVENTORY)
+    return InventoryComponent.make({
+      items: base.items.filter(id => id !== mutation.itemId),
+      loadCapacity: base.loadCapacity,
+      currentLoad: base.currentLoad
+    })
+  }
+}
 
 /**
  * Load categories affecting movement

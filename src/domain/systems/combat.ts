@@ -3,6 +3,7 @@
  */
 import { Chunk, Effect, HashMap, Option } from "effect"
 
+import { getStrengthMod } from "../character/attributes.js"
 import type { WeaponGroup } from "../combat/weapons.js"
 import { SystemName } from "../entities.js"
 import type { Entity } from "../entity.js"
@@ -77,7 +78,7 @@ export const combatToHitSystem: System = (state, events, _accumulatedMutations) 
           return Option.none()
         }
 
-        const totalAttackRoll = attack.attackRoll + combatStats.meleeAttackBonus + attrs.strengthMod
+        const totalAttackRoll = attack.attackRoll + combatStats.meleeAttackBonus + getStrengthMod(attrs)
         const hit = totalAttackRoll >= targetCombat.armorClass
 
         if (!hit && attack.attackRoll !== 20) {
@@ -92,7 +93,7 @@ export const combatToHitSystem: System = (state, events, _accumulatedMutations) 
 
         const damage = yield* combat.calculateDamage(
           weaponComp.damageDice,
-          attrs.strengthMod,
+          getStrengthMod(attrs),
           getSpecializationBonus(attacker, weaponComp.weaponGroup),
           isCritical
         )

@@ -3,13 +3,31 @@
  */
 import { Schema } from "effect"
 
+import type { SetClassMutation } from "./mutations.js"
+
 export const CharacterClass = Schema.Literal("Fighter", "Specialist", "Mystic")
 export type CharacterClass = typeof CharacterClass.Type
+
+const DEFAULT_CLASS = {
+  class: "Fighter" as const,
+  level: 1
+}
 
 export class ClassComponent extends Schema.TaggedClass<ClassComponent>()("Class", {
   class: CharacterClass,
   level: Schema.Int.pipe(Schema.between(1, 10))
-}) {}
+}) {
+  static applyMutation(
+    existing: ClassComponent | null,
+    mutation: SetClassMutation
+  ): ClassComponent {
+    const base = existing ?? ClassComponent.make(DEFAULT_CLASS)
+    return ClassComponent.make({
+      class: mutation.data.class ?? base.class,
+      level: mutation.data.level ?? base.level
+    })
+  }
+}
 
 /**
  * Fighter: Combat Superiority

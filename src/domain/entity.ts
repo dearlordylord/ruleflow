@@ -11,73 +11,9 @@ import * as Mysticism from "./mysticism/index.js"
 import * as NPC from "./npc/index.js"
 import * as World from "./world/index.js"
 
-/**
- * Component tag for type-safe lookups
- */
-export const ComponentTag = Schema.Literal(
-  // Character
-  "Attributes",
-  "Health",
-  "TraumaState",
-  "Class",
-  "CombatSuperiority",
-  "SneakAttack",
-  "LuckySkill",
-  "ForbiddenKnowledge",
-  "Skills",
-  "Traits",
-  "SavingThrows",
-  "Experience",
-  "TraitProgression",
-  "CharacterCreation",
-  // Combat
-  "CombatStats",
-  "Weapon",
-  "WeaponSpecialization",
-  "EquippedWeapons",
-  "EquippedArmor",
-  "Armor",
-  "Shield",
-  "Conditions",
-  "GrappleState",
-  "Initiative",
-  "ActionEconomy",
-  "Ammunition",
-  "ReloadState",
-  // Combat Encounter
-  "CombatEncounter",
-  "Distance",
-  "ReadyAction",
-  "DefenseStance",
-  "MysteryCasting",
-  // Inventory
-  "Item",
-  "Inventory",
-  "Currency",
-  "Consumable",
-  "Corpse",
-  "Container",
-  "DroppedItem",
-  // Mysticism
-  "KnownMysteries",
-  "Concentration",
-  "Artifact",
-  // NPC
-  "Morale",
-  "Reaction",
-  "Loyalty",
-  // World
-  "Movement",
-  "Position",
-  "LightSource",
-  "Vision"
-)
 export type ComponentTag = typeof ComponentTag.Type
 
-/**
- * Union of all possible components across all domains
- */
-export const Component = Schema.Union(
+export const ComponentRegistry = [
   // Character domain
   Character.AttributesComponent,
   Character.HealthComponent,
@@ -134,8 +70,19 @@ export const Component = Schema.Union(
   World.PositionComponent,
   World.LightSourceComponent,
   World.VisionComponent
+] as const;
+
+/**
+ * Union of all possible components across all domains
+ */
+export const Component = Schema.Union(
+  ...ComponentRegistry
 )
 export type Component = typeof Component.Type
+
+export const ComponentTag = Schema.Literal(
+  ...ComponentRegistry.map(c => c._tag)
+);
 
 /**
  * Entity class with component array
