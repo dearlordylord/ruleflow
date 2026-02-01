@@ -11,8 +11,7 @@ export class AttackPerformed extends Schema.TaggedClass<AttackPerformed>()(
     attackerId: EntityId,
     targetId: EntityId,
     weaponId: EntityId,
-    attackRoll: Schema.Int.pipe(Schema.between(1, 20)),
-    isCritical: Schema.Boolean
+    attackRoll: Schema.Int.pipe(Schema.between(1, 20))
   }
 ) {}
 

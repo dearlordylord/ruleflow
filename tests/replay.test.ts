@@ -101,7 +101,6 @@ describe("Event Replay", () => {
         targetId,
         weaponId,
         attackRoll: 15,
-        isCritical: false
       })
 
       const mutations = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attackEvent))
@@ -379,7 +378,6 @@ describe("Event Replay", () => {
         targetId,
         weaponId,
         attackRoll: 15,
-        isCritical: false
       })
       const mutations1 = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attack1))
       const entry1 = yield* committer.commit(attack1, mutations1)
@@ -389,7 +387,6 @@ describe("Event Replay", () => {
         targetId,
         weaponId,
         attackRoll: 18,
-        isCritical: false
       })
       const mutations2 = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attack2))
       const entry2 = yield* committer.commit(attack2, mutations2)

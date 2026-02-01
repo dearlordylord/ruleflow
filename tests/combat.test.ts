@@ -99,7 +99,6 @@ describe("Combat To-Hit System", () => {
         targetId,
         weaponId,
         attackRoll: 10,
-        isCritical: false
       })
 
       const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation), Chunk.empty())
@@ -187,7 +186,6 @@ describe("Combat To-Hit System", () => {
         targetId,
         weaponId,
         attackRoll: 10,
-        isCritical: false
       })
 
       const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation), Chunk.empty())
@@ -267,7 +265,6 @@ describe("Combat To-Hit System", () => {
         targetId,
         weaponId,
         attackRoll: 20,
-        isCritical: true
       })
 
       const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation), Chunk.empty())

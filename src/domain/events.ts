@@ -23,6 +23,7 @@ import {
   ArmorDamaged,
   ArmorEquipped,
   ArmorUnequipped,
+  AttackPerformed,
   CombatEnded,
   CombatStarted,
   DamageDealt,
@@ -73,17 +74,6 @@ import {
   LootDistributed
 } from "./inventory/loot-events.js"
 
-export class AttackPerformed extends Schema.TaggedClass<AttackPerformed>()(
-  "AttackPerformed",
-  {
-    attackerId: EntityId,
-    targetId: EntityId,
-    weaponId: EntityId,
-    attackRoll: Schema.Int.pipe(Schema.between(1, 20)),
-    isCritical: Schema.Boolean
-  }
-) {}
-
 export class CurrencyTransferred extends Schema.TaggedClass<CurrencyTransferred>()(
   "CurrencyTransferred",
   {
@@ -98,6 +88,7 @@ export class CurrencyTransferred extends Schema.TaggedClass<CurrencyTransferred>
 
 // Re-export events for convenience
 export {
+  AttackPerformed,
   DamageDealt,
   GrappleAttempted,
   CombatStarted,
