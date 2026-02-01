@@ -127,9 +127,7 @@ export const actionEconomySystem: System = (state, events, _accumulatedMutations
       )
     }
 
-    if (Chunk.size(Chunk.fromIterable(errors)) > 0) {
-      return Effect.fail(Chunk.fromIterable(errors))
-    }
-
-    return Chunk.fromIterable(mutations)
+    return errors.length > 0
+      ? yield* Effect.fail(Chunk.fromIterable(errors))
+      : Chunk.fromIterable(mutations)
   })
