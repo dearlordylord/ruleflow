@@ -24,8 +24,18 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for event sourcing flow, layer deps, fi
 
 **Key rules:**
 - Systems are pure: read `ReadonlyGameState`, return `Mutation`s, no side effects
-- Rich components: put single-entity logic in component methods, not scattered in systems
+- Components are data-only; derived values → utility functions (pure ECS)
 - Cross-entity logic → systems
+
+## Pre-Commit Verification
+
+**Before committing (especially in worktrees), run all checks:**
+
+```bash
+pnpm tsc --noEmit && pnpm lint --fix && pnpm test
+```
+
+If any fail, fix and re-run the full chain. Don't commit until all three pass.
 
 ## Domain Events
 
