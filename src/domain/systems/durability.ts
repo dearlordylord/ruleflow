@@ -34,6 +34,7 @@ export const durabilitySystem: System = (state, events, _accumulatedMutations) =
       weaponDamagedEvents,
       (event) =>
         Effect.gen(function*() {
+          // @ts-expect-error - intentionally validating entity exists
           const _weapon = yield* state.getEntity(event.weaponId).pipe(
             Effect.orElseFail(() =>
               Chunk.of(
@@ -69,6 +70,7 @@ export const durabilitySystem: System = (state, events, _accumulatedMutations) =
       armorDamagedEvents,
       (event) =>
         Effect.gen(function*() {
+          // @ts-expect-error - intentionally validating entity exists
           const _armor = yield* state.getEntity(event.armorId).pipe(
             Effect.orElseFail(() =>
               Chunk.of(
@@ -104,6 +106,7 @@ export const durabilitySystem: System = (state, events, _accumulatedMutations) =
       equipmentRepairedEvents,
       (event) =>
         Effect.gen(function*() {
+          // @ts-expect-error - intentionally validating entity exists
           const _repairer = yield* state.getEntity(event.repairerId).pipe(
             Effect.orElseFail(() =>
               Chunk.of(
