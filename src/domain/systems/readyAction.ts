@@ -3,8 +3,6 @@
  */
 import { Chunk, Effect } from "effect"
 
-// @ts-expect-error - TODO: Will be used when ready action component lookup implemented
-import { getComponent } from "../entity.js"
 import {
   ReadyActionDeclared,
   // @ts-expect-error - TODO: Will be used when trigger matching implemented

@@ -3,14 +3,8 @@
  */
 import { Chunk, Effect } from "effect"
 
-// @ts-expect-error - TODO: Will be used when morale component lookup implemented
-import { getComponent } from "../entity.js"
-import { MoraleChecked } from "../combat/moraleEvents.js"
-// @ts-expect-error - TODO: Will be used when retreat behavior implemented
-import { RetreatDeclared } from "../combat/encounterEvents.js"
+import type { MoraleChecked } from "../combat/moraleEvents.js"
 import { SetMoraleResultMutation } from "../combat/encounterMutations.js"
-// @ts-expect-error - TODO: Will be used when morale result lookup implemented
-import { getMoraleResult } from "../npc/morale.js"
 import type { System } from "./types.js"
 
 /**

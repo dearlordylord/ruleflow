@@ -5,8 +5,7 @@ import { Chunk, Effect } from "effect"
 
 import { DisarmAttempted, PushAttempted } from "../combat/maneuverEvents.js"
 import { UnequipWeaponMutation, AddConditionMutation } from "../combat/mutations.js"
-// @ts-expect-error - TODO: Will be used when distance tracking implemented
-import { SetDistanceMutation } from "../combat/encounterMutations.js"
+// TODO: import { SetDistanceMutation } from "../combat/encounterMutations.js"
 import type { System } from "./types.js"
 
 /**

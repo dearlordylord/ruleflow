@@ -52,8 +52,7 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
             )
           )
 
-          // @ts-expect-error - intentionally validating entity exists
-          const _weapon = yield* state.getEntity(event.weaponId).pipe(
+          yield* state.getEntity(event.weaponId).pipe(
             Effect.orElseFail(() =>
               Chunk.of(
                 DomainError.make({
