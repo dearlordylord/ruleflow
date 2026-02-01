@@ -3,12 +3,12 @@
  */
 import { Schema } from "effect"
 
-import type * as Character from "./character/index.js"
-import type * as Combat from "./combat/index.js"
-import type * as Inventory from "./inventory/index.js"
-import type * as Mysticism from "./mysticism/index.js"
-import type * as NPC from "./npc/index.js"
-import type * as World from "./world/index.js"
+import * as Character from "./character/index.js"
+import * as Combat from "./combat/index.js"
+import * as Inventory from "./inventory/index.js"
+import * as Mysticism from "./mysticism/index.js"
+import * as NPC from "./npc/index.js"
+import * as World from "./world/index.js"
 import { EntityId } from "./entities.js"
 
 /**
@@ -36,6 +36,7 @@ export const Component = Schema.Union(
   Combat.WeaponComponent,
   Combat.WeaponSpecializationComponent,
   Combat.EquippedWeaponsComponent,
+  Combat.EquippedArmorComponent,
   Combat.ArmorComponent,
   Combat.ShieldComponent,
   Combat.ConditionsComponent,
@@ -94,6 +95,7 @@ export const ComponentTag = Schema.Literal(
   "Weapon",
   "WeaponSpecialization",
   "EquippedWeapons",
+  "EquippedArmor",
   "Armor",
   "Shield",
   "Conditions",

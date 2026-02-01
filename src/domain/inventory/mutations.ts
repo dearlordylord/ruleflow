@@ -60,3 +60,11 @@ export class TransferItemMutation extends Schema.TaggedClass<TransferItemMutatio
     toEntityId: EntityId
   }
 ) {}
+
+export class UpdateInventoryLoadMutation extends Schema.TaggedClass<UpdateInventoryLoadMutation>()(
+  "UpdateInventoryLoad",
+  {
+    entityId: EntityId,
+    newLoad: Schema.Number.pipe(Schema.greaterThanOrEqualTo(0))
+  }
+) {}

@@ -50,16 +50,59 @@ export function getEncumbranceCategory(currentLoad: number, capacity: number): s
 
 /**
  * Common items from rulebook
+ * Prices converted from rulebook: см (silver) × 10 = copper, мм (copper) = 1
  */
 export const COMMON_ITEMS = {
-  Rope: { loadSize: "Standard" as LoadSize, valueInCopper: 10 },
-  Torch: { loadSize: "Small" as LoadSize, valueInCopper: 1 },
-  "Grappling Hook": { loadSize: "Small" as LoadSize, valueInCopper: 25 },
-  Backpack: { loadSize: "Standard" as LoadSize, valueInCopper: 20 },
-  Bedroll: { loadSize: "Standard" as LoadSize, valueInCopper: 10 },
-  Rations: { loadSize: "Small" as LoadSize, valueInCopper: 5 },
-  "Healing Kit": { loadSize: "Standard" as LoadSize, valueInCopper: 500 },
-  "Lockpick Set": { loadSize: "Small" as LoadSize, valueInCopper: 250 },
-  "Disguise Kit": { loadSize: "Standard" as LoadSize, valueInCopper: 250 },
-  "Repair Kit": { loadSize: "Standard" as LoadSize, valueInCopper: 500 }
+  // AMMUNITION
+  "Alchemical Fire": { loadSize: "Standard" as LoadSize, valueInCopper: 200 }, // 20 см
+  "Arrows (10)": { loadSize: "Small" as LoadSize, valueInCopper: 50 }, // 5 см
+  "Crossbow Bolts (10)": { loadSize: "Small" as LoadSize, valueInCopper: 50 }, // 5 см
+  "Sling Bullets (10)": { loadSize: "Small" as LoadSize, valueInCopper: 20 }, // 2 см
+  "Powder and Bullets (10)": { loadSize: "Small" as LoadSize, valueInCopper: 50 }, // 5 см
+
+  // CONTAINERS
+  Backpack: { loadSize: "Standard" as LoadSize, valueInCopper: 10 }, // 1 см
+  "Powder Horn": { loadSize: "Small" as LoadSize, valueInCopper: 10 }, // 1 см
+  Quiver: { loadSize: "Small" as LoadSize, valueInCopper: 50 }, // 5 см
+  Sack: { loadSize: "Small" as LoadSize, valueInCopper: 1 }, // 1 мм
+  "Sling Bag": { loadSize: "Small" as LoadSize, valueInCopper: 1 }, // 5 мм (treating as negligible)
+  "Javelin Case": { loadSize: "Small" as LoadSize, valueInCopper: 50 }, // 5 см
+
+  // LIGHT SOURCES
+  "Candles (10)": { loadSize: "Small" as LoadSize, valueInCopper: 10 }, // 1 см
+  Torch: { loadSize: "Small" as LoadSize, valueInCopper: 1 }, // 1 мм
+  Lantern: { loadSize: "Standard" as LoadSize, valueInCopper: 50 }, // 5 см
+  "Glowing Rod": { loadSize: "Standard" as LoadSize, valueInCopper: 200 }, // 20 см
+  "Flint and Steel": { loadSize: "Small" as LoadSize, valueInCopper: 1 }, // 2 мм (rounding up)
+  "Oil (pint)": { loadSize: "Small" as LoadSize, valueInCopper: 1 }, // 5 мм (rounding up)
+
+  // ADVENTURING GEAR
+  Rope: { loadSize: "Standard" as LoadSize, valueInCopper: 20 }, // 2 см
+  "Grappling Hook": { loadSize: "Small" as LoadSize, valueInCopper: 20 }, // 2 см
+  Bandolier: { loadSize: "Standard" as LoadSize, valueInCopper: 100 }, // 10 см
+  Garrote: { loadSize: "Small" as LoadSize, valueInCopper: 10 }, // 1 см
+  "Smoke Grenade": { loadSize: "Small" as LoadSize, valueInCopper: 100 }, // 10 см
+  "Powder Grenade": { loadSize: "Small" as LoadSize, valueInCopper: 100 }, // 10 см
+  "Paper (sheet)": { loadSize: "Small" as LoadSize, valueInCopper: 1 }, // 1 мм
+  "Pen and Ink": { loadSize: "Small" as LoadSize, valueInCopper: 10 }, // 1 см
+  Rations: { loadSize: "Small" as LoadSize, valueInCopper: 1 }, // 5 мм (rounding up)
+  Saddle: { loadSize: "Large" as LoadSize, valueInCopper: 50 }, // 5 см
+  "War Saddle": { loadSize: "Large" as LoadSize, valueInCopper: 250 }, // 25 см
+  Bedroll: { loadSize: "Standard" as LoadSize, valueInCopper: 1 }, // 5 мм (rounding up)
+  "Warm Clothing": { loadSize: "Standard" as LoadSize, valueInCopper: 250 }, // 25 см
+  "Pole (10 ft)": { loadSize: "Large" as LoadSize, valueInCopper: 1 }, // 5 мм (rounding up)
+  Pavise: { loadSize: "Large" as LoadSize, valueInCopper: 200 }, // 20 см (large shield)
+  "Gauntlets (plated)": { loadSize: "Small" as LoadSize, valueInCopper: 500 }, // 50 см
+
+  // KITS
+  "Healing Kit": { loadSize: "Standard" as LoadSize, valueInCopper: 100 }, // 10 см
+  "Lockpick Set": { loadSize: "Small" as LoadSize, valueInCopper: 200 }, // 20 см
+  "Disguise Kit": { loadSize: "Standard" as LoadSize, valueInCopper: 100 }, // 10 см
+  "Repair Kit": { loadSize: "Standard" as LoadSize, valueInCopper: 100 }, // 10 см
+
+  // POISONS
+  "White Arsenic": { loadSize: "Small" as LoadSize, valueInCopper: 500 }, // 50 см
+  "Wolfsbane Death": { loadSize: "Small" as LoadSize, valueInCopper: 2000 }, // 200 см
+  Cantarella: { loadSize: "Small" as LoadSize, valueInCopper: 1000 }, // 100 см
+  "Salt of the Hanged": { loadSize: "Small" as LoadSize, valueInCopper: 1500 } // 150 см
 } as const

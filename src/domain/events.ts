@@ -19,6 +19,23 @@ import {
   MysteriesChosen,
   CharacterCreationCompleted
 } from "./character/creationEvents.js"
+import {
+  ItemPurchased,
+  ItemSold,
+  ConsumableUsed,
+  ItemDiscarded
+} from "./inventory/events.js"
+import {
+  WeaponEquipped,
+  WeaponUnequipped,
+  ArmorEquipped,
+  ArmorUnequipped,
+  ShieldEquipped,
+  ShieldUnequipped,
+  EquipmentRepaired,
+  WeaponDamaged,
+  ArmorDamaged
+} from "./combat/events.js"
 
 export class AttackPerformed extends Schema.TaggedClass<AttackPerformed>()(
   "AttackPerformed",
@@ -57,6 +74,21 @@ export const DomainEvent = Schema.Union(
   AlignmentChosen,
   NameChosen,
   MysteriesChosen,
-  CharacterCreationCompleted
+  CharacterCreationCompleted,
+  // Inventory events
+  ItemPurchased,
+  ItemSold,
+  ConsumableUsed,
+  ItemDiscarded,
+  // Combat/Equipment events
+  WeaponEquipped,
+  WeaponUnequipped,
+  ArmorEquipped,
+  ArmorUnequipped,
+  ShieldEquipped,
+  ShieldUnequipped,
+  EquipmentRepaired,
+  WeaponDamaged,
+  ArmorDamaged
 )
 export type DomainEvent = typeof DomainEvent.Type

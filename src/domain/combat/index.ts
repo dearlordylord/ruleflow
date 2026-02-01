@@ -10,6 +10,7 @@ export * from "./weapons.js"
 
 // Armor and shields
 export * from "./armor.js"
+export * from "./equippedArmor.js"
 
 // Conditions and status effects
 export * from "./conditions.js"

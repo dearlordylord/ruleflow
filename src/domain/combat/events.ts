@@ -82,3 +82,63 @@ export class ArmorDamaged extends Schema.TaggedClass<ArmorDamaged>()(
     currentDurability: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
   }
 ) {}
+
+export class WeaponEquipped extends Schema.TaggedClass<WeaponEquipped>()(
+  "WeaponEquipped",
+  {
+    entityId: EntityId,
+    weaponId: EntityId,
+    hand: Schema.Literal("MainHand", "OffHand", "TwoHanded")
+  }
+) {}
+
+export class WeaponUnequipped extends Schema.TaggedClass<WeaponUnequipped>()(
+  "WeaponUnequipped",
+  {
+    entityId: EntityId,
+    weaponId: EntityId,
+    hand: Schema.Literal("MainHand", "OffHand")
+  }
+) {}
+
+export class ArmorEquipped extends Schema.TaggedClass<ArmorEquipped>()(
+  "ArmorEquipped",
+  {
+    entityId: EntityId,
+    armorId: EntityId
+  }
+) {}
+
+export class ArmorUnequipped extends Schema.TaggedClass<ArmorUnequipped>()(
+  "ArmorUnequipped",
+  {
+    entityId: EntityId,
+    armorId: EntityId
+  }
+) {}
+
+export class ShieldEquipped extends Schema.TaggedClass<ShieldEquipped>()(
+  "ShieldEquipped",
+  {
+    entityId: EntityId,
+    shieldId: EntityId
+  }
+) {}
+
+export class ShieldUnequipped extends Schema.TaggedClass<ShieldUnequipped>()(
+  "ShieldUnequipped",
+  {
+    entityId: EntityId,
+    shieldId: EntityId
+  }
+) {}
+
+export class EquipmentRepaired extends Schema.TaggedClass<EquipmentRepaired>()(
+  "EquipmentRepaired",
+  {
+    repairerId: EntityId,
+    equipmentId: EntityId,
+    repairKitId: EntityId,
+    durabilityRestored: Schema.Int.pipe(Schema.greaterThan(0))
+  }
+) {}

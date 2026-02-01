@@ -46,3 +46,12 @@ export class ConsumableUsed extends Schema.TaggedClass<ConsumableUsed>()(
     effectApplied: Schema.NonEmptyString
   }
 ) {}
+
+export class ItemDiscarded extends Schema.TaggedClass<ItemDiscarded>()(
+  "ItemDiscarded",
+  {
+    entityId: EntityId,
+    itemId: EntityId,
+    reason: Schema.Literal("Overencumbered", "PlayerChoice", "ItemDestroyed")
+  }
+) {}
