@@ -3,10 +3,10 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../entity.js"
+import { ConcentrationBroken } from "../combat/concentrationEvents.js"
 import { hasCondition } from "../combat/conditions.js"
 import { RemoveConditionMutation } from "../combat/mutations.js"
-import { ConcentrationBroken } from "../combat/concentrationEvents.js"
+import { getComponent } from "../entity.js"
 import type { System } from "./types.js"
 
 /**

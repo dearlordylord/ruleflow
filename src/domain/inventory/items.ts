@@ -4,7 +4,7 @@
 import { Schema } from "effect"
 
 import { EntityId } from "../entities.js"
-import type { AddItem, RemoveItem } from "../mutations.js"
+import type { AddItemMutation, RemoveItemMutation } from "./mutations.js"
 
 export const LoadSize = Schema.Literal("Small", "Standard", "Large", "Massive")
 export type LoadSize = typeof LoadSize.Type
@@ -46,7 +46,7 @@ export class InventoryComponent extends Schema.TaggedClass<InventoryComponent>()
 }) {
   static applyAddItem(
     existing: InventoryComponent | null,
-    mutation: AddItem
+    mutation: AddItemMutation
   ): InventoryComponent {
     const base = existing ?? InventoryComponent.make(DEFAULT_INVENTORY)
     return InventoryComponent.make({
@@ -58,7 +58,7 @@ export class InventoryComponent extends Schema.TaggedClass<InventoryComponent>()
 
   static applyRemoveItem(
     existing: InventoryComponent | null,
-    mutation: RemoveItem
+    mutation: RemoveItemMutation
   ): InventoryComponent {
     const base = existing ?? InventoryComponent.make(DEFAULT_INVENTORY)
     return InventoryComponent.make({

@@ -3,11 +3,11 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../entity.js"
-import { MovementPerformed } from "../combat/encounterEvents.js"
-import type { Mutation } from "../mutations.js"
+import type { MovementPerformed } from "../combat/encounterEvents.js"
 import { SystemName } from "../entities.js"
+import { getComponent } from "../entity.js"
 import { DomainError } from "../errors.js"
+import type { Mutation } from "../mutations.js"
 import type { System } from "./types.js"
 
 /**
@@ -58,7 +58,8 @@ export const movementSystem: System = (state, events, _accumulatedMutations) =>
         errors.push(
           DomainError.make({
             systemName: SystemName.make("Movement"),
-            message: `Entity ${moveEvent.entityId} attempted to move ${moveEvent.distanceMoved} feet but can only move ${allowedDistance} feet`
+            message:
+              `Entity ${moveEvent.entityId} attempted to move ${moveEvent.distanceMoved} feet but can only move ${allowedDistance} feet`
           })
         )
         continue

@@ -3,9 +3,9 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../entity.js"
-import { AttackPerformed } from "../combat/events.js"
+import type { AttackPerformed } from "../combat/events.js"
 import { DamageEquipmentMutation } from "../combat/mutations.js"
+import { getComponent } from "../entity.js"
 import type { System } from "./types.js"
 
 /**
@@ -39,10 +39,8 @@ export const criticalEffectsSystem: System = (state, events, _accumulatedMutatio
         // For now, just emit ArmorDamaged event without mutation
         // Armor/shield durability tracking needs equipment system integration
 
-        mutations.push(
-          // Placeholder: would need to find equipped armor/shield
-          // DamageEquipmentMutation for shield or armor
-        )
+        mutations.push() // Placeholder: would need to find equipped armor/shield
+        // DamageEquipmentMutation for shield or armor
       }
 
       // Natural 1: damage weapon

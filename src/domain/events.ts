@@ -19,6 +19,20 @@ import {
   TraitChosen
 } from "./character/creationEvents.js"
 import { CharacterDied } from "./character/events.js"
+import { ConcentrationBroken } from "./combat/concentrationEvents.js"
+import {
+  CombatRoundEnded,
+  CombatRoundStarted,
+  DefenseStanceTaken,
+  MovementPerformed,
+  MysteryCastDeclared,
+  ReadyActionDeclared,
+  ReadyActionTriggered,
+  RetreatDeclared,
+  TurnEnded,
+  TurnStarted,
+  WithdrawalDeclared
+} from "./combat/encounterEvents.js"
 import {
   ArmorDamaged,
   ArmorEquipped,
@@ -36,32 +50,9 @@ import {
   WeaponEquipped,
   WeaponUnequipped
 } from "./combat/events.js"
-import {
-  ConcentrationBroken
-} from "./combat/concentrationEvents.js"
-import {
-  CombatRoundStarted,
-  CombatRoundEnded,
-  TurnStarted,
-  TurnEnded,
-  MysteryCastDeclared,
-  WithdrawalDeclared,
-  RetreatDeclared,
-  MovementPerformed,
-  DefenseStanceTaken,
-  ReadyActionDeclared,
-  ReadyActionTriggered
-} from "./combat/encounterEvents.js"
-import {
-  DisarmAttempted,
-  PushAttempted
-} from "./combat/maneuverEvents.js"
-import {
-  MoraleChecked
-} from "./combat/moraleEvents.js"
-import {
-  MysteryResolved
-} from "./combat/mysteryEvents.js"
+import { DisarmAttempted, PushAttempted } from "./combat/maneuverEvents.js"
+import { MoraleChecked } from "./combat/moraleEvents.js"
+import { MysteryResolved } from "./combat/mysteryEvents.js"
 import { EntityId } from "./entities.js"
 import { ConsumableUsed, ItemDiscarded, ItemPurchased, ItemSold } from "./inventory/events.js"
 import {
@@ -84,48 +75,46 @@ export class CurrencyTransferred extends Schema.TaggedClass<CurrencyTransferred>
     gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
     platinum: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
   }).pipe(
-    Schema.filter((event) =>
-      event.copper + event.silver + event.gold + event.platinum > 0, {
-        message: () => "At least one currency amount must be greater than 0"
-      }
-    )
+    Schema.filter((event) => event.copper + event.silver + event.gold + event.platinum > 0, {
+      message: () => "At least one currency amount must be greater than 0"
+    })
   )
 ) {}
 
 // Re-export events for convenience
 export {
-  AttackPerformed,
-  DamageDealt,
-  GrappleAttempted,
-  CombatStarted,
-  CombatEnded,
-  InitiativeRolled,
-  WeaponDamaged,
   ArmorDamaged,
-  WeaponEquipped,
-  WeaponUnequipped,
   ArmorEquipped,
   ArmorUnequipped,
-  ShieldEquipped,
-  ShieldUnequipped,
-  EquipmentRepaired,
-  CombatRoundStarted,
+  AttackPerformed,
+  CharacterDied,
+  CombatEnded,
   CombatRoundEnded,
-  TurnStarted,
-  TurnEnded,
-  MysteryCastDeclared,
-  WithdrawalDeclared,
-  RetreatDeclared,
-  MovementPerformed,
+  CombatRoundStarted,
+  CombatStarted,
+  ConcentrationBroken,
+  DamageDealt,
   DefenseStanceTaken,
+  DisarmAttempted,
+  EquipmentRepaired,
+  GrappleAttempted,
+  InitiativeRolled,
+  MoraleChecked,
+  MovementPerformed,
+  MysteryCastDeclared,
+  MysteryResolved,
+  PushAttempted,
   ReadyActionDeclared,
   ReadyActionTriggered,
-  DisarmAttempted,
-  PushAttempted,
-  MysteryResolved,
-  ConcentrationBroken,
-  MoraleChecked,
-  CharacterDied
+  RetreatDeclared,
+  ShieldEquipped,
+  ShieldUnequipped,
+  TurnEnded,
+  TurnStarted,
+  WeaponDamaged,
+  WeaponEquipped,
+  WeaponUnequipped,
+  WithdrawalDeclared
 }
 
 export const DomainEvent = Schema.Union(
@@ -144,7 +133,6 @@ export const DomainEvent = Schema.Union(
   MysteriesChosen,
   CharacterCreationCompleted,
   CharacterDied,
-
   // Combat events
   AttackPerformed,
   DamageDealt,
@@ -152,7 +140,6 @@ export const DomainEvent = Schema.Union(
   CombatStarted,
   CombatEnded,
   InitiativeRolled,
-
   // Combat encounter events
   CombatRoundStarted,
   CombatRoundEnded,
@@ -165,29 +152,22 @@ export const DomainEvent = Schema.Union(
   DefenseStanceTaken,
   ReadyActionDeclared,
   ReadyActionTriggered,
-
   // Maneuver events
   DisarmAttempted,
   PushAttempted,
-
   // Mystery events
   MysteryResolved,
-
   // Concentration events
   ConcentrationBroken,
-
   // Morale events
   MoraleChecked,
-
   // Currency events
   CurrencyTransferred,
-
   // Inventory events
   ItemPurchased,
   ItemSold,
   ConsumableUsed,
   ItemDiscarded,
-
   // Looting events
   ItemDiscovered,
   ContainerDiscovered,
@@ -196,7 +176,6 @@ export const DomainEvent = Schema.Union(
   ContainerSearched,
   ContainerLockDiscovered,
   LootDistributed,
-
   // Combat/Equipment events
   WeaponEquipped,
   WeaponUnequipped,

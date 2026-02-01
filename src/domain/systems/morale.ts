@@ -3,8 +3,8 @@
  */
 import { Chunk, Effect } from "effect"
 
-import type { MoraleChecked } from "../combat/moraleEvents.js"
 import { SetMoraleResultMutation } from "../combat/encounterMutations.js"
+import type { MoraleChecked } from "../combat/moraleEvents.js"
 import type { System } from "./types.js"
 
 /**

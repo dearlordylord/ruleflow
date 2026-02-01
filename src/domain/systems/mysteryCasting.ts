@@ -3,11 +3,11 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../entity.js"
 import { hasCondition } from "../combat/conditions.js"
-import { TurnStarted } from "../combat/encounterEvents.js"
-import { MysteryResolved } from "../combat/mysteryEvents.js"
+import type { TurnStarted } from "../combat/encounterEvents.js"
 import { SetMysteryCastingMutation } from "../combat/encounterMutations.js"
+import { MysteryResolved } from "../combat/mysteryEvents.js"
+import { getComponent } from "../entity.js"
 import type { System } from "./types.js"
 
 /**

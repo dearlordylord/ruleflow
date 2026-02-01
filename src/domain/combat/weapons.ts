@@ -134,10 +134,10 @@ export class EquippedWeaponsComponent extends Schema.TaggedClass<EquippedWeapons
 
 // Re-export from weaponRegistry for backwards compatibility
 export {
-  WEAPON_DEFINITIONS,
-  getWeaponDefinition,
   getAllWeaponNames,
+  getWeaponDefinition,
   getWeaponsByGroup,
+  WEAPON_DEFINITIONS,
   type WeaponDefinition,
   type WeaponName
 } from "./weaponRegistry.js"

@@ -3,8 +3,8 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { DisarmAttempted, PushAttempted } from "../combat/maneuverEvents.js"
-import { UnequipWeaponMutation, AddConditionMutation } from "../combat/mutations.js"
+import type { DisarmAttempted, PushAttempted } from "../combat/maneuverEvents.js"
+import { AddConditionMutation, UnequipWeaponMutation } from "../combat/mutations.js"
 // TODO: import { SetDistanceMutation } from "../combat/encounterMutations.js"
 import type { System } from "./types.js"
 

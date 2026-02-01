@@ -161,7 +161,8 @@ export class GameState extends Context.Tag("@game/State")<
             case "AddItem":
             case "RemoveItem": {
               const component = yield* createComponentFromMutation(mutation, store)
-              yield* store.update(mutation.entityId, (entity) => Effect.succeed(setComponent(entity, component)))
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.succeed(setComponent(entity, component)))
               break
             }
 

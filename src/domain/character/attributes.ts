@@ -3,7 +3,7 @@
  */
 import { Schema } from "effect"
 
-import type { SetAttributes } from "../mutations.js"
+import type { SetAttributesMutation } from "./mutations.js"
 
 // OSR formula: (attribute - 10) / 2 rounded down
 const calculateModifier = (attribute: number): number => Math.floor((attribute - 10) / 2)
@@ -27,7 +27,7 @@ export class AttributesComponent extends Schema.TaggedClass<AttributesComponent>
 }) {
   static applyMutation(
     existing: AttributesComponent | null,
-    mutation: SetAttributes
+    mutation: SetAttributesMutation
   ): AttributesComponent {
     const base = existing ?? AttributesComponent.make(DEFAULT_ATTRIBUTES)
     return AttributesComponent.make({

@@ -3,23 +3,23 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../entity.js"
 import { hasCondition } from "../combat/conditions.js"
-import { RemoveConditionMutation } from "../combat/mutations.js"
+import type { TurnStarted } from "../combat/encounterEvents.js"
 import {
-  TurnStarted,
-  // @ts-expect-error - TODO: Will be used when turn progression implemented
-  TurnEnded,
   // @ts-expect-error - TODO: Will be used when round end tracking implemented
-  CombatRoundEnded
+  CombatRoundEnded,
+  // @ts-expect-error - TODO: Will be used when turn progression implemented
+  TurnEnded
 } from "../combat/encounterEvents.js"
 import {
-  // @ts-expect-error - TODO: Will be used when turn progression implemented
-  AdvanceTurnMutation,
   // @ts-expect-error - TODO: Will be used when side progression implemented
   AdvanceSideMutation,
+  // @ts-expect-error - TODO: Will be used when turn progression implemented
+  AdvanceTurnMutation,
   ResetActionEconomyMutation
 } from "../combat/encounterMutations.js"
+import { RemoveConditionMutation } from "../combat/mutations.js"
+import { getComponent } from "../entity.js"
 import type { System } from "./types.js"
 
 /**

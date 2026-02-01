@@ -8,7 +8,7 @@ import { SystemName } from "../entities.js"
 import { getComponent } from "../entity.js"
 import { DomainError } from "../errors.js"
 import { getTotalCopper, hasSufficientFunds } from "../inventory/currency.js"
-import { ItemPurchased } from "../inventory/events.js"
+import type { ItemPurchased } from "../inventory/events.js"
 import { getLoadValue } from "../inventory/items.js"
 import { UpdateInventoryLoadMutation } from "../inventory/mutations.js"
 import { AddItemMutation, CreditCurrencyMutation, DebitCurrencyMutation, TransferItemMutation } from "../mutations.js"
@@ -44,7 +44,9 @@ export const itemPurchaseSystem: System = (state, events, _accumulatedMutations)
               Chunk.of(
                 DomainError.make({
                   systemName: SystemName.make("ItemPurchase"),
-                  message: `Buyer has insufficient funds: need ${purchase.priceInCopper} copper, have ${getTotalCopper(buyerCurrency)} copper`
+                  message: `Buyer has insufficient funds: need ${purchase.priceInCopper} copper, have ${
+                    getTotalCopper(buyerCurrency)
+                  } copper`
                 })
               )
             )

@@ -5,7 +5,7 @@
 import { Chunk, Effect } from "effect"
 
 import { getDexterityMod } from "../character/attributes.js"
-import { ArmorEquipped, ShieldEquipped, WeaponEquipped } from "../combat/events.js"
+import type { ArmorEquipped, ShieldEquipped, WeaponEquipped } from "../combat/events.js"
 import {
   EquipArmorMutation,
   EquipShieldMutation,
@@ -82,10 +82,9 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
           // Check if weapon is already equipped
           if (equippedWeapons) {
             const state = equippedWeapons.state
-            const isAlreadyEquipped =
-              (state._type === "OneHanded" &&
-                (state.mainHand === event.weaponId || state.offHand === event.weaponId)) ||
-              (state._type === "TwoHanded" && state.weapon === event.weaponId)
+            const isAlreadyEquipped = (state._type === "OneHanded"
+              && (state.mainHand === event.weaponId || state.offHand === event.weaponId))
+              || (state._type === "TwoHanded" && state.weapon === event.weaponId)
             if (isAlreadyEquipped) {
               return yield* Effect.fail(
                 Chunk.of(
@@ -300,12 +299,11 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
           const dexMod = attributes ? getDexterityMod(attributes) : 0
 
           // AC = baseAC + dexMod (capped by armor category) + shield bonus
-          const dexModCapped =
-            armorComp.armorCategory === "Light"
-              ? dexMod
-              : armorComp.armorCategory === "Medium"
-                ? Math.min(dexMod, 2)
-                : 0
+          const dexModCapped = armorComp.armorCategory === "Light"
+            ? dexMod
+            : armorComp.armorCategory === "Medium"
+            ? Math.min(dexMod, 2)
+            : 0
 
           // Shield bonus from currently equipped shield (reuse equippedArmorComp)
           let shieldBonus = 0

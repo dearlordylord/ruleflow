@@ -3,9 +3,9 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { AddConditionMutation } from "../combat/mutations.js"
-import { CombatStarted } from "../combat/events.js"
 import { StartCombatRoundMutation } from "../combat/encounterMutations.js"
+import type { CombatStarted } from "../combat/events.js"
+import { AddConditionMutation } from "../combat/mutations.js"
 import type { System } from "./types.js"
 
 /**

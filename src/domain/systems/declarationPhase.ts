@@ -3,14 +3,13 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { AddConditionMutation } from "../combat/mutations.js"
+import type { MysteryCastDeclared, RetreatDeclared } from "../combat/encounterEvents.js"
 import {
-  MysteryCastDeclared,
   // @ts-expect-error - TODO: Will be used when withdrawal system implemented
-  WithdrawalDeclared,
-  RetreatDeclared
+  WithdrawalDeclared
 } from "../combat/encounterEvents.js"
 import { SetMysteryCastingMutation } from "../combat/encounterMutations.js"
+import { AddConditionMutation } from "../combat/mutations.js"
 import type { System } from "./types.js"
 
 /**

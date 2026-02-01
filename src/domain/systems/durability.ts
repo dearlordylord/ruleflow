@@ -4,7 +4,7 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { ArmorDamaged, EquipmentRepaired, WeaponDamaged } from "../combat/events.js"
+import type { ArmorDamaged, EquipmentRepaired, WeaponDamaged } from "../combat/events.js"
 import { DamageEquipmentMutation, RepairEquipmentMutation } from "../combat/mutations.js"
 import { SystemName } from "../entities.js"
 import { getComponent } from "../entity.js"
@@ -45,7 +45,7 @@ export const durabilitySystem: System = (state, events, _accumulatedMutations) =
             )
           )
 
-          let muts = Chunk.make(
+          const muts = Chunk.make(
             DamageEquipmentMutation.make({
               equipmentId: event.weaponId,
               damage: 1
@@ -80,7 +80,7 @@ export const durabilitySystem: System = (state, events, _accumulatedMutations) =
             )
           )
 
-          let muts = Chunk.make(
+          const muts = Chunk.make(
             DamageEquipmentMutation.make({
               equipmentId: event.armorId,
               damage: 1

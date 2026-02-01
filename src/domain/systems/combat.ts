@@ -113,15 +113,17 @@ export const combatToHitSystem: System = (state, events, _accumulatedMutations) 
     )
   }).pipe(
     Effect.mapError((err) =>
-      err instanceof DomainError ? Chunk.of(err) :
-      "message" in err && typeof err.message === "string" ? Chunk.of(DomainError.make({
-        systemName: SystemName.make("CombatToHit"),
-        message: err.message
-      })) :
-      Chunk.of(DomainError.make({
-        systemName: SystemName.make("CombatToHit"),
-        message: String(err)
-      }))
+      err instanceof DomainError
+        ? Chunk.of(err)
+        : "message" in err && typeof err.message === "string"
+        ? Chunk.of(DomainError.make({
+          systemName: SystemName.make("CombatToHit"),
+          message: err.message
+        }))
+        : Chunk.of(DomainError.make({
+          systemName: SystemName.make("CombatToHit"),
+          message: String(err)
+        }))
     )
   )
 

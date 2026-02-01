@@ -29,20 +29,20 @@ export {
 export type { System } from "./types.js"
 
 // Combat encounter systems
-export { encounterSetupSystem } from "./encounterSetup.js"
-export { declarationPhaseSystem } from "./declarationPhase.js"
-export { initiativeSystem } from "./initiative.js"
-export { turnManagementSystem } from "./turnManagement.js"
 export { actionEconomySystem } from "./actionEconomy.js"
-export { movementSystem } from "./movement.js"
-export { grappleSystem } from "./grapple.js"
-export { maneuversSystem } from "./maneuvers.js"
-export { defenseStanceSystem } from "./defenseStance.js"
-export { readyActionSystem } from "./readyAction.js"
-export { moraleSystem } from "./morale.js"
-export { criticalEffectsSystem } from "./criticalEffects.js"
 export { concentrationSystem } from "./concentration.js"
+export { criticalEffectsSystem } from "./criticalEffects.js"
+export { declarationPhaseSystem } from "./declarationPhase.js"
+export { defenseStanceSystem } from "./defenseStance.js"
+export { encounterSetupSystem } from "./encounterSetup.js"
+export { grappleSystem } from "./grapple.js"
+export { initiativeSystem } from "./initiative.js"
+export { maneuversSystem } from "./maneuvers.js"
+export { moraleSystem } from "./morale.js"
+export { movementSystem } from "./movement.js"
 export { mysteryCastingSystem } from "./mysteryCasting.js"
+export { readyActionSystem } from "./readyAction.js"
+export { turnManagementSystem } from "./turnManagement.js"
 
 /**
  * Runs systems sequentially, passing accumulated mutations to each subsequent system.

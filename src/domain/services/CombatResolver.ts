@@ -3,10 +3,9 @@
  */
 import { Context, Effect, Layer } from "effect"
 
-import { DiceRoller } from "./DiceRoller.js"
-
-import { DomainError } from "../errors.js"
 import { SystemName } from "../entities.js"
+import { DomainError } from "../errors.js"
+import { DiceRoller } from "./DiceRoller.js"
 
 export class CombatResolver extends Context.Tag("@game/CombatResolver")<
   CombatResolver,

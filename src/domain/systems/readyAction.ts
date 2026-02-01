@@ -3,16 +3,15 @@
  */
 import { Chunk, Effect } from "effect"
 
+import type { CombatRoundEnded, ReadyActionDeclared } from "../combat/encounterEvents.js"
 import {
-  ReadyActionDeclared,
   // @ts-expect-error - TODO: Will be used when trigger matching implemented
-  ReadyActionTriggered,
-  CombatRoundEnded
+  ReadyActionTriggered
 } from "../combat/encounterEvents.js"
 import {
-  SetReadyActionMutation,
   // @ts-expect-error - TODO: Will be used when ready action clearing implemented
-  ClearReadyActionMutation
+  ClearReadyActionMutation,
+  SetReadyActionMutation
 } from "../combat/encounterMutations.js"
 import type { System } from "./types.js"
 

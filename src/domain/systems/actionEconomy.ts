@@ -3,13 +3,13 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../entity.js"
 import { hasCondition } from "../combat/conditions.js"
-import { MovementPerformed } from "../combat/encounterEvents.js"
+import type { MovementPerformed } from "../combat/encounterEvents.js"
 import { UseActionMutation } from "../combat/mutations.js"
-import type { Mutation } from "../mutations.js"
 import { SystemName } from "../entities.js"
+import { getComponent } from "../entity.js"
 import { DomainError } from "../errors.js"
+import type { Mutation } from "../mutations.js"
 import type { System } from "./types.js"
 
 /**
@@ -25,18 +25,20 @@ export const actionEconomySystem: System = (state, events, _accumulatedMutations
 
     // Check main action events
     const mainActionEvents = Chunk.filter(events, (event) =>
-      event._tag === "AttackPerformed" ||
-      event._tag === "DefenseStanceTaken" ||
-      event._tag === "ReadyActionDeclared" ||
-      event._tag === "DisarmAttempted" ||
-      event._tag === "PushAttempted"
-    )
+      event._tag === "AttackPerformed"
+      || event._tag === "DefenseStanceTaken"
+      || event._tag === "ReadyActionDeclared"
+      || event._tag === "DisarmAttempted"
+      || event._tag === "PushAttempted")
 
     for (const actionEvent of mainActionEvents) {
-      const entityId = "entityId" in actionEvent ? actionEvent.entityId :
-        "attackerId" in actionEvent ? actionEvent.attackerId :
-        "disarmerId" in actionEvent ? actionEvent.disarmerId :
-        actionEvent.pusherId
+      const entityId = "entityId" in actionEvent
+        ? actionEvent.entityId
+        : "attackerId" in actionEvent
+        ? actionEvent.attackerId
+        : "disarmerId" in actionEvent
+        ? actionEvent.disarmerId
+        : actionEvent.pusherId
 
       const entity = yield* state.getEntity(entityId).pipe(
         Effect.orElseSucceed(() => null)
@@ -49,10 +51,9 @@ export const actionEconomySystem: System = (state, events, _accumulatedMutations
 
       // Check if entity can act (not stunned/paralyzed/unconscious)
       if (conditions) {
-        const cannotAct =
-          hasCondition(conditions.conditions, "Stunned") ||
-          hasCondition(conditions.conditions, "Paralyzed") ||
-          hasCondition(conditions.conditions, "Unconscious")
+        const cannotAct = hasCondition(conditions.conditions, "Stunned")
+          || hasCondition(conditions.conditions, "Paralyzed")
+          || hasCondition(conditions.conditions, "Unconscious")
         if (cannotAct) {
           errors.push(
             DomainError.make({
@@ -100,7 +101,10 @@ export const actionEconomySystem: System = (state, events, _accumulatedMutations
       const conditions = getComponent(entity, "Conditions")
 
       // Check if grappled/restrained (cannot move)
-      if (conditions && (hasCondition(conditions.conditions, "Grappled") || hasCondition(conditions.conditions, "Restrained"))) {
+      if (
+        conditions
+        && (hasCondition(conditions.conditions, "Grappled") || hasCondition(conditions.conditions, "Restrained"))
+      ) {
         errors.push(
           DomainError.make({
             systemName: SystemName.make("ActionEconomy"),

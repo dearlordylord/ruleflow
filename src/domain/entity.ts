@@ -70,7 +70,7 @@ export const ComponentRegistry = [
   World.PositionComponent,
   World.LightSourceComponent,
   World.VisionComponent
-] as const;
+] as const
 
 /**
  * Union of all possible components across all domains
@@ -82,7 +82,7 @@ export type Component = typeof Component.Type
 
 export const ComponentTag = Schema.Literal(
   ...ComponentRegistry.map(c => c._tag)
-);
+)
 
 /**
  * Entity class with component array

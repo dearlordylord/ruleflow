@@ -3,7 +3,7 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { InitiativeRolled } from "../combat/events.js"
+import type { InitiativeRolled } from "../combat/events.js"
 import { RollInitiativeMutation } from "../combat/mutations.js"
 import type { System } from "./types.js"
 

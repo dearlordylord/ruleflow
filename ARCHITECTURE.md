@@ -1,5 +1,9 @@
 # Architecture
 
+## Core Principle: Player Perspective
+
+State = what the player knows, not what "exists." DM reveals → it becomes true. No hidden world state precedes discovery.
+
 ## Event Sourcing Flow
 
 ```
@@ -29,25 +33,16 @@ type System = (
 - No database, no HTTP, no randomness (inject `DiceRoller`)
 - Validation before mutation generation
 
-## Domain Model
+## Components Are Data-Only
 
-**Rich components** - behavior + data, not just data:
+Pure ECS: components = data, functions = logic.
 
 ```typescript
-// Good: logic in component
-class AttributesComponent {
-  get strengthMod() { return calculateModifier(this.strength) }
-  get loadCapacity() { return this.strength * 10 }
-}
-
-// Avoid: anemic component + logic elsewhere
-class HealthComponent { hp: number }  // logic scattered in systems
+class AttributesComponent { strength, dexterity, ... }  // data only
+export function getStrengthMod(attrs: AttributesComponent): number  // utility
 ```
 
-**When to use what:**
-- Single-entity logic → component methods/getters
-- Cross-entity logic → systems (e.g., buyer/seller/item purchase)
-- Validation → schema constraints + system checks
+Exception: `static applyMutation()` for mutation→component conversion.
 
 ## Layer Dependencies
 
