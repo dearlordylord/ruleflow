@@ -5,7 +5,7 @@ import { Effect } from "effect"
 
 import { Entity, getComponent } from "../components.js"
 import * as Components from "../components.js"
-import { CharacterCreationComponent, SkillsComponent, SavingThrowsComponent, Skill } from "../character/index.js"
+import { SkillsComponent, SavingThrowsComponent, Skill } from "../character/index.js"
 import type { EntityId } from "../entities.js"
 import type { EntityNotFound } from "../errors.js"
 import type { Mutation } from "../mutations.js"

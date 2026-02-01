@@ -3,8 +3,6 @@
  */
 import { Schema } from "effect"
 
-import type { CharacterClass } from "./class.js"
-
 /**
  * Trait categories for organization
  */

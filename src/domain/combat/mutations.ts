@@ -4,7 +4,6 @@
 import { Schema } from "effect"
 
 import { EntityId } from "../entities.js"
-import type { Condition } from "./conditions.js"
 
 export class AddConditionMutation extends Schema.TaggedClass<AddConditionMutation>()(
   "AddCondition",
