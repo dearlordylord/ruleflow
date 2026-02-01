@@ -13,7 +13,10 @@ export class AttackPerformed extends Schema.TaggedClass<AttackPerformed>()(
     weaponId: EntityId,
     attackRoll: Schema.Int.pipe(Schema.between(1, 20)),
     isCritical: Schema.Boolean,
-    isHit: Schema.Boolean
+    isHit: Schema.Boolean,
+    // Critical type: "Margin" if attack exceeds AC by 10+, "Natural20" if natural 20
+    criticalType: Schema.NullOr(Schema.Literal("Margin", "Natural20")),
+    isNatural1: Schema.Boolean
   }
 ) {}
 

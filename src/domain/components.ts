@@ -18,6 +18,22 @@ import {
   TraitProgressionComponent
 } from "./character/index.js"
 import { KnownMysteriesComponent, ConcentrationComponent } from "./mysticism/index.js"
+import {
+  CombatEncounterComponent,
+  DistanceComponent,
+  ReadyActionComponent,
+  DefenseStanceComponent,
+  MysteryCastingComponent
+} from "./combat/encounterComponents.js"
+import {
+  ConditionsComponent,
+  GrappleStateComponent,
+  InitiativeComponent,
+  ActionEconomyComponent
+} from "./combat/conditions.js"
+import {
+  EquippedWeaponsComponent
+} from "./combat/weapons.js"
 
 // OSR formula: (attribute - 10) / 2 rounded down
 const calculateModifier = (attribute: number): number => Math.floor((attribute - 10) / 2)
@@ -177,7 +193,19 @@ export const Component = Schema.Union(
   ExperienceComponent,
   TraitProgressionComponent,
   KnownMysteriesComponent,
-  ConcentrationComponent
+  ConcentrationComponent,
+  // Combat encounter components
+  CombatEncounterComponent,
+  DistanceComponent,
+  ReadyActionComponent,
+  DefenseStanceComponent,
+  MysteryCastingComponent,
+  // Combat condition components
+  ConditionsComponent,
+  GrappleStateComponent,
+  InitiativeComponent,
+  ActionEconomyComponent,
+  EquippedWeaponsComponent
 )
 export type Component = typeof Component.Type
 
@@ -205,7 +233,19 @@ export const ComponentTag = Schema.Literal(
   "Experience",
   "TraitProgression",
   "KnownMysteries",
-  "Concentration"
+  "Concentration",
+  // Combat encounter tags
+  "CombatEncounter",
+  "Distance",
+  "ReadyAction",
+  "DefenseStance",
+  "MysteryCasting",
+  // Combat condition tags
+  "Conditions",
+  "GrappleState",
+  "Initiative",
+  "ActionEconomy",
+  "EquippedWeapons"
 )
 export type ComponentTag = typeof ComponentTag.Type
 

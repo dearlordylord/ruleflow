@@ -19,17 +19,42 @@ import {
   MysteriesChosen,
   CharacterCreationCompleted
 } from "./character/creationEvents.js"
-
-export class AttackPerformed extends Schema.TaggedClass<AttackPerformed>()(
-  "AttackPerformed",
-  {
-    attackerId: EntityId,
-    targetId: EntityId,
-    weaponId: EntityId,
-    attackRoll: Schema.Int.pipe(Schema.between(1, 20)),
-    isCritical: Schema.Boolean
-  }
-) {}
+import {
+  AttackPerformed,
+  DamageDealt,
+  GrappleAttempted,
+  CombatStarted,
+  CombatEnded,
+  InitiativeRolled,
+  WeaponDamaged,
+  ArmorDamaged
+} from "./combat/events.js"
+import {
+  CombatRoundStarted,
+  CombatRoundEnded,
+  TurnStarted,
+  TurnEnded,
+  MysteryCastDeclared,
+  WithdrawalDeclared,
+  RetreatDeclared,
+  MovementPerformed,
+  DefenseStanceTaken,
+  ReadyActionDeclared,
+  ReadyActionTriggered
+} from "./combat/encounterEvents.js"
+import {
+  DisarmAttempted,
+  PushAttempted
+} from "./combat/maneuverEvents.js"
+import {
+  MysteryResolved
+} from "./combat/mysteryEvents.js"
+import {
+  ConcentrationBroken
+} from "./combat/concentrationEvents.js"
+import {
+  MoraleChecked
+} from "./combat/moraleEvents.js"
 
 export class CurrencyTransferred extends Schema.TaggedClass<CurrencyTransferred>()(
   "CurrencyTransferred",
@@ -43,8 +68,46 @@ export class CurrencyTransferred extends Schema.TaggedClass<CurrencyTransferred>
 ) {}
 
 export const DomainEvent = Schema.Union(
+  // Combat events
   AttackPerformed,
+  DamageDealt,
+  GrappleAttempted,
+  CombatStarted,
+  CombatEnded,
+  InitiativeRolled,
+  WeaponDamaged,
+  ArmorDamaged,
+
+  // Combat encounter events
+  CombatRoundStarted,
+  CombatRoundEnded,
+  TurnStarted,
+  TurnEnded,
+  MysteryCastDeclared,
+  WithdrawalDeclared,
+  RetreatDeclared,
+  MovementPerformed,
+  DefenseStanceTaken,
+  ReadyActionDeclared,
+  ReadyActionTriggered,
+
+  // Maneuver events
+  DisarmAttempted,
+  PushAttempted,
+
+  // Mystery events
+  MysteryResolved,
+
+  // Concentration events
+  ConcentrationBroken,
+
+  // Morale events
+  MoraleChecked,
+
+  // Currency events
   CurrencyTransferred,
+
+  // Character creation events
   CharacterCreationStarted,
   AttributesRolled,
   ClassChosen,
