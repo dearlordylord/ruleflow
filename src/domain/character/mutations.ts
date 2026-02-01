@@ -3,7 +3,7 @@
  */
 import { Schema } from "effect"
 
-import type { EntityId } from "../entities.js"
+import { EntityId } from "../entities.js"
 import { AttributesComponent } from "./attributes.js"
 import { ClassComponent } from "./class.js"
 import { HealthComponent } from "./health.js"

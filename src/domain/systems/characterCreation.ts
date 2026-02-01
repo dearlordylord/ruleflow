@@ -439,7 +439,7 @@ function buildFinalCharacterComponents(creation: ValidatedCharacterCreation): Co
 
   // 10. Class-specific components
   const classComponents = buildClassSpecificComponents(
-    creation.class!,
+    creation.class,
     level,
     attrs.intelligence,
     attrs.will,
