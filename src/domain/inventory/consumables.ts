@@ -13,7 +13,9 @@ export const ConsumableType = Schema.Literal(
   "SmokeGrenade",
   "PowderGrenade",
   "Antidote",
-  "Medicine"
+  "Medicine",
+  "RepairKit",
+  "HealingKit"
 )
 export type ConsumableType = typeof ConsumableType.Type
 
@@ -23,6 +25,11 @@ export class ConsumableComponent extends Schema.TaggedClass<ConsumableComponent>
   // Number of uses (e.g., healing kit has 10 uses)
   usesRemaining: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
   maxUses: Schema.Int.pipe(Schema.greaterThan(0)),
+
+  // Durability pool for repair kits (total durability points that can be restored)
+  // Rulebook: Repair kits can restore 10 total durability points across multiple items
+  // This field decrements as items are repaired
+  durabilityPool: Schema.NullOr(Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))),
 
   // Effect description
   effect: Schema.NonEmptyString,
@@ -83,5 +90,27 @@ export const ALCHEMICAL_DEFINITIONS = {
     effect: "1d10 damage, 5' radius, DC 15 save for half",
     saveDC: 15,
     effectDice: "1d10"
+  }
+} as const
+
+/**
+ * Kit definitions from rulebook
+ */
+export const KIT_DEFINITIONS = {
+  "Repair Kit": {
+    consumableType: "RepairKit" as ConsumableType,
+    effect: "Repairs equipment durability",
+    usesRemaining: 10,
+    maxUses: 10,
+    durabilityPool: 10, // Can repair 10 total durability points
+    effectDice: null
+  },
+  "Healing Kit": {
+    consumableType: "HealingKit" as ConsumableType,
+    effect: "Medical aid for wounds and poison, or 10 days of care",
+    usesRemaining: 10,
+    maxUses: 10,
+    durabilityPool: null, // Not for repairs
+    effectDice: null
   }
 } as const

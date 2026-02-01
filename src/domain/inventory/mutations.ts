@@ -23,3 +23,11 @@ export class UseConsumableMutation extends Schema.TaggedClass<UseConsumableMutat
     usesConsumed: Schema.Int.pipe(Schema.greaterThan(0))
   }
 ) {}
+
+export class UpdateInventoryLoadMutation extends Schema.TaggedClass<UpdateInventoryLoadMutation>()(
+  "UpdateInventoryLoad",
+  {
+    entityId: EntityId,
+    newLoad: Schema.Number.pipe(Schema.greaterThanOrEqualTo(0))
+  }
+) {}

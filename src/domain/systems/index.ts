@@ -12,7 +12,10 @@ import type { System } from "./types.js"
 export { characterCreationSystem } from "./characterCreation.js"
 export { combatToHitSystem, traumaSystem } from "./combat.js"
 export { currencyTransferSystem } from "./currency.js"
+export { durabilitySystem } from "./durability.js"
 export { attributeModifierSystem, encumbranceValidationSystem } from "./encumbrance.js"
+export { equipmentSystem } from "./equipment.js"
+export { itemPurchaseSystem } from "./itemPurchase.js"
 export {
   containerDiscoverySystem,
   containerLockDiscoverySystem,

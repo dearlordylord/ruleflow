@@ -5,8 +5,22 @@ import { Schema } from "effect"
 
 import { AttributesComponent, ClassComponent, HealthComponent } from "./character/index.js"
 import { SetSavingThrowsMutation, SetSkillsMutation, UpdateCharacterCreationMutation } from "./character/mutations.js"
+import {
+  ConsumeAmmunitionMutation,
+  DamageEquipmentMutation,
+  EquipArmorMutation,
+  EquipShieldMutation,
+  EquipWeaponMutation,
+  ReloadWeaponMutation,
+  RepairEquipmentMutation,
+  UnequipArmorMutation,
+  UnequipShieldMutation,
+  UnequipWeaponMutation,
+  UpdateCombatStatsMutation
+} from "./combat/mutations.js"
 import { EntityId } from "./entities.js"
 import { Component, ComponentTag, Entity } from "./entity.js"
+import { UpdateInventoryLoadMutation, UseConsumableMutation } from "./inventory/mutations.js"
 
 export class SetAttributesMutation extends Schema.TaggedClass<SetAttributesMutation>()(
   "SetAttributes",
@@ -135,6 +149,21 @@ export const Mutation = Schema.Union(
   SetSkillsMutation,
   SetSavingThrowsMutation,
   CreateEntityMutation,
-  TransferItemMutation
+  // Inventory mutations
+  TransferItemMutation,
+  UseConsumableMutation,
+  UpdateInventoryLoadMutation,
+  // Combat/Equipment mutations
+  EquipWeaponMutation,
+  UnequipWeaponMutation,
+  EquipArmorMutation,
+  UnequipArmorMutation,
+  EquipShieldMutation,
+  UnequipShieldMutation,
+  DamageEquipmentMutation,
+  RepairEquipmentMutation,
+  UpdateCombatStatsMutation,
+  ReloadWeaponMutation,
+  ConsumeAmmunitionMutation
 )
 export type Mutation = typeof Mutation.Type

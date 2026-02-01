@@ -19,7 +19,19 @@ import {
   TraitChosen
 } from "./character/creationEvents.js"
 import { CharacterDied } from "./character/events.js"
+import {
+  ArmorDamaged,
+  ArmorEquipped,
+  ArmorUnequipped,
+  EquipmentRepaired,
+  ShieldEquipped,
+  ShieldUnequipped,
+  WeaponDamaged,
+  WeaponEquipped,
+  WeaponUnequipped
+} from "./combat/events.js"
 import { EntityId } from "./entities.js"
+import { ConsumableUsed, ItemDiscarded, ItemPurchased, ItemSold } from "./inventory/events.js"
 import {
   ContainerDiscovered,
   ContainerLockDiscovered,
@@ -70,12 +82,28 @@ export const DomainEvent = Schema.Union(
   MysteriesChosen,
   CharacterCreationCompleted,
   CharacterDied,
+  // Inventory events
+  ItemPurchased,
+  ItemSold,
+  ConsumableUsed,
+  ItemDiscarded,
+  // Looting events
   ItemDiscovered,
   ContainerDiscovered,
   ItemLooted,
   ItemDropped,
   ContainerSearched,
   ContainerLockDiscovered,
-  LootDistributed
+  LootDistributed,
+  // Combat/Equipment events
+  WeaponEquipped,
+  WeaponUnequipped,
+  ArmorEquipped,
+  ArmorUnequipped,
+  ShieldEquipped,
+  ShieldUnequipped,
+  EquipmentRepaired,
+  WeaponDamaged,
+  ArmorDamaged
 )
 export type DomainEvent = typeof DomainEvent.Type

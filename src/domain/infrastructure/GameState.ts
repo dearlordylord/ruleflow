@@ -5,11 +5,16 @@ import { Context, Effect, Layer } from "effect"
 
 import { HealthComponent } from "../character/health.js"
 import { CharacterCreationComponent } from "../character/index.js"
+import { ArmorComponent, EquippedArmorComponent, ShieldComponent } from "../combat/index.js"
+import { CombatStatsComponent } from "../combat/stats.js"
+import { EquippedWeaponsComponent, WeaponComponent } from "../combat/weapons.js"
 import type { EntityId } from "../entities.js"
 import type { Entity } from "../entity.js"
 import { getComponent, removeComponent, setComponent } from "../entity.js"
 import type { EntityNotFound } from "../errors.js"
+import { ConsumableComponent } from "../inventory/consumables.js"
 import { CurrencyComponent } from "../inventory/currency.js"
+import { InventoryComponent } from "../inventory/items.js"
 import type { Mutation } from "../mutations.js"
 import { createComponentFromMutation } from "./helpers.js"
 import { ReadModelStore } from "./ReadModelStore.js"
@@ -187,6 +192,229 @@ export class GameState extends Context.Tag("@game/State")<
               yield* store.update(mutation.entityId, (entity) => Effect.succeed(setComponent(entity, component)))
               break
             }
+
+            case "TransferItem":
+              // Move item from one entity's inventory to another
+              yield* store.update(mutation.fromEntityId, (fromEntity) =>
+                Effect.gen(function*() {
+                  const fromInventory = getComponent(fromEntity, "Inventory")
+                  if (!fromInventory) return fromEntity
+                  const newInventory = InventoryComponent.make({
+                    ...fromInventory,
+                    items: fromInventory.items.filter(id => id !== mutation.itemId)
+                  })
+                  return setComponent(fromEntity, newInventory)
+                }))
+              yield* store.update(mutation.toEntityId, (toEntity) =>
+                Effect.gen(function*() {
+                  const toInventory = getComponent(toEntity, "Inventory")
+                  if (!toInventory) return toEntity
+                  const newInventory = InventoryComponent.make({
+                    ...toInventory,
+                    items: [...toInventory.items, mutation.itemId]
+                  })
+                  return setComponent(toEntity, newInventory)
+                }))
+              break
+
+            case "UpdateInventoryLoad":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const inventory = getComponent(entity, "Inventory")
+                  if (!inventory) return entity
+                  const newInventory = InventoryComponent.make({
+                    ...inventory,
+                    currentLoad: mutation.newLoad
+                  })
+                  return setComponent(entity, newInventory)
+                }))
+              break
+
+            case "UseConsumable":
+              yield* store.update(mutation.consumableId, (entity) =>
+                Effect.gen(function*() {
+                  const consumable = getComponent(entity, "Consumable")
+                  if (!consumable) return entity
+                  const newConsumable = ConsumableComponent.make({
+                    ...consumable,
+                    usesRemaining: Math.max(0, consumable.usesRemaining - mutation.usesConsumed),
+                    durabilityPool: consumable.durabilityPool
+                      ? Math.max(0, consumable.durabilityPool - mutation.usesConsumed)
+                      : null
+                  })
+                  return setComponent(entity, newConsumable)
+                }))
+              break
+
+            case "EquipWeapon":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const equipped = getComponent(entity, "EquippedWeapons")
+                  const base = equipped ?? EquippedWeaponsComponent.make({
+                    mainHand: null,
+                    offHand: null,
+                    equippedAmmunition: null
+                  })
+                  const newEquipped = EquippedWeaponsComponent.make({
+                    ...base,
+                    [mutation.hand === "MainHand" ? "mainHand" : "offHand"]: mutation.weaponId
+                  })
+                  return setComponent(entity, newEquipped)
+                }))
+              break
+
+            case "UnequipWeapon":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const equipped = getComponent(entity, "EquippedWeapons")
+                  if (!equipped) return entity
+                  const newEquipped = EquippedWeaponsComponent.make({
+                    ...equipped,
+                    [mutation.hand === "MainHand" ? "mainHand" : "offHand"]: null
+                  })
+                  return setComponent(entity, newEquipped)
+                }))
+              break
+
+            case "EquipArmor":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const equipped = getComponent(entity, "EquippedArmor")
+                  const base = equipped ?? EquippedArmorComponent.make({
+                    armorId: null,
+                    shieldId: null
+                  })
+                  const newEquipped = EquippedArmorComponent.make({
+                    ...base,
+                    armorId: mutation.armorId
+                  })
+                  return setComponent(entity, newEquipped)
+                }))
+              break
+
+            case "UnequipArmor":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const equipped = getComponent(entity, "EquippedArmor")
+                  if (!equipped) return entity
+                  const newEquipped = EquippedArmorComponent.make({
+                    ...equipped,
+                    armorId: null
+                  })
+                  return setComponent(entity, newEquipped)
+                }))
+              break
+
+            case "EquipShield":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const equipped = getComponent(entity, "EquippedArmor")
+                  const base = equipped ?? EquippedArmorComponent.make({
+                    armorId: null,
+                    shieldId: null
+                  })
+                  const newEquipped = EquippedArmorComponent.make({
+                    ...base,
+                    shieldId: mutation.shieldId
+                  })
+                  return setComponent(entity, newEquipped)
+                }))
+              break
+
+            case "UnequipShield":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const equipped = getComponent(entity, "EquippedArmor")
+                  if (!equipped) return entity
+                  const newEquipped = EquippedArmorComponent.make({
+                    ...equipped,
+                    shieldId: null
+                  })
+                  return setComponent(entity, newEquipped)
+                }))
+              break
+
+            case "DamageEquipment":
+              yield* store.update(mutation.equipmentId, (entity) =>
+                Effect.gen(function*() {
+                  const weapon = getComponent(entity, "Weapon")
+                  const armor = getComponent(entity, "Armor")
+                  const shield = getComponent(entity, "Shield")
+
+                  if (weapon) {
+                    const newWeapon = WeaponComponent.make({
+                      ...weapon,
+                      durability: Math.max(0, weapon.durability - mutation.damage)
+                    })
+                    return setComponent(entity, newWeapon)
+                  }
+                  if (armor) {
+                    const newArmor = ArmorComponent.make({
+                      ...armor,
+                      durability: Math.max(0, armor.durability - mutation.damage)
+                    })
+                    return setComponent(entity, newArmor)
+                  }
+                  if (shield) {
+                    const newShield = ShieldComponent.make({
+                      ...shield,
+                      durability: Math.max(0, shield.durability - mutation.damage)
+                    })
+                    return setComponent(entity, newShield)
+                  }
+                  return entity
+                }))
+              break
+
+            case "RepairEquipment":
+              yield* store.update(mutation.equipmentId, (entity) =>
+                Effect.gen(function*() {
+                  const weapon = getComponent(entity, "Weapon")
+                  const armor = getComponent(entity, "Armor")
+                  const shield = getComponent(entity, "Shield")
+
+                  if (weapon) {
+                    const newWeapon = WeaponComponent.make({
+                      ...weapon,
+                      durability: Math.min(weapon.maxDurability, weapon.durability + mutation.durabilityRestored)
+                    })
+                    return setComponent(entity, newWeapon)
+                  }
+                  if (armor) {
+                    const newArmor = ArmorComponent.make({
+                      ...armor,
+                      durability: Math.min(armor.maxDurability, armor.durability + mutation.durabilityRestored)
+                    })
+                    return setComponent(entity, newArmor)
+                  }
+                  if (shield) {
+                    const newShield = ShieldComponent.make({
+                      ...shield,
+                      durability: Math.min(shield.maxDurability, shield.durability + mutation.durabilityRestored)
+                    })
+                    return setComponent(entity, newShield)
+                  }
+                  return entity
+                }))
+              break
+
+            case "UpdateCombatStats":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const newCombatStats = CombatStatsComponent.make({
+                    armorClass: mutation.armorClass,
+                    meleeAttackBonus: mutation.meleeAttackBonus,
+                    rangedAttackBonus: mutation.rangedAttackBonus,
+                    initiativeModifier: mutation.initiativeModifier
+                  })
+                  return setComponent(entity, newCombatStats)
+                }))
+              break
+
+            case "ReloadWeapon":
+            case "ConsumeAmmunition":
+              // TODO: Implement ranged weapon mechanics
+              break
 
             default: {
               // SetAttributes, SetHealth, SetClass
