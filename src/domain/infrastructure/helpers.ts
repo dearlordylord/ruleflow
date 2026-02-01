@@ -105,7 +105,7 @@ export function createComponentFromMutation(
     })
   }
 
-  if (mutation._tag === "SetComponents.Skills") {
+  if (mutation._tag === "SetSkills") {
     return Effect.gen(function*() {
       const entity = yield* store.get(mutation.entityId).pipe(
         Effect.orElseSucceed(() =>
@@ -117,14 +117,14 @@ export function createComponentFromMutation(
       )
       const existing = getComponent(entity, "Skills")
 
-      const defaultSkill = Components.Skill.make({
+      const defaultSkill = Skill.make({
         proficiency: "Untrained",
         levelBonus: 0
       })
 
-      const base = existing instanceof Components.SkillsComponent
+      const base = existing instanceof SkillsComponent
         ? existing
-        : Components.SkillsComponent.make({
+        : SkillsComponent.make({
             melee: defaultSkill,
             might: defaultSkill,
             accuracy: defaultSkill,
@@ -142,7 +142,7 @@ export function createComponentFromMutation(
             animalHandling: defaultSkill
           })
 
-      return Components.SkillsComponent.make({
+      return SkillsComponent.make({
         melee: mutation.data.melee ?? base.melee,
         might: mutation.data.might ?? base.might,
         accuracy: mutation.data.accuracy ?? base.accuracy,
@@ -173,9 +173,9 @@ export function createComponentFromMutation(
         )
       )
       const existing = getComponent(entity, "SavingThrows")
-      const base = existing instanceof Components.SavingThrowsComponent
+      const base = existing instanceof SavingThrowsComponent
         ? existing
-        : Components.SavingThrowsComponent.make({
+        : SavingThrowsComponent.make({
             baseSaveBonus: 0,
             restraintModifier: 0,
             exhaustionModifier: 0,
@@ -185,7 +185,7 @@ export function createComponentFromMutation(
             curseModifier: 0
           })
 
-      return Components.SavingThrowsComponent.make({
+      return SavingThrowsComponent.make({
         baseSaveBonus: mutation.data.baseSaveBonus ?? base.baseSaveBonus,
         restraintModifier: mutation.data.restraintModifier ?? base.restraintModifier,
         exhaustionModifier: mutation.data.exhaustionModifier ?? base.exhaustionModifier,
