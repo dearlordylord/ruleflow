@@ -5,6 +5,7 @@ import { Effect } from "effect"
 
 import { Entity, getComponent } from "../components.js"
 import * as Components from "../components.js"
+import { CharacterCreationComponent, SkillsComponent, SavingThrowsComponent } from "../character/index.js"
 import type { EntityId } from "../entities.js"
 import type { EntityNotFound } from "../errors.js"
 import type { Mutation } from "../mutations.js"
@@ -163,7 +164,7 @@ export function createComponentFromMutation(
     return Effect.die(`DebitCurrency/CreditCurrency should not reach createComponentFromMutation`)
   }
 
-  if (mutation._tag === "DealDamage" || mutation._tag === "RemoveComponent") {
+  if (mutation._tag === "DealDamage" || mutation._tag === "RemoveComponent" || mutation._tag === "SetMultipleComponents") {
     // These mutations are handled directly in GameState.applyMutation
     return Effect.die(`${mutation._tag} should not reach createComponentFromMutation`)
   }

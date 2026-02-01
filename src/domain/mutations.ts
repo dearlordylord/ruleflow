@@ -3,7 +3,12 @@
  */
 import { Schema } from "effect"
 
-import { AttributesComponent, ClassComponent, ComponentTag, HealthComponent } from "./components.js"
+import { AttributesComponent, ClassComponent, Component, ComponentTag, HealthComponent } from "./components.js"
+import {
+  UpdateCharacterCreationMutation,
+  SetSkillsMutation,
+  SetSavingThrowsMutation
+} from "./character/mutations.js"
 import { EntityId } from "./entities.js"
 
 export class SetAttributesMutation extends Schema.TaggedClass<SetAttributesMutation>()(
@@ -83,6 +88,15 @@ export class RemoveComponentMutation extends Schema.TaggedClass<RemoveComponentM
   }
 ) {}
 
+export class SetMultipleComponentsMutation extends Schema.TaggedClass<SetMultipleComponentsMutation>()(
+  "SetMultipleComponents",
+  {
+    entityId: EntityId,
+    components: Schema.Array(Component),
+    removeComponents: Schema.Array(ComponentTag)
+  }
+) {}
+
 export const Mutation = Schema.Union(
   SetAttributesMutation,
   SetHealthMutation,
@@ -92,6 +106,10 @@ export const Mutation = Schema.Union(
   RemoveItemMutation,
   DebitCurrencyMutation,
   CreditCurrencyMutation,
-  RemoveComponentMutation
+  RemoveComponentMutation,
+  SetMultipleComponentsMutation,
+  UpdateCharacterCreationMutation,
+  SetSkillsMutation,
+  SetSavingThrowsMutation
 )
 export type Mutation = typeof Mutation.Type

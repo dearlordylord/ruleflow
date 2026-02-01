@@ -7,6 +7,9 @@ import type { EntityId } from "../entities.js"
 import { AttributesComponent } from "./attributes.js"
 import { ClassComponent } from "./class.js"
 import { HealthComponent } from "./health.js"
+import { CharacterCreationComponent } from "./creation.js"
+import { SkillsComponent } from "./skills.js"
+import { SavingThrowsComponent } from "./saves.js"
 
 export class SetAttributesMutation extends Schema.TaggedClass<SetAttributesMutation>()(
   "SetAttributes",
@@ -95,5 +98,30 @@ export class RecoverLuckPointsMutation extends Schema.TaggedClass<RecoverLuckPoi
   {
     entityId: EntityId,
     amount: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
+  }
+) {}
+
+// Character creation mutations
+export class UpdateCharacterCreationMutation extends Schema.TaggedClass<UpdateCharacterCreationMutation>()(
+  "UpdateCharacterCreation",
+  {
+    entityId: EntityId,
+    data: Schema.Struct(CharacterCreationComponent.fields).pipe(Schema.partial)
+  }
+) {}
+
+export class SetSkillsMutation extends Schema.TaggedClass<SetSkillsMutation>()(
+  "SetSkills",
+  {
+    entityId: EntityId,
+    data: Schema.Struct(SkillsComponent.fields).pipe(Schema.partial)
+  }
+) {}
+
+export class SetSavingThrowsMutation extends Schema.TaggedClass<SetSavingThrowsMutation>()(
+  "SetSavingThrows",
+  {
+    entityId: EntityId,
+    data: Schema.Struct(SavingThrowsComponent.fields).pipe(Schema.partial)
   }
 ) {}

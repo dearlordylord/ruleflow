@@ -29,6 +29,7 @@ export const Component = Schema.Union(
   Character.SavingThrowsComponent,
   Character.ExperienceComponent,
   Character.TraitProgressionComponent,
+  Character.CharacterCreationComponent,
 
   // Combat domain
   Combat.CombatStatsComponent,
@@ -86,6 +87,7 @@ export const ComponentTag = Schema.Literal(
   "SavingThrows",
   "Experience",
   "TraitProgression",
+  "CharacterCreation",
 
   // Combat
   "CombatStats",

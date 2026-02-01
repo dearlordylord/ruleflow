@@ -5,6 +5,11 @@ import { Context, Effect, Layer } from "effect"
 
 import type { Entity } from "../components.js"
 import { CurrencyComponent, getComponent, HealthComponent, removeComponent, setComponent } from "../components.js"
+import {
+  CharacterCreationComponent,
+  SkillsComponent,
+  SavingThrowsComponent
+} from "../character/index.js"
 import type { EntityId } from "../entities.js"
 import type { EntityNotFound } from "../errors.js"
 import type { Mutation } from "../mutations.js"
@@ -31,6 +36,25 @@ export class GameState extends Context.Tag("@game/State")<
             case "RemoveComponent":
               yield* store.update(mutation.entityId, (entity) =>
                 Effect.succeed(removeComponent(entity, mutation.componentTag)))
+              break
+
+            case "SetMultipleComponents":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  let updated = entity
+
+                  // Remove components first
+                  for (const tag of mutation.removeComponents) {
+                    updated = removeComponent(updated, tag)
+                  }
+
+                  // Set all components
+                  for (const component of mutation.components) {
+                    updated = setComponent(updated, component)
+                  }
+
+                  return updated
+                }))
               break
 
             case "DealDamage":
@@ -80,6 +104,68 @@ export class GameState extends Context.Tag("@game/State")<
                     gold: currency.gold + mutation.gold
                   })
                   return setComponent(entity, newCurrency)
+                }))
+              break
+
+            case "UpdateCharacterCreation":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const existing = getComponent(entity, "CharacterCreation")
+                  if (!existing) {
+                    return entity
+                  }
+                  const updated = CharacterCreationComponent.make({
+                    playerId: mutation.data.playerId ?? existing.playerId,
+                    currentStep: mutation.data.currentStep ?? existing.currentStep,
+                    startingLevel: mutation.data.startingLevel ?? existing.startingLevel,
+                    attributes: mutation.data.attributes !== undefined ? mutation.data.attributes : existing.attributes,
+                    class: mutation.data.class !== undefined ? mutation.data.class : existing.class,
+                    skills: mutation.data.skills !== undefined ? mutation.data.skills : existing.skills,
+                    trait: mutation.data.trait !== undefined ? mutation.data.trait : existing.trait,
+                    hitPoints: mutation.data.hitPoints !== undefined ? mutation.data.hitPoints : existing.hitPoints,
+                    startingMoney: mutation.data.startingMoney ?? existing.startingMoney,
+                    remainingMoney: mutation.data.remainingMoney ?? existing.remainingMoney,
+                    purchasedItems: mutation.data.purchasedItems ?? existing.purchasedItems,
+                    languages: mutation.data.languages ?? existing.languages,
+                    alignment: mutation.data.alignment !== undefined ? mutation.data.alignment : existing.alignment,
+                    name: mutation.data.name !== undefined ? mutation.data.name : existing.name,
+                    mysteries: mutation.data.mysteries !== undefined ? mutation.data.mysteries : existing.mysteries
+                  })
+                  return setComponent(entity, updated)
+                }))
+              break
+
+            case "SetSkills":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const existing = getComponent(entity, "Skills")
+                  const base = existing || SkillsComponent.make({} as any)
+                  const updated = SkillsComponent.make({
+                    ...base,
+                    ...mutation.data
+                  } as any)
+                  return setComponent(entity, updated)
+                }))
+              break
+
+            case "SetSavingThrows":
+              yield* store.update(mutation.entityId, (entity) =>
+                Effect.gen(function*() {
+                  const existing = getComponent(entity, "SavingThrows")
+                  const base = existing || SavingThrowsComponent.make({
+                    baseSaveBonus: 0,
+                    restraintModifier: 0,
+                    exhaustionModifier: 0,
+                    dodgeModifier: 0,
+                    suppressionModifier: 0,
+                    confusionModifier: 0,
+                    curseModifier: 0
+                  })
+                  const updated = SavingThrowsComponent.make({
+                    ...base,
+                    ...mutation.data
+                  })
+                  return setComponent(entity, updated)
                 }))
               break
 

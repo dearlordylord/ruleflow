@@ -21,6 +21,10 @@ export * from "./saves.js"
 // Progression and leveling
 export * from "./progression.js"
 
+// Character creation
+export * from "./creation.js"
+export * from "./creationEvents.js"
+
 // Mutations and events
 export * from "./mutations.js"
 export * from "./events.js"

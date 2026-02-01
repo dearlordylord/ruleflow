@@ -12,6 +12,7 @@ import type { System } from "./types.js"
 export { combatToHitSystem, traumaSystem } from "./combat.js"
 export { currencyTransferSystem } from "./currency.js"
 export { attributeModifierSystem, encumbranceValidationSystem } from "./encumbrance.js"
+export { characterCreationSystem } from "./characterCreation.js"
 export type { System } from "./types.js"
 
 export const runSystemsPipeline = (

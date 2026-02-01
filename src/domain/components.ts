@@ -4,6 +4,20 @@
 import { Schema } from "effect"
 
 import { EntityId } from "./entities.js"
+import { CharacterCreationComponent } from "./character/creation.js"
+import { SkillsComponent } from "./character/skills.js"
+import { SavingThrowsComponent } from "./character/saves.js"
+import {
+  TraumaStateComponent,
+  CombatSuperiorityComponent,
+  SneakAttackComponent,
+  LuckySkillComponent,
+  ForbiddenKnowledgeComponent,
+  TraitsComponent,
+  ExperienceComponent,
+  TraitProgressionComponent
+} from "./character/index.js"
+import { KnownMysteriesComponent, ConcentrationComponent } from "./mysticism/index.js"
 
 // OSR formula: (attribute - 10) / 2 rounded down
 const calculateModifier = (attribute: number): number => Math.floor((attribute - 10) / 2)
@@ -150,7 +164,20 @@ export const Component = Schema.Union(
   InventoryComponent,
   CurrencyComponent,
   ArmorComponent,
-  SpecializationComponent
+  SpecializationComponent,
+  CharacterCreationComponent,
+  SkillsComponent,
+  SavingThrowsComponent,
+  TraumaStateComponent,
+  CombatSuperiorityComponent,
+  SneakAttackComponent,
+  LuckySkillComponent,
+  ForbiddenKnowledgeComponent,
+  TraitsComponent,
+  ExperienceComponent,
+  TraitProgressionComponent,
+  KnownMysteriesComponent,
+  ConcentrationComponent
 )
 export type Component = typeof Component.Type
 
@@ -165,7 +192,20 @@ export const ComponentTag = Schema.Literal(
   "Inventory",
   "Currency",
   "Armor",
-  "Specialization"
+  "Specialization",
+  "CharacterCreation",
+  "Skills",
+  "SavingThrows",
+  "TraumaState",
+  "CombatSuperiority",
+  "SneakAttack",
+  "LuckySkill",
+  "ForbiddenKnowledge",
+  "Traits",
+  "Experience",
+  "TraitProgression",
+  "KnownMysteries",
+  "Concentration"
 )
 export type ComponentTag = typeof ComponentTag.Type
 

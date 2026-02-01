@@ -4,6 +4,21 @@
 import { Schema } from "effect"
 
 import { EntityId } from "./entities.js"
+import {
+  CharacterCreationStarted,
+  AttributesRolled,
+  ClassChosen,
+  SkillsChosen,
+  TraitChosen,
+  HitPointsRolled,
+  StartingMoneyRolled,
+  EquipmentPurchased,
+  LanguagesChosen,
+  AlignmentChosen,
+  NameChosen,
+  MysteriesChosen,
+  CharacterCreationCompleted
+} from "./character/creationEvents.js"
 
 export class AttackPerformed extends Schema.TaggedClass<AttackPerformed>()(
   "AttackPerformed",
@@ -27,5 +42,21 @@ export class CurrencyTransferred extends Schema.TaggedClass<CurrencyTransferred>
   }
 ) {}
 
-export const DomainEvent = Schema.Union(AttackPerformed, CurrencyTransferred)
+export const DomainEvent = Schema.Union(
+  AttackPerformed,
+  CurrencyTransferred,
+  CharacterCreationStarted,
+  AttributesRolled,
+  ClassChosen,
+  SkillsChosen,
+  TraitChosen,
+  HitPointsRolled,
+  StartingMoneyRolled,
+  EquipmentPurchased,
+  LanguagesChosen,
+  AlignmentChosen,
+  NameChosen,
+  MysteriesChosen,
+  CharacterCreationCompleted
+)
 export type DomainEvent = typeof DomainEvent.Type
