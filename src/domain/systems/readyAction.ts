@@ -3,16 +3,13 @@
  */
 import { Chunk, Effect } from "effect"
 
-import type { CombatRoundEnded, ReadyActionDeclared } from "../combat/encounterEvents.js"
-import {
-  // @ts-expect-error - TODO: Will be used when trigger matching implemented
-  ReadyActionTriggered
+import type {
+  CombatRoundEnded,
+  ReadyActionDeclared,
+  ReadyActionTriggered as _ReadyActionTriggered
 } from "../combat/encounterEvents.js"
-import {
-  // @ts-expect-error - TODO: Will be used when ready action clearing implemented
-  ClearReadyActionMutation,
-  SetReadyActionMutation
-} from "../combat/encounterMutations.js"
+import type { ClearReadyActionMutation as _ClearReadyActionMutation } from "../combat/encounterMutations.js"
+import { SetReadyActionMutation } from "../combat/encounterMutations.js"
 import type { System } from "./types.js"
 
 /**
@@ -23,7 +20,7 @@ import type { System } from "./types.js"
  */
 export const readyActionSystem: System = (state, events, _accumulatedMutations) =>
   Effect.gen(function*() {
-    const mutations: Array<any> = []
+    const mutations: Array<typeof SetReadyActionMutation.Type> = []
 
     // Handle ready action declarations
     const readyEvents = Chunk.filter(

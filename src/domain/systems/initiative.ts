@@ -27,7 +27,7 @@ export const initiativeSystem: System = (state, events, _accumulatedMutations) =
       return Chunk.empty()
     }
 
-    const mutations: Array<any> = []
+    const mutations: Array<typeof RollInitiativeMutation.Type> = []
 
     // Store initiative for each entity
     for (const initEvent of initiativeEvents) {

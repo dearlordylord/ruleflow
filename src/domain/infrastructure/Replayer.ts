@@ -4,8 +4,7 @@
 import { Chunk, Context, Effect, Layer } from "effect"
 
 import type { DomainError, EntityNotFound } from "../errors.js"
-import type { AllSystemRequirements } from "../systems/index.js"
-import { runSystemsPipeline, type System } from "../systems/index.js"
+import { type AllSystemRequirements, runSystemsPipeline, type System } from "../systems/index.js"
 import type { EventLogEntry } from "./EventLog.js"
 import { GameState } from "./GameState.js"
 

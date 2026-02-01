@@ -5,7 +5,6 @@
  * All system types are derived from this registry.
  */
 import type { CombatResolver } from "../services/CombatResolver.js"
-
 import { actionEconomySystem } from "./actionEconomy.js"
 import { characterCreationSystem } from "./characterCreation.js"
 import { combatToHitSystem, traumaSystem } from "./combat.js"
@@ -118,6 +117,10 @@ export function getSystemByName<N extends SystemName>(
   name: N
 ): typeof SystemRegistry[number] & { name: N } {
   const entry = SystemRegistry.find((s) => s.name === name)
+  // This is a programming error - caller passed an invalid system name
+  // Since SystemName is a union type, this should never happen at runtime
+  // if TypeScript types are respected. We use an assertion here.
+  // eslint-disable-next-line functional/no-throw-statements -- Programming error, not domain error
   if (!entry) throw new Error(`System ${name} not found in registry`)
   return entry as typeof SystemRegistry[number] & { name: N }
 }

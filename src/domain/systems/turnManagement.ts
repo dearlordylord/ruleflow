@@ -4,20 +4,16 @@
 import { Chunk, Effect } from "effect"
 
 import { hasCondition } from "../combat/conditions.js"
-import type { TurnStarted } from "../combat/encounterEvents.js"
-import {
-  // @ts-expect-error - TODO: Will be used when round end tracking implemented
-  CombatRoundEnded,
-  // @ts-expect-error - TODO: Will be used when turn progression implemented
-  TurnEnded
+import type {
+  CombatRoundEnded as _CombatRoundEnded,
+  TurnEnded as _TurnEnded,
+  TurnStarted
 } from "../combat/encounterEvents.js"
-import {
-  // @ts-expect-error - TODO: Will be used when side progression implemented
-  AdvanceSideMutation,
-  // @ts-expect-error - TODO: Will be used when turn progression implemented
-  AdvanceTurnMutation,
-  ResetActionEconomyMutation
+import type {
+  AdvanceSideMutation as _AdvanceSideMutation,
+  AdvanceTurnMutation as _AdvanceTurnMutation
 } from "../combat/encounterMutations.js"
+import { ResetActionEconomyMutation } from "../combat/encounterMutations.js"
 import { RemoveConditionMutation } from "../combat/mutations.js"
 import { getComponent } from "../entity.js"
 import type { System } from "./types.js"
@@ -30,7 +26,7 @@ import type { System } from "./types.js"
  */
 export const turnManagementSystem: System = (state, events, _accumulatedMutations) =>
   Effect.gen(function*() {
-    const mutations: Array<any> = []
+    const mutations: Array<typeof RemoveConditionMutation.Type | typeof ResetActionEconomyMutation.Type> = []
 
     // Handle turn starts
     const turnStartEvents = Chunk.filter(

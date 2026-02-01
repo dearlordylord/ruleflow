@@ -11,7 +11,7 @@ import {
   SkillsComponent
 } from "../character/index.js"
 import type { EntityId } from "../entities.js"
-import type { Component, Entity, getComponent } from "../entity.js"
+import { type Component, type Entity, getComponent } from "../entity.js"
 import type { EntityNotFound } from "../errors.js"
 import { InventoryComponent } from "../inventory/items.js"
 import type { Mutation } from "../mutations.js"

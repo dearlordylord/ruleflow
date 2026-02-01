@@ -13,7 +13,7 @@ import type { System } from "./types.js"
  */
 export const maneuversSystem: System = (state, events, _accumulatedMutations) =>
   Effect.gen(function*() {
-    const mutations: Array<any> = []
+    const mutations: Array<typeof UnequipWeaponMutation.Type | typeof AddConditionMutation.Type> = []
 
     // Disarm attempts
     const disarmEvents = Chunk.filter(

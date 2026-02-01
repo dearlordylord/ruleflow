@@ -3,10 +3,10 @@
  */
 import { Chunk, Effect } from "effect"
 
-import type { MysteryCastDeclared, RetreatDeclared } from "../combat/encounterEvents.js"
-import {
-  // @ts-expect-error - TODO: Will be used when withdrawal system implemented
-  WithdrawalDeclared
+import type {
+  MysteryCastDeclared,
+  RetreatDeclared,
+  WithdrawalDeclared as _WithdrawalDeclared
 } from "../combat/encounterEvents.js"
 import { SetMysteryCastingMutation } from "../combat/encounterMutations.js"
 import { AddConditionMutation } from "../combat/mutations.js"
@@ -19,7 +19,7 @@ import type { System } from "./types.js"
  */
 export const declarationPhaseSystem: System = (state, events, _accumulatedMutations) =>
   Effect.gen(function*() {
-    const mutations: Array<any> = []
+    const mutations: Array<typeof AddConditionMutation.Type | typeof SetMysteryCastingMutation.Type> = []
 
     // Mystery casting declarations
     const mysteryCastEvents = Chunk.filter(

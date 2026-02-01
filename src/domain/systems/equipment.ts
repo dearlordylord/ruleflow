@@ -65,7 +65,7 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
           )
 
           const inventory = getComponent(entity, "Inventory")!
-          const equippedWeapons = getComponent(entity, "EquippedWeapons")
+          const _equippedWeapons = getComponent(entity, "EquippedWeapons")
 
           // Validate item is in inventory (business rule)
           if (!inventory.items.includes(event.weaponId)) {
@@ -80,8 +80,8 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
           }
 
           // Check if weapon is already equipped
-          if (equippedWeapons) {
-            const state = equippedWeapons.state
+          if (_equippedWeapons) {
+            const state = _equippedWeapons.state
             const isAlreadyEquipped = (state._type === "OneHanded"
               && (state.mainHand === event.weaponId || state.offHand === event.weaponId))
               || (state._type === "TwoHanded" && state.weapon === event.weaponId)
@@ -105,7 +105,7 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
           >()
 
           // Extract current weapon state
-          const weaponState = equippedWeapons?.state
+          const weaponState = _equippedWeapons?.state
           const hasMainHand = weaponState?._type === "OneHanded" || weaponState?._type === "TwoHanded"
           const hasOffHand = weaponState?._type === "OneHanded" && weaponState.offHand !== null
 

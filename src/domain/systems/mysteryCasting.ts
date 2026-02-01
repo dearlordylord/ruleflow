@@ -23,8 +23,8 @@ export const mysteryCastingSystem: System = (state, events, _accumulatedMutation
       (event): event is TurnStarted => event._tag === "TurnStarted"
     )
 
-    const mutations: Array<any> = []
-    const mysteryResolvedEvents: Array<any> = []
+    const mutations: Array<typeof SetMysteryCastingMutation.Type> = []
+    const _mysteryResolvedEvents: Array<typeof MysteryResolved.Type> = []
 
     for (const turnStart of turnStartEvents) {
       const entity = yield* state.getEntity(turnStart.entityId).pipe(
@@ -55,7 +55,7 @@ export const mysteryCastingSystem: System = (state, events, _accumulatedMutation
       }
 
       // Resolve mystery
-      mysteryResolvedEvents.push(
+      _mysteryResolvedEvents.push(
         MysteryResolved.make({
           entityId: turnStart.entityId,
           mysteryName: mysteryCasting.mysteryName,

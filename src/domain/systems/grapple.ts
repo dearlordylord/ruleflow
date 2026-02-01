@@ -21,7 +21,7 @@ export const grappleSystem: System = (state, events, _accumulatedMutations) =>
       (event): event is GrappleAttempted => event._tag === "GrappleAttempted"
     )
 
-    const mutations: Array<any> = []
+    const mutations: Array<typeof SetGrappleStateMutation.Type | typeof AddConditionMutation.Type> = []
 
     for (const grapple of grappleEvents) {
       if (!grapple.success) continue

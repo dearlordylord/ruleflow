@@ -21,7 +21,7 @@ export const criticalEffectsSystem: System = (state, events, _accumulatedMutatio
       (event): event is AttackPerformed => event._tag === "AttackPerformed"
     )
 
-    const mutations: Array<any> = []
+    const mutations: Array<typeof DamageEquipmentMutation.Type> = []
 
     for (const attack of attackEvents) {
       // Natural 20: damage armor/shield
@@ -34,7 +34,7 @@ export const criticalEffectsSystem: System = (state, events, _accumulatedMutatio
 
         // Check for equipped armor or shield
         // @ts-expect-error - TODO: Will be used when armor/shield tracking implemented
-        const equippedWeapons = getComponent(target, "EquippedWeapons")
+        const _equippedWeapons = getComponent(target, "EquippedWeapons")
         // TODO: Get armor/shield components
         // For now, just emit ArmorDamaged event without mutation
         // Armor/shield durability tracking needs equipment system integration

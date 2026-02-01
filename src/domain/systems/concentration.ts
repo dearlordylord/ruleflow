@@ -25,8 +25,8 @@ export const concentrationSystem: System = (state, events, accumulatedMutations)
       (m) => m._tag === "DealDamage"
     )
 
-    const mutations: Array<any> = []
-    const concentrationBreaks: Array<any> = []
+    const mutations: Array<typeof RemoveConditionMutation.Type> = []
+    const _concentrationBreaks: Array<typeof ConcentrationBroken.Type> = []
 
     for (const damage of damageMutations) {
       const entity = yield* state.getEntity(damage.entityId).pipe(
@@ -45,7 +45,7 @@ export const concentrationSystem: System = (state, events, accumulatedMutations)
       const saveFailed = true // TODO: implement save rolling
 
       if (saveFailed) {
-        concentrationBreaks.push(
+        _concentrationBreaks.push(
           ConcentrationBroken.make({
             entityId: damage.entityId,
             reason: "DamageFailed",

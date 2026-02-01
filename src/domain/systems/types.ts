@@ -30,6 +30,7 @@ export type System<R = never> = (
  * Helper interface for registry entries with explicit requirements tracking.
  * The _R field is a phantom type that captures the requirements at the type level.
  */
+// eslint-disable-next-line functional/no-mixed-types -- Intentional: system is a function, name/_R are metadata
 export interface SystemEntry<R = never> {
   readonly name: string
   readonly system: System<R>

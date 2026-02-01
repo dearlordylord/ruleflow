@@ -28,7 +28,7 @@ export const moraleSystem: System = (state, events, _accumulatedMutations) =>
       (event): event is MoraleChecked => event._tag === "MoraleChecked"
     )
 
-    const mutations: Array<any> = []
+    const mutations: Array<typeof SetMoraleResultMutation.Type> = []
 
     for (const moraleEvent of moraleEvents) {
       mutations.push(
