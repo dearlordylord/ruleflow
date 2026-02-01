@@ -4,9 +4,7 @@
 import { Chunk, Effect } from "effect"
 
 import { getComponent } from "../components.js"
-import { AttackPerformed } from "../combat/events.js"
-import { MovementPerformed, DefenseStanceTaken, ReadyActionDeclared } from "../combat/encounterEvents.js"
-import { DisarmAttempted, PushAttempted } from "../combat/maneuverEvents.js"
+import { MovementPerformed } from "../combat/encounterEvents.js"
 import { UseActionMutation } from "../combat/mutations.js"
 import { SystemName } from "../entities.js"
 import { DomainError } from "../errors.js"

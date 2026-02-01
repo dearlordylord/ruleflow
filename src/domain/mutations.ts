@@ -1,85 +1,103 @@
 /**
- * Phase 1-3 Mutations
+ * Domain Mutations - All mutations from all bounded contexts
  */
 import { Schema } from "effect"
 
-import { AttributesComponent, ClassComponent, Component, ComponentTag, HealthComponent } from "./components.js"
-import {
+import { Component, ComponentTag } from "./components.js"
+import { EntityId } from "./entities.js"
+
+// Re-export all mutations from bounded contexts
+export {
+  SetAttributesMutation,
+  SetHealthMutation,
+  DealDamageMutation,
+  SetClassMutation,
   UpdateCharacterCreationMutation,
   SetSkillsMutation,
   SetSavingThrowsMutation
 } from "./character/mutations.js"
-import { EntityId } from "./entities.js"
 
-export class SetAttributesMutation extends Schema.TaggedClass<SetAttributesMutation>()(
-  "SetAttributes",
-  {
-    entityId: EntityId,
-    data: Schema.Struct(AttributesComponent.fields).pipe(Schema.partial)
-  }
-) {}
+export {
+  AddItemMutation,
+  RemoveItemMutation,
+  DebitCurrencyMutation,
+  CreditCurrencyMutation
+} from "./inventory/mutations.js"
 
-export class SetHealthMutation extends Schema.TaggedClass<SetHealthMutation>()(
-  "SetHealth",
-  {
-    entityId: EntityId,
-    data: Schema.Struct(HealthComponent.fields).pipe(Schema.partial)
-  }
-) {}
+export {
+  AddConditionMutation,
+  RemoveConditionMutation,
+  SetGrappleStateMutation,
+  RollInitiativeMutation,
+  UseActionMutation,
+  EquipWeaponMutation,
+  UnequipWeaponMutation,
+  EquipArmorMutation,
+  EquipShieldMutation,
+  DamageEquipmentMutation,
+  ReloadWeaponMutation,
+  ConsumeAmmunitionMutation
+} from "./combat/mutations.js"
 
-export class DealDamageMutation extends Schema.TaggedClass<DealDamageMutation>()(
-  "DealDamage",
-  {
-    entityId: EntityId,
-    amount: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
-    source: EntityId
-  }
-) {}
+export {
+  StartCombatRoundMutation,
+  AdvanceSideMutation,
+  AdvanceTurnMutation,
+  ResetActionEconomyMutation,
+  SetDistanceMutation,
+  SetReadyActionMutation,
+  ClearReadyActionMutation,
+  SetDefenseStanceMutation,
+  SetMoraleResultMutation,
+  SetMysteryCastingMutation,
+  ClearMysteryCastingMutation
+} from "./combat/encounterMutations.js"
 
-export class SetClassMutation extends Schema.TaggedClass<SetClassMutation>()(
-  "SetClass",
-  {
-    entityId: EntityId,
-    data: Schema.Struct(ClassComponent.fields).pipe(Schema.partial)
-  }
-) {}
+// Import for union only
+import {
+  SetAttributesMutation,
+  SetHealthMutation,
+  DealDamageMutation,
+  SetClassMutation,
+  UpdateCharacterCreationMutation,
+  SetSkillsMutation,
+  SetSavingThrowsMutation
+} from "./character/mutations.js"
+import {
+  AddItemMutation,
+  RemoveItemMutation,
+  DebitCurrencyMutation,
+  CreditCurrencyMutation
+} from "./inventory/mutations.js"
+import {
+  AddConditionMutation,
+  RemoveConditionMutation,
+  SetGrappleStateMutation,
+  RollInitiativeMutation,
+  UseActionMutation,
+  EquipWeaponMutation,
+  UnequipWeaponMutation,
+  EquipArmorMutation,
+  EquipShieldMutation,
+  DamageEquipmentMutation,
+  ReloadWeaponMutation,
+  ConsumeAmmunitionMutation
+} from "./combat/mutations.js"
+import {
+  StartCombatRoundMutation,
+  AdvanceSideMutation,
+  AdvanceTurnMutation,
+  ResetActionEconomyMutation,
+  SetDistanceMutation,
+  SetReadyActionMutation,
+  ClearReadyActionMutation,
+  SetDefenseStanceMutation,
+  SetMoraleResultMutation,
+  SetMysteryCastingMutation,
+  ClearMysteryCastingMutation
+} from "./combat/encounterMutations.js"
 
-export class AddItemMutation extends Schema.TaggedClass<AddItemMutation>()(
-  "AddItem",
-  {
-    entityId: EntityId,
-    itemId: EntityId
-  }
-) {}
-
-export class RemoveItemMutation extends Schema.TaggedClass<RemoveItemMutation>()(
-  "RemoveItem",
-  {
-    entityId: EntityId,
-    itemId: EntityId
-  }
-) {}
-
-export class DebitCurrencyMutation extends Schema.TaggedClass<DebitCurrencyMutation>()(
-  "DebitCurrency",
-  {
-    entityId: EntityId,
-    copper: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
-    silver: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
-    gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
-  }
-) {}
-
-export class CreditCurrencyMutation extends Schema.TaggedClass<CreditCurrencyMutation>()(
-  "CreditCurrency",
-  {
-    entityId: EntityId,
-    copper: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
-    silver: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
-    gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
-  }
-) {}
-
+// Mutations defined here (cross-domain)
 export class RemoveComponentMutation extends Schema.TaggedClass<RemoveComponentMutation>()(
   "RemoveComponent",
   {
@@ -97,6 +115,7 @@ export class SetMultipleComponentsMutation extends Schema.TaggedClass<SetMultipl
   }
 ) {}
 
+// Mutation union
 export const Mutation = Schema.Union(
   SetAttributesMutation,
   SetHealthMutation,
@@ -110,6 +129,31 @@ export const Mutation = Schema.Union(
   SetMultipleComponentsMutation,
   UpdateCharacterCreationMutation,
   SetSkillsMutation,
-  SetSavingThrowsMutation
+  SetSavingThrowsMutation,
+  // Combat mutations
+  AddConditionMutation,
+  RemoveConditionMutation,
+  SetGrappleStateMutation,
+  RollInitiativeMutation,
+  UseActionMutation,
+  EquipWeaponMutation,
+  UnequipWeaponMutation,
+  EquipArmorMutation,
+  EquipShieldMutation,
+  DamageEquipmentMutation,
+  ReloadWeaponMutation,
+  ConsumeAmmunitionMutation,
+  // Combat encounter mutations
+  StartCombatRoundMutation,
+  AdvanceSideMutation,
+  AdvanceTurnMutation,
+  ResetActionEconomyMutation,
+  SetDistanceMutation,
+  SetReadyActionMutation,
+  ClearReadyActionMutation,
+  SetDefenseStanceMutation,
+  SetMoraleResultMutation,
+  SetMysteryCastingMutation,
+  ClearMysteryCastingMutation
 )
 export type Mutation = typeof Mutation.Type

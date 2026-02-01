@@ -1,7 +1,7 @@
 /**
  * Combat Encounter Components
  */
-import { HashMap, Schema } from "effect"
+import { Schema } from "effect"
 
 import { EntityId } from "../entities.js"
 

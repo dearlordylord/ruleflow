@@ -13,12 +13,22 @@ export class DiceRoller extends Context.Tag("@game/DiceRoller")<
   static readonly liveLayer = Layer.succeed(DiceRoller, {
     roll: (dice) =>
       Effect.gen(function*() {
-        const [count, sides] = dice.split("d").map(Number)
+        const match = dice.match(/^(\d+)d(\d+)(?:([+-])(\d+))?$/)
+        if (!match) {
+          return yield* Effect.fail(new Error(`Invalid dice notation: ${dice}`))
+        }
+
+        const [_, countStr, sidesStr, operator, modStr] = match
+        const count = Number(countStr)
+        const sides = Number(sidesStr)
+        const modifier = modStr ? Number(modStr) : 0
+
         let total = 0
         for (let i = 0; i < count; i++) {
           total += yield* Random.nextIntBetween(1, sides + 1)
         }
-        return total
+
+        return operator === "-" ? total - modifier : total + modifier
       }),
     d20: () => Random.nextIntBetween(1, 21)
   })
@@ -36,8 +46,16 @@ export class DiceRoller extends Context.Tag("@game/DiceRoller")<
   static readonly testMaxLayer = Layer.succeed(DiceRoller, {
     roll: (dice) =>
       Effect.sync(() => {
-        const [count, sides] = dice.split("d").map(Number)
-        return count * sides
+        const match = dice.match(/^(\d+)d(\d+)(?:([+-])(\d+))?$/)
+        if (!match) return 0
+
+        const [_, countStr, sidesStr, operator, modStr] = match
+        const count = Number(countStr)
+        const sides = Number(sidesStr)
+        const modifier = modStr ? Number(modStr) : 0
+
+        const diceTotal = count * sides
+        return operator === "-" ? diceTotal - modifier : diceTotal + modifier
       }),
     d20: () => Effect.succeed(20)
   })
@@ -46,8 +64,15 @@ export class DiceRoller extends Context.Tag("@game/DiceRoller")<
   static readonly testMinLayer = Layer.succeed(DiceRoller, {
     roll: (dice) =>
       Effect.sync(() => {
-        const [count] = dice.split("d").map(Number)
-        return count // 1 per die
+        const match = dice.match(/^(\d+)d(\d+)(?:([+-])(\d+))?$/)
+        if (!match) return 0
+
+        const [_, countStr, sidesStr, operator, modStr] = match
+        const count = Number(countStr)
+        const modifier = modStr ? Number(modStr) : 0
+
+        const diceTotal = count // 1 per die (minimum)
+        return operator === "-" ? diceTotal - modifier : diceTotal + modifier
       }),
     d20: () => Effect.succeed(1)
   })

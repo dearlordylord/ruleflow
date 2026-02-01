@@ -4,7 +4,6 @@
 import { Schema } from "effect"
 
 import { EntityId } from "../entities.js"
-import type { MoraleResult } from "../npc/morale.js"
 
 /**
  * Morale check performed (NPCs only)
