@@ -5,6 +5,7 @@
  * All system types are derived from this registry.
  */
 import type { CombatResolver } from "../services/CombatResolver.js"
+import type { IdGenerator } from "../services/IdGenerator.js"
 import { actionEconomySystem } from "./actionEconomy.js"
 import { characterCreationSystem } from "./characterCreation.js"
 import { combatToHitSystem, traumaSystem } from "./combat.js"
@@ -95,7 +96,7 @@ export const SystemRegistry = [
   { name: "lootDistribution", system: lootDistributionSystem, _R: {} as never },
 
   // NPC systems
-  { name: "creatureDiscovery", system: creatureDiscoverySystem, _R: {} as never }
+  { name: "creatureDiscovery", system: creatureDiscoverySystem, _R: {} as IdGenerator }
 ] as const satisfies ReadonlyArray<SystemEntry<unknown>>
 
 /**

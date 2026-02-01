@@ -16,8 +16,10 @@ import type {
   NameChosen,
   SkillsChosen,
   StartingMoneyRolled,
-  TraitChosen
+  TraitChosen,
+  WeaponGroupSpecializationChosen
 } from "../character/creationEvents.js"
+import { WeaponSpecializationComponent } from "../combat/weapons.js"
 import {
   AttributesComponent,
   calculateBaseSaveBonus,
@@ -147,6 +149,40 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
                 currentStep: "ClassChosen",
                 class: e.class
               }
+            })
+          )
+          break
+        }
+
+        case "WeaponGroupSpecializationChosen": {
+          // Fighter class ability: choose weapon group for +1 damage bonus
+          const e = event as WeaponGroupSpecializationChosen
+          const entityResult = yield* state.getEntity(e.entityId).pipe(Effect.option)
+
+          if (Option.isNone(entityResult)) {
+            yield* Effect.logError(`Entity ${e.entityId} not found for weapon specialization`)
+            break
+          }
+
+          const entity = entityResult.value
+          const existingSpec = getComponent(entity, "WeaponSpecialization")
+
+          // Get existing specializations or start fresh
+          const currentSpecs = existingSpec?.specializations ?? HashMap.empty()
+
+          // Add or update the weapon group (currently always +1, could increase with level)
+          const newSpecs = HashMap.set(currentSpecs, e.weaponGroup, 1)
+
+          // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
+          mutations.push(
+            SetMultipleComponentsMutation.make({
+              entityId: e.entityId,
+              components: [
+                WeaponSpecializationComponent.make({
+                  specializations: newSpecs
+                })
+              ],
+              removeComponents: []
             })
           )
           break

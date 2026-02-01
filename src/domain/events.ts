@@ -16,7 +16,8 @@ import {
   NameChosen,
   SkillsChosen,
   StartingMoneyRolled,
-  TraitChosen
+  TraitChosen,
+  WeaponGroupSpecializationChosen
 } from "./character/creationEvents.js"
 import { CharacterDied } from "./character/events.js"
 import { ConcentrationBroken } from "./combat/concentrationEvents.js"
@@ -124,6 +125,7 @@ export const DomainEvent = Schema.Union(
   CharacterCreationStarted,
   AttributesRolled,
   ClassChosen,
+  WeaponGroupSpecializationChosen,
   SkillsChosen,
   TraitChosen,
   HitPointsRolled,

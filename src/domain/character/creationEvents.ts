@@ -3,6 +3,7 @@
  */
 import { Schema } from "effect"
 
+import { WeaponGroup } from "../combat/weapons.js"
 import { EntityId } from "../entities.js"
 import { CharacterClass } from "./class.js"
 import { Alignment } from "./creation.js"
@@ -34,6 +35,19 @@ export class ClassChosen extends Schema.TaggedClass<ClassChosen>()(
   {
     entityId: EntityId,
     class: CharacterClass
+  }
+) {}
+
+/**
+ * Fighter class ability: weapon group specialization
+ * At level 1, Fighter chooses a weapon group for +1 damage bonus.
+ * At levels 3, 5, 7, 9 can choose additional groups.
+ */
+export class WeaponGroupSpecializationChosen extends Schema.TaggedClass<WeaponGroupSpecializationChosen>()(
+  "WeaponGroupSpecializationChosen",
+  {
+    entityId: EntityId,
+    weaponGroup: WeaponGroup
   }
 ) {}
 

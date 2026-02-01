@@ -8,7 +8,7 @@
  * 4. Looting (currency from goblin)
  */
 import { describe, expect, it } from "@effect/vitest"
-import { Chunk, Effect, Schema } from "effect"
+import { Chunk, Effect, HashMap, Option, Schema } from "effect"
 
 import {
   AlignmentChosen,
@@ -20,7 +20,8 @@ import {
   NameChosen,
   SkillsChosen,
   StartingMoneyRolled,
-  TraitChosen
+  TraitChosen,
+  WeaponGroupSpecializationChosen
 } from "../src/domain/character/creationEvents.js"
 import { CombatStatsComponent } from "../src/domain/combat/stats.js"
 import { DiceNotation, WeaponComponent } from "../src/domain/combat/weapons.js"
@@ -77,12 +78,15 @@ describe("Full Game Simulation", () => {
           charisma: 8
         }),
         ClassChosen.make({ entityId: guidoId, class: "Fighter" }),
+        // Fighter class ability: weapon group specialization (HeavyBlades for longsword)
+        WeaponGroupSpecializationChosen.make({ entityId: guidoId, weaponGroup: "HeavyBlades" }),
         SkillsChosen.make({
           entityId: guidoId,
           primarySkills: ["MeleeCombat", "Accuracy"],
           secondarySkills: ["Awareness", "Survival", "Medicine"]
         }),
-        TraitChosen.make({ entityId: guidoId, traitName: "WeaponSpecialization" }),
+        // Trait at level 1 (Combat Reflexes has no requirements)
+        TraitChosen.make({ entityId: guidoId, traitName: "Combat Reflexes" }),
         HitPointsRolled.make({ entityId: guidoId, rolledValue: 7, constitutionModifier: 1 }),
         StartingMoneyRolled.make({ entityId: guidoId, silverAmount: 110 }),
         AlignmentChosen.make({ entityId: guidoId, alignment: "Neutral" }),
@@ -122,6 +126,15 @@ describe("Full Game Simulation", () => {
 
       const guidoCurrency = getComponent(guido, "Currency")
       expect(guidoCurrency?.silver).toBe(110)
+
+      // Verify weapon specialization was applied (Fighter class ability)
+      const guidoAfterSpec = yield* state.getEntity(guidoId)
+      const guidoSpec = getComponent(guidoAfterSpec, "WeaponSpecialization")
+      expect(guidoSpec).toBeDefined()
+      // Verify HeavyBlades specialization has +1 bonus
+      const heavyBladesBonus = HashMap.get(guidoSpec!.specializations, "HeavyBlades")
+      expect(Option.isSome(heavyBladesBonus)).toBe(true)
+      expect(Option.getOrElse(heavyBladesBonus, () => 0)).toBe(1)
 
       // ========================================================================
       // PHASE 2: Enemy Encounter - Goblin Appears
@@ -181,7 +194,7 @@ describe("Full Game Simulation", () => {
             name: "Longsword",
             damageDice: Schema.decodeSync(DiceNotation)("1d8"),
             damageType: ["Slashing"],
-            weaponGroup: "Blades",
+            weaponGroup: "HeavyBlades", // Matches Fighter's weapon specialization
             size: "Medium",
             traits: [],
             reach: 5,
@@ -218,11 +231,11 @@ describe("Full Game Simulation", () => {
       yield* committer.commit(guidoAttack, combatMutations)
 
       // Check goblin took damage
-      // Damage = 1d8 roll (5 from test layer) + STR modifier (+2 for STR 14) = 7
-      // Goblin HP: 5 - 7 = -2
+      // Damage = 1d8 roll (5) + STR mod (+2) + weapon specialization (+1) = 8
+      // Goblin HP: 5 - 8 = -3
       const goblinAfterAttack = yield* state.getEntity(goblinId)
       const goblinHealthAfter = getComponent(goblinAfterAttack, "Health")
-      expect(goblinHealthAfter!.current).toBe(-2) // 5 HP - 7 damage = -2 (dead)
+      expect(goblinHealthAfter!.current).toBe(-3) // 5 HP - 8 damage = -3 (dead)
 
       // ========================================================================
       // PHASE 4: Looting Currency
