@@ -1,12 +1,17 @@
 /**
  * Injectable Dice Roller Service
  */
-import { Context, Effect, Layer, Random } from "effect"
+import { Context, Effect, Layer, Random, Schema } from "effect"
+
+export class DiceParseError extends Schema.TaggedError<DiceParseError>()(
+  "DiceParseError",
+  { notation: Schema.String }
+) {}
 
 export class DiceRoller extends Context.Tag("@game/DiceRoller")<
   DiceRoller,
   {
-    readonly roll: (dice: string) => Effect.Effect<number, Error>
+    readonly roll: (dice: string) => Effect.Effect<number, DiceParseError>
     readonly d20: () => Effect.Effect<number>
   }
 >() {
@@ -15,7 +20,7 @@ export class DiceRoller extends Context.Tag("@game/DiceRoller")<
       Effect.gen(function*() {
         const match = dice.match(/^(\d+)d(\d+)(?:([+-])(\d+))?$/)
         if (!match) {
-          return yield* Effect.fail(new Error(`Invalid dice notation: ${dice}`))
+          return yield* new DiceParseError({ notation: dice })
         }
 
         const [_, countStr, sidesStr, operator, modStr] = match

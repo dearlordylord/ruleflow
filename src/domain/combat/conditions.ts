@@ -6,9 +6,9 @@ import { Schema } from "effect"
 import { EntityId } from "../entities.js"
 
 /**
- * Combat conditions that affect actions
+ * Simple condition types (no additional data)
  */
-export const Condition = Schema.Literal(
+export const SimpleConditionType = Schema.Literal(
   "Vulnerable", // Cannot defend effectively (e.g., surprised, concentrating on spell)
   "Prone", // On the ground, must use movement action to stand
   "Grappled", // Held by another creature
@@ -20,26 +20,64 @@ export const Condition = Schema.Literal(
   "Unconscious", // Knocked out
   "Poisoned", // Suffering from poison
   "Diseased", // Suffering from disease
-  "Exhausted", // Fatigued from exertion
   "Frightened", // Scared, morale affected
   "Charmed", // Under magical influence
   "Invisible", // Cannot be seen normally
-  "Hidden", // Concealed from view
-  "Concentrating" // Maintaining a spell/mystery
+  "Hidden" // Concealed from view
 )
-export type Condition = typeof Condition.Type
+export type SimpleConditionType = typeof SimpleConditionType.Type
+
+/**
+ * Conditions that carry their own data, making invalid states irrepresentable
+ */
+export const ConditionWithData = Schema.Union(
+  Schema.Struct({ _type: Schema.Literal("Vulnerable") }),
+  Schema.Struct({ _type: Schema.Literal("Prone") }),
+  Schema.Struct({ _type: Schema.Literal("Grappled") }),
+  Schema.Struct({ _type: Schema.Literal("Restrained") }),
+  Schema.Struct({ _type: Schema.Literal("Blinded") }),
+  Schema.Struct({ _type: Schema.Literal("Deafened") }),
+  Schema.Struct({ _type: Schema.Literal("Stunned") }),
+  Schema.Struct({ _type: Schema.Literal("Paralyzed") }),
+  Schema.Struct({ _type: Schema.Literal("Unconscious") }),
+  Schema.Struct({ _type: Schema.Literal("Poisoned") }),
+  Schema.Struct({ _type: Schema.Literal("Diseased") }),
+  Schema.Struct({ _type: Schema.Literal("Exhausted"), level: Schema.Int.pipe(Schema.between(1, 6)) }), // 1-6, 6 = death
+  Schema.Struct({ _type: Schema.Literal("Frightened") }),
+  Schema.Struct({ _type: Schema.Literal("Charmed") }),
+  Schema.Struct({ _type: Schema.Literal("Invisible") }),
+  Schema.Struct({ _type: Schema.Literal("Hidden") }),
+  Schema.Struct({ _type: Schema.Literal("Concentrating"), mysteryName: Schema.NonEmptyString }) // Which mystery being maintained
+)
+export type ConditionWithData = typeof ConditionWithData.Type
+
+/**
+ * Helper to get condition type from ConditionWithData
+ */
+export type ConditionType = ConditionWithData["_type"]
+
+/**
+ * Helper to check if entity has a specific condition type
+ */
+export function hasCondition(conditions: ReadonlyArray<ConditionWithData>, type: ConditionType): boolean {
+  return conditions.some(c => c._type === type)
+}
+
+/**
+ * Helper to get a specific condition (useful for conditions with data)
+ */
+export function getCondition<T extends ConditionType>(
+  conditions: ReadonlyArray<ConditionWithData>,
+  type: T
+): Extract<ConditionWithData, { _type: T }> | undefined {
+  return conditions.find(c => c._type === type) as Extract<ConditionWithData, { _type: T }> | undefined
+}
 
 /**
  * Component tracking active conditions
  */
 export class ConditionsComponent extends Schema.TaggedClass<ConditionsComponent>()("Conditions", {
-  activeConditions: Schema.Array(Condition),
-
-  // Condition-specific data
-  exhaustionLevel: Schema.Int.pipe(Schema.between(0, 6)), // 0 = none, 6 = death
-
-  // Tracking concentration (for spell maintenance)
-  concentratingOn: Schema.NullOr(Schema.NonEmptyString)
+  conditions: Schema.Array(ConditionWithData)
 }) {}
 
 /**

@@ -31,7 +31,7 @@ export const encounterSetupSystem: System = (state, events, _accumulatedMutation
       ...combatStart.surprisedParticipants.map(entityId =>
         AddConditionMutation.make({
           entityId,
-          condition: "Vulnerable"
+          condition: { _type: "Vulnerable" }
         })
       ),
       // Start first round (default to Players side, will be determined by initiative)

@@ -18,6 +18,15 @@ Topics: quick-start, project-setup, tsconfig, basics, services-and-layers, data-
 Never guess at Effect patterns - check the guide first.
 <!-- effect-solutions:end -->
 
+## Architecture
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for event sourcing flow, layer deps, file locations.
+
+**Key rules:**
+- Systems are pure: read `ReadonlyGameState`, return `Mutation`s, no side effects
+- Rich components: put single-entity logic in component methods, not scattered in systems
+- Cross-entity logic → systems
+
 ## Domain Events
 
 **Domain events = observable in-game actions with business/rules significance.**

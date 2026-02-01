@@ -222,15 +222,50 @@ export class GameState extends Context.Tag("@game/State")<
               yield* store.update(mutation.entityId, (entity) =>
                 Effect.gen(function*() {
                   const equipped = getComponent(entity, "EquippedWeapons")
-                  const base = equipped ?? EquippedWeaponsComponent.make({
-                    mainHand: null,
-                    offHand: null,
-                    equippedAmmunition: null
-                  })
-                  const newEquipped = EquippedWeaponsComponent.make({
-                    ...base,
-                    [mutation.hand === "MainHand" ? "mainHand" : "offHand"]: mutation.weaponId
-                  })
+                  const currentState = equipped?.state ?? { _type: "Unarmed" as const, equippedAmmunition: null }
+                  const equippedAmmunition = currentState.equippedAmmunition
+
+                  // Determine new state based on mutation and current state
+                  let newState: typeof currentState
+                  if (mutation.hand === "TwoHanded") {
+                    // Equipping two-handed weapon
+                    newState = {
+                      _type: "TwoHanded" as const,
+                      weapon: mutation.weaponId,
+                      equippedAmmunition
+                    }
+                  } else if (mutation.hand === "MainHand") {
+                    // Equipping to main hand - becomes OneHanded
+                    // Preserve offHand if currently OneHanded, otherwise null
+                    const offHand = currentState._type === "OneHanded" ? currentState.offHand : null
+                    newState = {
+                      _type: "OneHanded" as const,
+                      mainHand: mutation.weaponId,
+                      offHand,
+                      equippedAmmunition
+                    }
+                  } else {
+                    // Equipping to off-hand
+                    if (currentState._type === "OneHanded") {
+                      // Already have main hand weapon, add to off-hand
+                      newState = {
+                        _type: "OneHanded" as const,
+                        mainHand: currentState.mainHand,
+                        offHand: mutation.weaponId,
+                        equippedAmmunition
+                      }
+                    } else if (currentState._type === "TwoHanded") {
+                      // Two-handed weapon equipped - system should have unequipped it first
+                      // For safety, treat as error case - just set unarmed
+                      newState = { _type: "Unarmed" as const, equippedAmmunition }
+                    } else {
+                      // Unarmed - can't equip to off-hand without main hand
+                      // This shouldn't happen in valid gameplay but handle gracefully
+                      newState = { _type: "Unarmed" as const, equippedAmmunition }
+                    }
+                  }
+
+                  const newEquipped = EquippedWeaponsComponent.make({ state: newState })
                   return setComponent(entity, newEquipped)
                 }))
               break
@@ -240,10 +275,45 @@ export class GameState extends Context.Tag("@game/State")<
                 Effect.gen(function*() {
                   const equipped = getComponent(entity, "EquippedWeapons")
                   if (!equipped) return entity
-                  const newEquipped = EquippedWeaponsComponent.make({
-                    ...equipped,
-                    [mutation.hand === "MainHand" ? "mainHand" : "offHand"]: null
-                  })
+
+                  const currentState = equipped.state
+                  const equippedAmmunition = currentState.equippedAmmunition
+
+                  let newState: typeof currentState
+                  if (currentState._type === "Unarmed") {
+                    // Nothing to unequip
+                    newState = currentState
+                  } else if (currentState._type === "TwoHanded") {
+                    // Unequipping two-handed weapon (treated as main hand)
+                    if (mutation.hand === "MainHand") {
+                      newState = { _type: "Unarmed" as const, equippedAmmunition }
+                    } else {
+                      // Off-hand unequip on TwoHanded - no-op
+                      newState = currentState
+                    }
+                  } else {
+                    // OneHanded state
+                    if (mutation.hand === "MainHand") {
+                      // Unequip main hand
+                      if (currentState.offHand) {
+                        // Off-hand becomes main hand? Actually no - just go unarmed
+                        // The system should handle weapon swapping separately
+                        newState = { _type: "Unarmed" as const, equippedAmmunition }
+                      } else {
+                        newState = { _type: "Unarmed" as const, equippedAmmunition }
+                      }
+                    } else {
+                      // Unequip off-hand
+                      newState = {
+                        _type: "OneHanded" as const,
+                        mainHand: currentState.mainHand,
+                        offHand: null,
+                        equippedAmmunition
+                      }
+                    }
+                  }
+
+                  const newEquipped = EquippedWeaponsComponent.make({ state: newState })
                   return setComponent(entity, newEquipped)
                 }))
               break

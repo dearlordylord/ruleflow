@@ -30,28 +30,28 @@ export const grappleSystem: System = (state, events, _accumulatedMutations) =>
         // Set grapple state for target (grappled by grappler)
         SetGrappleStateMutation.make({
           entityId: grapple.targetId,
-          grappledBy: grapple.grapplerInd,
+          grappledBy: grapple.grapplerId,
           isPinned: false // TODO: detect pin from subsequent contests
         }),
         // Add "Grappled" condition to target
         AddConditionMutation.make({
           entityId: grapple.targetId,
-          condition: "Grappled"
+          condition: { _type: "Grappled" }
         }),
         // Both are vulnerable to third parties
         AddConditionMutation.make({
           entityId: grapple.targetId,
-          condition: "Vulnerable"
+          condition: { _type: "Vulnerable" }
         }),
         AddConditionMutation.make({
-          entityId: grapple.grapplerInd,
-          condition: "Vulnerable"
+          entityId: grapple.grapplerId,
+          condition: { _type: "Vulnerable" }
         })
       )
 
       // TODO: Handle pinning (subsequent contest after grapple established)
       // If pinned:
-      // - AddConditionMutation("Prone") for target
+      // - AddConditionMutation({ _type: "Prone" }) for target
       // - SetGrappleStateMutation with isPinned: true
     }
 

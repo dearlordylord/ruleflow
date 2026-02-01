@@ -4,6 +4,7 @@
 import { Chunk, Effect } from "effect"
 
 import { getComponent } from "../entity.js"
+import { hasCondition } from "../combat/conditions.js"
 import { RemoveConditionMutation } from "../combat/mutations.js"
 import {
   TurnStarted,
@@ -47,11 +48,11 @@ export const turnManagementSystem: System = (state, events, _accumulatedMutation
       const conditions = getComponent(entity, "Conditions")
 
       // Remove Vulnerable at start of entity's turn (if it was from first turn/declaration)
-      if (conditions?.activeConditions.includes("Vulnerable")) {
+      if (conditions && hasCondition(conditions.conditions, "Vulnerable")) {
         mutations.push(
           RemoveConditionMutation.make({
             entityId: turnStart.entityId,
-            condition: "Vulnerable"
+            conditionType: "Vulnerable"
           })
         )
       }

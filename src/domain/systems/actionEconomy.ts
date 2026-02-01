@@ -4,6 +4,7 @@
 import { Chunk, Effect } from "effect"
 
 import { getComponent } from "../entity.js"
+import { hasCondition } from "../combat/conditions.js"
 import { MovementPerformed } from "../combat/encounterEvents.js"
 import { UseActionMutation } from "../combat/mutations.js"
 import type { Mutation } from "../mutations.js"
@@ -48,9 +49,10 @@ export const actionEconomySystem: System = (state, events, _accumulatedMutations
 
       // Check if entity can act (not stunned/paralyzed/unconscious)
       if (conditions) {
-        const cannotAct = conditions.activeConditions.some(c =>
-          c === "Stunned" || c === "Paralyzed" || c === "Unconscious"
-        )
+        const cannotAct =
+          hasCondition(conditions.conditions, "Stunned") ||
+          hasCondition(conditions.conditions, "Paralyzed") ||
+          hasCondition(conditions.conditions, "Unconscious")
         if (cannotAct) {
           errors.push(
             DomainError.make({
@@ -98,7 +100,7 @@ export const actionEconomySystem: System = (state, events, _accumulatedMutations
       const conditions = getComponent(entity, "Conditions")
 
       // Check if grappled/restrained (cannot move)
-      if (conditions?.activeConditions.some(c => c === "Grappled" || c === "Restrained")) {
+      if (conditions && (hasCondition(conditions.conditions, "Grappled") || hasCondition(conditions.conditions, "Restrained"))) {
         errors.push(
           DomainError.make({
             systemName: SystemName.make("ActionEconomy"),

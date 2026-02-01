@@ -106,15 +106,30 @@ export class WeaponSpecializationComponent
   })
 {}
 
+const EquippedWeaponsState = Schema.Union(
+  Schema.Struct({
+    _type: Schema.Literal("Unarmed"),
+    equippedAmmunition: Schema.NullOr(EntityId)
+  }),
+  Schema.Struct({
+    _type: Schema.Literal("OneHanded"),
+    mainHand: EntityId,
+    offHand: Schema.NullOr(EntityId), // Can dual-wield or use shield
+    equippedAmmunition: Schema.NullOr(EntityId)
+  }),
+  Schema.Struct({
+    _type: Schema.Literal("TwoHanded"),
+    weapon: EntityId, // No offHand field exists
+    equippedAmmunition: Schema.NullOr(EntityId)
+  })
+)
+export type EquippedWeaponsState = typeof EquippedWeaponsState.Type
+
 /**
  * Equipped weapon tracking
  */
 export class EquippedWeaponsComponent extends Schema.TaggedClass<EquippedWeaponsComponent>()("EquippedWeapons", {
-  mainHand: Schema.NullOr(EntityId),
-  offHand: Schema.NullOr(EntityId),
-
-  // Ammunition for ranged weapons
-  equippedAmmunition: Schema.NullOr(EntityId)
+  state: EquippedWeaponsState
 }) {}
 
 /**
@@ -146,7 +161,7 @@ export const WEAPON_DEFINITIONS = {
 
   // CLUBS
   Club: {
-    damageDice: "1d4" as DiceNotation,
+    damageDice: "1d6" as DiceNotation,
     damageType: ["Crushing"] as Array<DamageType>,
     weaponGroup: "Clubs" as WeaponGroup,
     size: "Small" as WeaponSize,
@@ -163,7 +178,7 @@ export const WEAPON_DEFINITIONS = {
   // BLADES (LIGHT)
   Dagger: {
     damageDice: "1d4" as DiceNotation,
-    damageType: ["Piercing", "Slashing"] as Array<DamageType>,
+    damageType: ["Piercing"] as Array<DamageType>,
     weaponGroup: "Blades" as WeaponGroup,
     size: "Miniature" as WeaponSize,
     traits: ["Light", "Finesse", "Thrown"] as Array<WeaponTrait>
@@ -179,14 +194,14 @@ export const WEAPON_DEFINITIONS = {
   // BLADES (HEAVY)
   Longsword: {
     damageDice: "1d8" as DiceNotation,
-    damageType: ["Slashing"] as Array<DamageType>,
+    damageType: ["Piercing", "Slashing"] as Array<DamageType>,
     weaponGroup: "HeavyBlades" as WeaponGroup,
     size: "Medium" as WeaponSize,
     traits: ["Versatile"] as Array<WeaponTrait>
   },
   Greatsword: {
     damageDice: "1d10" as DiceNotation,
-    damageType: ["Slashing"] as Array<DamageType>,
+    damageType: ["Piercing", "Slashing"] as Array<DamageType>,
     weaponGroup: "HeavyBlades" as WeaponGroup,
     size: "Large" as WeaponSize,
     traits: ["TwoHanded"] as Array<WeaponTrait>
@@ -197,18 +212,18 @@ export const WEAPON_DEFINITIONS = {
     damageDice: "1d8" as DiceNotation,
     damageType: ["Piercing"] as Array<DamageType>,
     weaponGroup: "Polearms" as WeaponGroup,
-    size: "Medium" as WeaponSize,
+    size: "Large" as WeaponSize,
     traits: ["Versatile", "Thrown", "BraceForCharge"] as Array<WeaponTrait>
   },
   Halberd: {
-    damageDice: "1d10" as DiceNotation,
+    damageDice: "1d8" as DiceNotation,
     damageType: ["Slashing", "Piercing"] as Array<DamageType>,
     weaponGroup: "Polearms" as WeaponGroup,
     size: "Large" as WeaponSize,
     traits: ["TwoHanded", "Reach", "Trip", "BraceForCharge"] as Array<WeaponTrait>
   },
   Glaive: {
-    damageDice: "1d10" as DiceNotation,
+    damageDice: "1d8" as DiceNotation,
     damageType: ["Slashing"] as Array<DamageType>,
     weaponGroup: "Polearms" as WeaponGroup,
     size: "Large" as WeaponSize,
@@ -279,5 +294,76 @@ export const WEAPON_DEFINITIONS = {
     rangeClose: 25,
     rangeMedium: 50,
     rangeLong: 100
+  },
+
+  // FLAILS
+  Morningstar: {
+    damageDice: "1d8" as DiceNotation,
+    damageType: ["Crushing"] as Array<DamageType>,
+    weaponGroup: "Flails" as WeaponGroup,
+    size: "Medium" as WeaponSize,
+    traits: ["Disarm"] as Array<WeaponTrait>
+  },
+  "Battle Flail": {
+    damageDice: "1d10" as DiceNotation,
+    damageType: ["Crushing"] as Array<DamageType>,
+    weaponGroup: "Flails" as WeaponGroup,
+    size: "Large" as WeaponSize,
+    traits: ["TwoHanded"] as Array<WeaponTrait>
+  },
+
+  // CLUBS (additional)
+  "War Pick": {
+    damageDice: "1d8" as DiceNotation,
+    damageType: ["Crushing", "Piercing"] as Array<DamageType>,
+    weaponGroup: "Clubs" as WeaponGroup,
+    size: "Medium" as WeaponSize,
+    traits: [] as Array<WeaponTrait>
+  },
+
+  // BLADES (LIGHT) (additional)
+  Cutlass: {
+    damageDice: "1d6" as DiceNotation,
+    damageType: ["Slashing"] as Array<DamageType>,
+    weaponGroup: "Blades" as WeaponGroup,
+    size: "Small" as WeaponSize,
+    traits: ["Light"] as Array<WeaponTrait>
+  },
+
+  // BLADES (HEAVY) (additional)
+  Saber: {
+    damageDice: "1d8" as DiceNotation,
+    damageType: ["Slashing"] as Array<DamageType>,
+    weaponGroup: "HeavyBlades" as WeaponGroup,
+    size: "Medium" as WeaponSize,
+    traits: [] as Array<WeaponTrait>
+  },
+  Falchion: {
+    damageDice: "1d8" as DiceNotation,
+    damageType: ["Slashing"] as Array<DamageType>,
+    weaponGroup: "HeavyBlades" as WeaponGroup,
+    size: "Medium" as WeaponSize,
+    traits: [] as Array<WeaponTrait>
+  },
+
+  // POLEARMS (additional)
+  Pollaxe: {
+    damageDice: "1d10" as DiceNotation,
+    damageType: ["Crushing", "Piercing", "Slashing"] as Array<DamageType>,
+    weaponGroup: "Polearms" as WeaponGroup,
+    size: "Large" as WeaponSize,
+    traits: ["TwoHanded", "Reach", "Trip", "BraceForCharge"] as Array<WeaponTrait>
+  },
+
+  // THROWN
+  Javelin: {
+    damageDice: "1d6" as DiceNotation,
+    damageType: ["Piercing"] as Array<DamageType>,
+    weaponGroup: "Thrown" as WeaponGroup,
+    size: "Small" as WeaponSize,
+    traits: ["Thrown"] as Array<WeaponTrait>,
+    rangeClose: 10,
+    rangeMedium: 20,
+    rangeLong: 40
   }
 } as const

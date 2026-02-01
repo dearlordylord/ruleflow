@@ -48,7 +48,7 @@ export const maneuversSystem: System = (state, events, _accumulatedMutations) =>
         mutations.push(
           AddConditionMutation.make({
             entityId: push.targetId,
-            condition: "Prone"
+            condition: { _type: "Prone" }
           })
         )
       }

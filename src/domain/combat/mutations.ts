@@ -4,30 +4,37 @@
 import { Schema } from "effect"
 
 import { EntityId } from "../entities.js"
+import { ConditionWithData } from "./conditions.js"
+
+/**
+ * Condition type for removal (only needs the _type to identify which condition to remove)
+ */
+export const ConditionTypeToRemove = Schema.Literal(
+  "Vulnerable",
+  "Prone",
+  "Grappled",
+  "Restrained",
+  "Blinded",
+  "Deafened",
+  "Stunned",
+  "Paralyzed",
+  "Unconscious",
+  "Poisoned",
+  "Diseased",
+  "Exhausted",
+  "Frightened",
+  "Charmed",
+  "Invisible",
+  "Hidden",
+  "Concentrating"
+)
+export type ConditionTypeToRemove = typeof ConditionTypeToRemove.Type
 
 export class AddConditionMutation extends Schema.TaggedClass<AddConditionMutation>()(
   "AddCondition",
   {
     entityId: EntityId,
-    condition: Schema.Literal(
-      "Vulnerable",
-      "Prone",
-      "Grappled",
-      "Restrained",
-      "Blinded",
-      "Deafened",
-      "Stunned",
-      "Paralyzed",
-      "Unconscious",
-      "Poisoned",
-      "Diseased",
-      "Exhausted",
-      "Frightened",
-      "Charmed",
-      "Invisible",
-      "Hidden",
-      "Concentrating"
-    )
+    condition: ConditionWithData
   }
 ) {}
 
@@ -35,25 +42,7 @@ export class RemoveConditionMutation extends Schema.TaggedClass<RemoveConditionM
   "RemoveCondition",
   {
     entityId: EntityId,
-    condition: Schema.Literal(
-      "Vulnerable",
-      "Prone",
-      "Grappled",
-      "Restrained",
-      "Blinded",
-      "Deafened",
-      "Stunned",
-      "Paralyzed",
-      "Unconscious",
-      "Poisoned",
-      "Diseased",
-      "Exhausted",
-      "Frightened",
-      "Charmed",
-      "Invisible",
-      "Hidden",
-      "Concentrating"
-    )
+    conditionType: ConditionTypeToRemove
   }
 ) {}
 
@@ -88,7 +77,7 @@ export class EquipWeaponMutation extends Schema.TaggedClass<EquipWeaponMutation>
   {
     entityId: EntityId,
     weaponId: EntityId,
-    hand: Schema.Literal("MainHand", "OffHand")
+    hand: Schema.Literal("MainHand", "OffHand", "TwoHanded")
   }
 ) {}
 

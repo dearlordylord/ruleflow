@@ -29,7 +29,7 @@ export class DamageDealt extends Schema.TaggedClass<DamageDealt>()(
 export class GrappleAttempted extends Schema.TaggedClass<GrappleAttempted>()(
   "GrappleAttempted",
   {
-    grapplerInd: EntityId,
+    grapplerId: EntityId,
     targetId: EntityId,
     grapplerRoll: Schema.Int,
     targetRoll: Schema.Int,

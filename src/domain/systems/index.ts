@@ -44,6 +44,16 @@ export { criticalEffectsSystem } from "./criticalEffects.js"
 export { concentrationSystem } from "./concentration.js"
 export { mysteryCastingSystem } from "./mysteryCasting.js"
 
+/**
+ * Runs systems sequentially, passing accumulated mutations to each subsequent system.
+ * Order matters: systems may depend on mutations produced by earlier systems.
+ *
+ * Known dependencies:
+ * - traumaSystem must run AFTER combatToHitSystem (reads DealDamageMutation)
+ *
+ * TODO: Make dependencies explicit via a dependency graph where systems declare
+ * what mutation types they consume/produce, allowing the pipeline to auto-order.
+ */
 export const runSystemsPipeline = (
   systems: Array<System>,
   events: Chunk.Chunk<DomainEvent> = Chunk.empty()

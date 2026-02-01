@@ -13,6 +13,11 @@ export interface ReadonlyGameState {
   readonly getEntity: (id: EntityId) => Effect.Effect<Entity, EntityNotFound>
 }
 
+/**
+ * A system processes domain events and accumulated mutations to produce new mutations.
+ * Systems may depend on mutations from prior systems in the pipeline, so ordering matters.
+ * The accumulatedMutations parameter contains all mutations produced by earlier systems.
+ */
 export type System = (
   state: ReadonlyGameState,
   events: Chunk.Chunk<DomainEvent>,

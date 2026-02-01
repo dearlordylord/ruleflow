@@ -4,6 +4,7 @@
 import { Chunk, Effect } from "effect"
 
 import { getComponent } from "../entity.js"
+import { hasCondition } from "../combat/conditions.js"
 import { TurnStarted } from "../combat/encounterEvents.js"
 import { MysteryResolved } from "../combat/mysteryEvents.js"
 import { SetMysteryCastingMutation } from "../combat/encounterMutations.js"
@@ -39,7 +40,7 @@ export const mysteryCastingSystem: System = (state, events, _accumulatedMutation
       if (!mysteryCasting?.declaredThisRound || mysteryCasting.resolved) continue
 
       // Check if still concentrating (not broken)
-      if (!conditions?.activeConditions.includes("Concentrating")) {
+      if (!conditions || !hasCondition(conditions.conditions, "Concentrating")) {
         // Concentration was broken, mystery fails
         mutations.push(
           SetMysteryCastingMutation.make({

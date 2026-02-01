@@ -4,6 +4,7 @@
 import { Chunk, Effect } from "effect"
 
 import { getComponent } from "../entity.js"
+import { hasCondition } from "../combat/conditions.js"
 import { RemoveConditionMutation } from "../combat/mutations.js"
 import { ConcentrationBroken } from "../combat/concentrationEvents.js"
 import type { System } from "./types.js"
@@ -35,7 +36,7 @@ export const concentrationSystem: System = (state, events, accumulatedMutations)
       if (!entity) continue
 
       const conditions = getComponent(entity, "Conditions")
-      if (!conditions?.activeConditions.includes("Concentrating")) continue
+      if (!conditions || !hasCondition(conditions.conditions, "Concentrating")) continue
 
       const mysteryCasting = getComponent(entity, "MysteryCasting")
 
@@ -56,7 +57,7 @@ export const concentrationSystem: System = (state, events, accumulatedMutations)
         mutations.push(
           RemoveConditionMutation.make({
             entityId: damage.entityId,
-            condition: "Concentrating"
+            conditionType: "Concentrating"
           })
         )
 

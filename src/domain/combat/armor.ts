@@ -14,9 +14,8 @@ export class ArmorComponent extends Schema.TaggedClass<ArmorComponent>()("Armor"
   baseAC: Schema.Int.pipe(Schema.greaterThanOrEqualTo(10)),
   armorCategory: ArmorCategory,
 
-  // Movement/stealth penalties
-  movementPenalty: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
-  stealthPenalty: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
+  // Skill penalty from rulebook "Штраф" column (0 or negative)
+  skillPenalty: Schema.Int.pipe(Schema.lessThanOrEqualTo(0)),
 
   // Durability
   durability: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
@@ -39,50 +38,44 @@ export class ShieldComponent extends Schema.TaggedClass<ShieldComponent>()("Shie
 }) {}
 
 /**
- * Predefined armor types from rulebook
+ * Predefined armor types from rulebook (06_Equipment.md)
+ * skillPenalty matches the "Штраф" column values
  */
 export const ARMOR_DEFINITIONS = {
   "No Protection": {
     baseAC: 11,
     armorCategory: "None" as ArmorCategory,
-    movementPenalty: 0,
-    stealthPenalty: 0
+    skillPenalty: 0
   },
   "Leather Clothing": {
     baseAC: 12,
     armorCategory: "Light" as ArmorCategory,
-    movementPenalty: 0,
-    stealthPenalty: 0
+    skillPenalty: 0
   },
   "Quilted Clothing": {
     baseAC: 13,
     armorCategory: "Light" as ArmorCategory,
-    movementPenalty: 0,
-    stealthPenalty: 0
+    skillPenalty: 0
   },
   "Scale Armor": {
     baseAC: 14,
     armorCategory: "Medium" as ArmorCategory,
-    movementPenalty: 5,
-    stealthPenalty: 2
+    skillPenalty: -1
   },
   "Chain Mail": {
     baseAC: 15,
     armorCategory: "Medium" as ArmorCategory,
-    movementPenalty: 5,
-    stealthPenalty: 2
+    skillPenalty: -2
   },
   "Plate Armor": {
     baseAC: 16,
     armorCategory: "Heavy" as ArmorCategory,
-    movementPenalty: 10,
-    stealthPenalty: 4
+    skillPenalty: -3
   },
   "Full Plate": {
     baseAC: 17,
     armorCategory: "Heavy" as ArmorCategory,
-    movementPenalty: 10,
-    stealthPenalty: 4
+    skillPenalty: -4
   }
 } as const
 

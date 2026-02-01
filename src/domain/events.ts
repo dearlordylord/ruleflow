@@ -76,14 +76,20 @@ import {
 
 export class CurrencyTransferred extends Schema.TaggedClass<CurrencyTransferred>()(
   "CurrencyTransferred",
-  {
+  Schema.Struct({
     fromEntityId: EntityId,
     toEntityId: EntityId,
     copper: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
     silver: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
     gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
     platinum: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
-  }
+  }).pipe(
+    Schema.filter((event) =>
+      event.copper + event.silver + event.gold + event.platinum > 0, {
+        message: () => "At least one currency amount must be greater than 0"
+      }
+    )
+  )
 ) {}
 
 // Re-export events for convenience

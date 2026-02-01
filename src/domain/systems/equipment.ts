@@ -80,10 +80,12 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
 
           // Check if weapon is already equipped
           if (equippedWeapons) {
-            if (
-              equippedWeapons.mainHand === event.weaponId ||
-              equippedWeapons.offHand === event.weaponId
-            ) {
+            const state = equippedWeapons.state
+            const isAlreadyEquipped =
+              (state._type === "OneHanded" &&
+                (state.mainHand === event.weaponId || state.offHand === event.weaponId)) ||
+              (state._type === "TwoHanded" && state.weapon === event.weaponId)
+            if (isAlreadyEquipped) {
               return yield* Effect.fail(
                 Chunk.of(
                   DomainError.make({
@@ -102,12 +104,17 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
             | typeof UpdateCombatStatsMutation.Type
           >()
 
+          // Extract current weapon state
+          const weaponState = equippedWeapons?.state
+          const hasMainHand = weaponState?._type === "OneHanded" || weaponState?._type === "TwoHanded"
+          const hasOffHand = weaponState?._type === "OneHanded" && weaponState.offHand !== null
+
           // Handle two-handed weapons
           if (event.hand === "TwoHanded") {
             let finalMuts = muts
 
             // Unequip both hands if occupied
-            if (equippedWeapons?.mainHand) {
+            if (hasMainHand) {
               finalMuts = Chunk.append(
                 finalMuts,
                 UnequipWeaponMutation.make({
@@ -116,7 +123,7 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
                 })
               )
             }
-            if (equippedWeapons?.offHand) {
+            if (hasOffHand) {
               finalMuts = Chunk.append(
                 finalMuts,
                 UnequipWeaponMutation.make({
@@ -126,13 +133,13 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
               )
             }
 
-            // Equip to main hand (two-handed weapons occupy main hand slot)
+            // Equip as two-handed weapon
             finalMuts = Chunk.append(
               finalMuts,
               EquipWeaponMutation.make({
                 entityId: event.entityId,
                 weaponId: event.weaponId,
-                hand: "MainHand"
+                hand: "TwoHanded"
               })
             )
 
@@ -145,7 +152,7 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
             let finalMuts = muts
 
             // Unequip current weapon in target hand if occupied
-            if (event.hand === "MainHand" && equippedWeapons?.mainHand) {
+            if (event.hand === "MainHand" && hasMainHand) {
               finalMuts = Chunk.append(
                 finalMuts,
                 UnequipWeaponMutation.make({
@@ -166,7 +173,7 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
               }
 
               // Unequip off-hand weapon if present
-              if (equippedWeapons?.offHand) {
+              if (hasOffHand) {
                 finalMuts = Chunk.append(
                   finalMuts,
                   UnequipWeaponMutation.make({
@@ -383,7 +390,9 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
             | typeof UpdateCombatStatsMutation.Type
           >()
 
-          if (equippedWeapons?.offHand) {
+          const weaponState = equippedWeapons?.state
+          const hasOffHandWeapon = weaponState?._type === "OneHanded" && weaponState.offHand !== null
+          if (hasOffHandWeapon) {
             muts = Chunk.append(
               muts,
               UnequipWeaponMutation.make({

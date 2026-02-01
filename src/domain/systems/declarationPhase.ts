@@ -33,12 +33,12 @@ export const declarationPhaseSystem: System = (state, events, _accumulatedMutati
         // Mark caster as vulnerable until their turn
         AddConditionMutation.make({
           entityId: mysteryEvent.entityId,
-          condition: "Vulnerable"
+          condition: { _type: "Vulnerable" }
         }),
-        // Mark as concentrating
+        // Mark as concentrating with mystery name
         AddConditionMutation.make({
           entityId: mysteryEvent.entityId,
-          condition: "Concentrating"
+          condition: { _type: "Concentrating", mysteryName: mysteryEvent.mysteryName }
         }),
         // Track mystery casting state
         SetMysteryCastingMutation.make({
@@ -65,7 +65,7 @@ export const declarationPhaseSystem: System = (state, events, _accumulatedMutati
       mutations.push(
         AddConditionMutation.make({
           entityId: retreatEvent.entityId,
-          condition: "Vulnerable"
+          condition: { _type: "Vulnerable" }
         })
       )
     }
