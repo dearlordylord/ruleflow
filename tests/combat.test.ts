@@ -4,15 +4,10 @@
 import { describe, expect, it } from "@effect/vitest"
 import { Chunk, Effect, Schema } from "effect"
 
-import {
-  AttributesComponent,
-  CombatStatsComponent,
-  DiceNotation,
-  Entity,
-  HealthComponent,
-  WeaponComponent
-} from "../src/domain/components.js"
+import { AttributesComponent, HealthComponent } from "../src/domain/character/index.js"
+import { CombatStatsComponent, DiceNotation, WeaponComponent } from "../src/domain/combat/index.js"
 import { EntityId } from "../src/domain/entities.js"
+import { Entity } from "../src/domain/entity.js"
 import { AttackPerformed } from "../src/domain/events.js"
 import { GameState } from "../src/domain/infrastructure/GameState.js"
 import { ReadModelStore } from "../src/domain/infrastructure/ReadModelStore.js"
@@ -45,7 +40,8 @@ describe("Combat To-Hit System", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 2,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -66,7 +62,8 @@ describe("Combat To-Hit System", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 0,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -81,8 +78,16 @@ describe("Combat To-Hit System", () => {
             WeaponComponent.make({
               name: "Longsword",
               damageDice: Schema.decodeSync(DiceNotation)("1d8"),
+              damageType: ["Slashing"],
               weaponGroup: "Blades",
-              traits: []
+              size: "Medium",
+              traits: [],
+              reach: 5,
+              rangeClose: null,
+              rangeMedium: null,
+              rangeLong: null,
+              durability: 10,
+              maxDurability: 10
             })
           ]
         })
@@ -131,7 +136,8 @@ describe("Combat To-Hit System", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 0,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -145,7 +151,8 @@ describe("Combat To-Hit System", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 0,
               rangedAttackBonus: 0,
-              armorClass: 20
+              armorClass: 20,
+              initiativeModifier: 0
             })
           ]
         })
@@ -159,8 +166,16 @@ describe("Combat To-Hit System", () => {
             WeaponComponent.make({
               name: "Longsword",
               damageDice: Schema.decodeSync(DiceNotation)("1d8"),
+              damageType: ["Slashing"],
               weaponGroup: "Blades",
-              traits: []
+              size: "Medium",
+              traits: [],
+              reach: 5,
+              rangeClose: null,
+              rangeMedium: null,
+              rangeLong: null,
+              durability: 10,
+              maxDurability: 10
             })
           ]
         })
@@ -202,7 +217,8 @@ describe("Combat To-Hit System", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 5,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -216,7 +232,8 @@ describe("Combat To-Hit System", () => {
             CombatStatsComponent.make({
               meleeAttackBonus: 0,
               rangedAttackBonus: 0,
-              armorClass: 15
+              armorClass: 15,
+              initiativeModifier: 0
             })
           ]
         })
@@ -230,8 +247,16 @@ describe("Combat To-Hit System", () => {
             WeaponComponent.make({
               name: "Longsword",
               damageDice: Schema.decodeSync(DiceNotation)("1d8"),
+              damageType: ["Slashing"],
               weaponGroup: "Blades",
-              traits: []
+              size: "Medium",
+              traits: [],
+              reach: 5,
+              rangeClose: null,
+              rangeMedium: null,
+              rangeLong: null,
+              durability: 10,
+              maxDurability: 10
             })
           ]
         })

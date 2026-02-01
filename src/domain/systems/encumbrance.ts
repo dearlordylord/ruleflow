@@ -3,8 +3,8 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { getComponent } from "../components.js"
 import { SystemName } from "../entities.js"
+import { getComponent } from "../entity.js"
 import { DomainError } from "../errors.js"
 import type { System } from "./types.js"
 

@@ -20,10 +20,13 @@ export class ItemComponent extends Schema.TaggedClass<ItemComponent>()("Item", {
   valueInCopper: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
 }) {
   get loadValue(): number {
-    const base = this.loadSize === "Small" ? 0.5 :
-                 this.loadSize === "Large" ? 2 :
-                 this.loadSize === "Massive" ? 4 :
-                 1 // Standard
+    const base = this.loadSize === "Small"
+      ? 0.5
+      : this.loadSize === "Large"
+      ? 2
+      : this.loadSize === "Massive"
+      ? 4
+      : 1 // Standard
     return base * this.quantity
   }
 }

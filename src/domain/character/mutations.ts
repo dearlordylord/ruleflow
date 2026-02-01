@@ -6,10 +6,10 @@ import { Schema } from "effect"
 import { EntityId } from "../entities.js"
 import { AttributesComponent } from "./attributes.js"
 import { ClassComponent } from "./class.js"
-import { HealthComponent } from "./health.js"
 import { CharacterCreationComponent } from "./creation.js"
-import { SkillsComponent } from "./skills.js"
+import { HealthComponent } from "./health.js"
 import { SavingThrowsComponent } from "./saves.js"
+import { SkillsComponent } from "./skills.js"
 
 export class SetAttributesMutation extends Schema.TaggedClass<SetAttributesMutation>()(
   "SetAttributes",

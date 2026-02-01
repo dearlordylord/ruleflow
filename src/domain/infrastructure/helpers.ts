@@ -3,11 +3,18 @@
  */
 import { Effect } from "effect"
 
-import { Entity, getComponent } from "../components.js"
-import * as Components from "../components.js"
-import { SkillsComponent, SavingThrowsComponent, Skill } from "../character/index.js"
+import {
+  AttributesComponent,
+  ClassComponent,
+  HealthComponent,
+  SavingThrowsComponent,
+  Skill,
+  SkillsComponent
+} from "../character/index.js"
 import type { EntityId } from "../entities.js"
+import { type Component, Entity, getComponent } from "../entity.js"
 import type { EntityNotFound } from "../errors.js"
+import { InventoryComponent } from "../inventory/items.js"
 import type { Mutation } from "../mutations.js"
 
 export function createComponentFromMutation(
@@ -19,8 +26,9 @@ export function createComponentFromMutation(
       id: EntityId,
       f: (entity: Entity) => Effect.Effect<Entity>
     ) => Effect.Effect<void, EntityNotFound>
+    readonly clear: () => Effect.Effect<void>
   }
-): Effect.Effect<Components.Component, never> {
+): Effect.Effect<Component, never> {
   if (mutation._tag === "SetAttributes") {
     return Effect.gen(function*() {
       const entity = yield* store.get(mutation.entityId).pipe(
@@ -32,9 +40,9 @@ export function createComponentFromMutation(
         )
       )
       const existing = getComponent(entity, "Attributes")
-      const base = existing instanceof Components.AttributesComponent
+      const base = existing instanceof AttributesComponent
         ? existing
-        : Components.AttributesComponent.make({
+        : AttributesComponent.make({
           strength: 10,
           dexterity: 10,
           intelligence: 10,
@@ -43,7 +51,7 @@ export function createComponentFromMutation(
           charisma: 10
         })
 
-      return Components.AttributesComponent.make({
+      return AttributesComponent.make({
         strength: mutation.data.strength ?? base.strength,
         dexterity: mutation.data.dexterity ?? base.dexterity,
         intelligence: mutation.data.intelligence ?? base.intelligence,
@@ -65,16 +73,16 @@ export function createComponentFromMutation(
         )
       )
       const existing = getComponent(entity, "Health")
-      const base = existing instanceof Components.HealthComponent
+      const base = existing instanceof HealthComponent
         ? existing
-        : Components.HealthComponent.make({
+        : HealthComponent.make({
           current: 10,
           max: 10,
           traumaActive: false,
           traumaEffect: null
         })
 
-      return Components.HealthComponent.make({
+      return HealthComponent.make({
         current: mutation.data.current ?? base.current,
         max: mutation.data.max ?? base.max,
         traumaActive: mutation.data.traumaActive ?? base.traumaActive,
@@ -94,11 +102,11 @@ export function createComponentFromMutation(
         )
       )
       const existing = getComponent(entity, "Class")
-      const base = existing instanceof Components.ClassComponent
+      const base = existing instanceof ClassComponent
         ? existing
-        : Components.ClassComponent.make({ class: "Fighter", level: 1 })
+        : ClassComponent.make({ class: "Fighter", level: 1 })
 
-      return Components.ClassComponent.make({
+      return ClassComponent.make({
         class: mutation.data.class ?? base.class,
         level: mutation.data.level ?? base.level
       })
@@ -125,22 +133,22 @@ export function createComponentFromMutation(
       const base = existing instanceof SkillsComponent
         ? existing
         : SkillsComponent.make({
-            melee: defaultSkill,
-            might: defaultSkill,
-            accuracy: defaultSkill,
-            movement: defaultSkill,
-            sleightOfHand: defaultSkill,
-            stealth: defaultSkill,
-            alchemy: defaultSkill,
-            craft: defaultSkill,
-            knowledge: defaultSkill,
-            medicine: defaultSkill,
-            awareness: defaultSkill,
-            survival: defaultSkill,
-            occultism: defaultSkill,
-            performance: defaultSkill,
-            animalHandling: defaultSkill
-          })
+          melee: defaultSkill,
+          might: defaultSkill,
+          accuracy: defaultSkill,
+          movement: defaultSkill,
+          sleightOfHand: defaultSkill,
+          stealth: defaultSkill,
+          alchemy: defaultSkill,
+          craft: defaultSkill,
+          knowledge: defaultSkill,
+          medicine: defaultSkill,
+          awareness: defaultSkill,
+          survival: defaultSkill,
+          occultism: defaultSkill,
+          performance: defaultSkill,
+          animalHandling: defaultSkill
+        })
 
       return SkillsComponent.make({
         melee: mutation.data.melee ?? base.melee,
@@ -176,14 +184,14 @@ export function createComponentFromMutation(
       const base = existing instanceof SavingThrowsComponent
         ? existing
         : SavingThrowsComponent.make({
-            baseSaveBonus: 0,
-            restraintModifier: 0,
-            exhaustionModifier: 0,
-            dodgeModifier: 0,
-            suppressionModifier: 0,
-            confusionModifier: 0,
-            curseModifier: 0
-          })
+          baseSaveBonus: 0,
+          restraintModifier: 0,
+          exhaustionModifier: 0,
+          dodgeModifier: 0,
+          suppressionModifier: 0,
+          confusionModifier: 0,
+          curseModifier: 0
+        })
 
       return SavingThrowsComponent.make({
         baseSaveBonus: mutation.data.baseSaveBonus ?? base.baseSaveBonus,
@@ -208,15 +216,15 @@ export function createComponentFromMutation(
         )
       )
       const existing = getComponent(entity, "Inventory")
-      const base = existing instanceof Components.InventoryComponent
+      const base = existing instanceof InventoryComponent
         ? existing
-        : Components.InventoryComponent.make({
+        : InventoryComponent.make({
           items: [],
           loadCapacity: 50,
           currentLoad: 0
         })
 
-      return Components.InventoryComponent.make({
+      return InventoryComponent.make({
         items: [...base.items, mutation.itemId],
         loadCapacity: base.loadCapacity,
         currentLoad: base.currentLoad // Will be updated by encumbrance system
@@ -235,15 +243,15 @@ export function createComponentFromMutation(
         )
       )
       const existing = getComponent(entity, "Inventory")
-      const base = existing instanceof Components.InventoryComponent
+      const base = existing instanceof InventoryComponent
         ? existing
-        : Components.InventoryComponent.make({
+        : InventoryComponent.make({
           items: [],
           loadCapacity: 50,
           currentLoad: 0
         })
 
-      return Components.InventoryComponent.make({
+      return InventoryComponent.make({
         items: base.items.filter(id => id !== mutation.itemId),
         loadCapacity: base.loadCapacity,
         currentLoad: base.currentLoad // Will be updated by encumbrance system
@@ -257,10 +265,10 @@ export function createComponentFromMutation(
   }
 
   if (
-    mutation._tag === "DealDamage" ||
-    mutation._tag === "RemoveComponent" ||
-    mutation._tag === "SetMultipleComponents" ||
-    mutation._tag === "UpdateCharacterCreation"
+    mutation._tag === "DealDamage"
+    || mutation._tag === "RemoveComponent"
+    || mutation._tag === "SetMultipleComponents"
+    || mutation._tag === "UpdateCharacterCreation"
   ) {
     // These mutations are handled directly in GameState.applyMutation
     return Effect.die(`${mutation._tag} should not reach createComponentFromMutation`)

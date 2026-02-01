@@ -3,22 +3,32 @@
  */
 import { Schema } from "effect"
 
+import {
+  AlignmentChosen,
+  AttributesRolled,
+  CharacterCreationCompleted,
+  CharacterCreationStarted,
+  ClassChosen,
+  EquipmentPurchased,
+  HitPointsRolled,
+  LanguagesChosen,
+  MysteriesChosen,
+  NameChosen,
+  SkillsChosen,
+  StartingMoneyRolled,
+  TraitChosen
+} from "./character/creationEvents.js"
+import { CharacterDied } from "./character/events.js"
 import { EntityId } from "./entities.js"
 import {
-  CharacterCreationStarted,
-  AttributesRolled,
-  ClassChosen,
-  SkillsChosen,
-  TraitChosen,
-  HitPointsRolled,
-  StartingMoneyRolled,
-  EquipmentPurchased,
-  LanguagesChosen,
-  AlignmentChosen,
-  NameChosen,
-  MysteriesChosen,
-  CharacterCreationCompleted
-} from "./character/creationEvents.js"
+  ContainerDiscovered,
+  ContainerLockDiscovered,
+  ContainerSearched,
+  ItemDiscovered,
+  ItemDropped,
+  ItemLooted,
+  LootDistributed
+} from "./inventory/loot-events.js"
 
 export class AttackPerformed extends Schema.TaggedClass<AttackPerformed>()(
   "AttackPerformed",
@@ -38,7 +48,8 @@ export class CurrencyTransferred extends Schema.TaggedClass<CurrencyTransferred>
     toEntityId: EntityId,
     copper: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
     silver: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
-    gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
+    gold: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
+    platinum: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0))
   }
 ) {}
 
@@ -57,6 +68,14 @@ export const DomainEvent = Schema.Union(
   AlignmentChosen,
   NameChosen,
   MysteriesChosen,
-  CharacterCreationCompleted
+  CharacterCreationCompleted,
+  CharacterDied,
+  ItemDiscovered,
+  ContainerDiscovered,
+  ItemLooted,
+  ItemDropped,
+  ContainerSearched,
+  ContainerLockDiscovered,
+  LootDistributed
 )
 export type DomainEvent = typeof DomainEvent.Type

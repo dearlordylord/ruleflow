@@ -54,13 +54,15 @@ export class LuckySkillComponent extends Schema.TaggedClass<LuckySkillComponent>
  * Mystic: Forbidden Knowledge
  * Artifact identification ability
  */
-export class ForbiddenKnowledgeComponent extends Schema.TaggedClass<ForbiddenKnowledgeComponent>()("ForbiddenKnowledge", {
-  // DC 15-20 for identifying supernatural artifacts
-  identificationBonus: Schema.Int,
+export class ForbiddenKnowledgeComponent
+  extends Schema.TaggedClass<ForbiddenKnowledgeComponent>()("ForbiddenKnowledge", {
+    // DC 15-20 for identifying supernatural artifacts
+    identificationBonus: Schema.Int,
 
-  // Known artifact properties (accumulated knowledge)
-  knownArtifacts: Schema.Array(Schema.String)
-}) {}
+    // Known artifact properties (accumulated knowledge)
+    knownArtifacts: Schema.Array(Schema.String)
+  })
+{}
 
 /**
  * Calculate number of extra attacks per round for Combat Superiority
@@ -117,10 +119,32 @@ export const HP_DIE_BY_CLASS = {
  * Class Titles by Level (1-10)
  * Note: Specialist level 2 "Adept" (Знаток) vs level 4 "Expert" (Эксперт) are different Russian terms
  */
-export const CLASS_TITLES: Record<CharacterClass, readonly string[]> = {
+export const CLASS_TITLES: Record<CharacterClass, ReadonlyArray<string>> = {
   Fighter: ["Soldier", "Veteran", "Warrior", "Knight", "Champion", "Hero", "Hero", "Hero", "Hero", "Hero"],
-  Specialist: ["Dilettante", "Adept", "Professional", "Expert", "Master", "Grandmaster", "Grandmaster", "Grandmaster", "Grandmaster", "Grandmaster"],
-  Mystic: ["Acolyte", "Adept", "Theurge", "Hierophant", "Apostle", "Prophet", "Prophet", "Prophet", "Prophet", "Prophet"]
+  Specialist: [
+    "Dilettante",
+    "Adept",
+    "Professional",
+    "Expert",
+    "Master",
+    "Grandmaster",
+    "Grandmaster",
+    "Grandmaster",
+    "Grandmaster",
+    "Grandmaster"
+  ],
+  Mystic: [
+    "Acolyte",
+    "Adept",
+    "Theurge",
+    "Hierophant",
+    "Apostle",
+    "Prophet",
+    "Prophet",
+    "Prophet",
+    "Prophet",
+    "Prophet"
+  ]
 } as const
 
 /**
