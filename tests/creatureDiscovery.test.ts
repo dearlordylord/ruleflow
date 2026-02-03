@@ -1,5 +1,8 @@
 /**
  * Creature Discovery System tests
+ *
+ * Monsters in this system are minimal - just a name for narrative purposes.
+ * They have no stats, HP, or weapons. The DM declares damage directly.
  */
 import { describe, expect, it } from "@effect/vitest"
 import { Chunk, Effect } from "effect"
@@ -13,27 +16,13 @@ import { creatureDiscoverySystem } from "../src/domain/systems/index.js"
 import { deterministicTestLayer } from "./layers.js"
 
 describe("Creature Discovery System", () => {
-  it.effect("creates creature entity with correct components from CreatureDiscovered event", () =>
+  it.effect("creates minimal creature entity from CreatureDiscovered event", () =>
     Effect.gen(function*() {
       const state = yield* GameState
 
-      // Create a goblin discovery event
+      // Create a goblin discovery event - just a name
       const goblinEvent = CreatureDiscovered.make({
         name: "Goblin",
-        strength: 8,
-        dexterity: 14,
-        constitution: 10,
-        intelligence: 8,
-        will: 8,
-        charisma: 6,
-        maxHP: 7,
-        currentHP: 7,
-        armorClass: 13,
-        meleeAttackBonus: 1,
-        rangedAttackBonus: 2,
-        weaponName: "Rusty Shortsword",
-        weaponDamageDice: "1d6",
-        weaponGroup: "Blades",
         discoveredAt: null
       })
 
@@ -51,79 +40,15 @@ describe("Creature Discovery System", () => {
 
       const entity = createMutation.entity
 
-      // Verify Attributes component
-      const attrs = getComponent(entity, "Attributes")
-      expect(attrs).toBeDefined()
-      expect(attrs?.strength).toBe(8)
-      expect(attrs?.dexterity).toBe(14)
-      expect(attrs?.constitution).toBe(10)
-      expect(attrs?.intelligence).toBe(8)
-      expect(attrs?.will).toBe(8)
-      expect(attrs?.charisma).toBe(6)
+      // Verify Creature component with name
+      const creature = getComponent(entity, "Creature")
+      expect(creature).toBeDefined()
+      expect(creature?.name).toBe("Goblin")
 
-      // Verify Health component
-      const health = getComponent(entity, "Health")
-      expect(health).toBeDefined()
-      expect(health?.current).toBe(7)
-      expect(health?.max).toBe(7)
-      expect(health?.traumaActive).toBe(false)
-      expect(health?.traumaEffect).toBeNull()
-
-      // Verify CombatStats component
-      const combat = getComponent(entity, "CombatStats")
-      expect(combat).toBeDefined()
-      expect(combat?.armorClass).toBe(13)
-      expect(combat?.meleeAttackBonus).toBe(1)
-      expect(combat?.rangedAttackBonus).toBe(2)
-      expect(combat?.initiativeModifier).toBe(0)
-
-      // Verify Weapon component
-      const weapon = getComponent(entity, "Weapon")
-      expect(weapon).toBeDefined()
-      expect(weapon?.name).toBe("Rusty Shortsword")
-      expect(weapon?.damageDice).toBe("1d6")
-      expect(weapon?.weaponGroup).toBe("Blades")
-    }).pipe(Effect.provide(deterministicTestLayer([]))))
-
-  it.effect("creates creature without weapon when weapon info is null", () =>
-    Effect.gen(function*() {
-      const state = yield* GameState
-
-      // Create a creature without weapon
-      const skeletonEvent = CreatureDiscovered.make({
-        name: "Skeleton",
-        strength: 10,
-        dexterity: 10,
-        constitution: 10,
-        intelligence: 6,
-        will: 10,
-        charisma: 5,
-        maxHP: 13,
-        currentHP: 13,
-        armorClass: 13,
-        meleeAttackBonus: 2,
-        rangedAttackBonus: 0,
-        weaponName: null,
-        weaponDamageDice: null,
-        weaponGroup: null,
-        discoveredAt: null
-      })
-
-      const mutations = yield* creatureDiscoverySystem(
-        state,
-        Chunk.of(skeletonEvent),
-        Chunk.empty()
-      )
-
-      expect(Chunk.size(mutations)).toBe(1)
-
-      const createMutation = Chunk.unsafeHead(mutations) as CreateEntityMutation
-      const entity = createMutation.entity
-
-      // Should have Attributes, Health, CombatStats but no Weapon
-      expect(getComponent(entity, "Attributes")).toBeDefined()
-      expect(getComponent(entity, "Health")).toBeDefined()
-      expect(getComponent(entity, "CombatStats")).toBeDefined()
+      // Monsters don't have stats, health, weapons, etc.
+      expect(getComponent(entity, "Attributes")).toBeUndefined()
+      expect(getComponent(entity, "Health")).toBeUndefined()
+      expect(getComponent(entity, "CombatStats")).toBeUndefined()
       expect(getComponent(entity, "Weapon")).toBeUndefined()
     }).pipe(Effect.provide(deterministicTestLayer([]))))
 
@@ -135,20 +60,6 @@ describe("Creature Discovery System", () => {
 
       const goblinEvent = CreatureDiscovered.make({
         name: "Lurking Goblin",
-        strength: 8,
-        dexterity: 14,
-        constitution: 10,
-        intelligence: 8,
-        will: 8,
-        charisma: 6,
-        maxHP: 7,
-        currentHP: 7,
-        armorClass: 13,
-        meleeAttackBonus: 1,
-        rangedAttackBonus: 2,
-        weaponName: null,
-        weaponDamageDice: null,
-        weaponGroup: null,
         discoveredAt: roomId
       })
 
@@ -158,11 +69,12 @@ describe("Creature Discovery System", () => {
         Chunk.empty()
       )
 
-      // System creates the entity; discoveredAt is event metadata
-      // The creature entity itself doesn't store discoveredAt (could add PositionComponent later)
       expect(Chunk.size(mutations)).toBe(1)
       const createMutation = Chunk.unsafeHead(mutations) as CreateEntityMutation
       expect(createMutation._tag).toBe("CreateEntity")
+
+      const creature = getComponent(createMutation.entity, "Creature")
+      expect(creature?.name).toBe("Lurking Goblin")
     }).pipe(Effect.provide(deterministicTestLayer([]))))
 
   it.effect("handles multiple creature discoveries in one batch", () =>
@@ -171,39 +83,11 @@ describe("Creature Discovery System", () => {
 
       const goblin1 = CreatureDiscovered.make({
         name: "Goblin Scout",
-        strength: 8,
-        dexterity: 14,
-        constitution: 10,
-        intelligence: 8,
-        will: 8,
-        charisma: 6,
-        maxHP: 7,
-        currentHP: 7,
-        armorClass: 13,
-        meleeAttackBonus: 1,
-        rangedAttackBonus: 2,
-        weaponName: null,
-        weaponDamageDice: null,
-        weaponGroup: null,
         discoveredAt: null
       })
 
       const goblin2 = CreatureDiscovered.make({
         name: "Goblin Warrior",
-        strength: 10,
-        dexterity: 12,
-        constitution: 12,
-        intelligence: 8,
-        will: 8,
-        charisma: 6,
-        maxHP: 11,
-        currentHP: 11,
-        armorClass: 15,
-        meleeAttackBonus: 3,
-        rangedAttackBonus: 0,
-        weaponName: "Scimitar",
-        weaponDamageDice: "1d6",
-        weaponGroup: "Blades",
         discoveredAt: null
       })
 
@@ -224,48 +108,8 @@ describe("Creature Discovery System", () => {
       // Different entity IDs
       expect(first.entity.id).not.toBe(second.entity.id)
 
-      // First goblin has no weapon
-      expect(getComponent(first.entity, "Weapon")).toBeUndefined()
-
-      // Second goblin has weapon
-      const weapon = getComponent(second.entity, "Weapon")
-      expect(weapon).toBeDefined()
-      expect(weapon?.name).toBe("Scimitar")
-    }).pipe(Effect.provide(deterministicTestLayer([]))))
-
-  it.effect("defaults to Brawling weapon group for invalid weapon group", () =>
-    Effect.gen(function*() {
-      const state = yield* GameState
-
-      const event = CreatureDiscovered.make({
-        name: "Strange Creature",
-        strength: 12,
-        dexterity: 10,
-        constitution: 12,
-        intelligence: 4,
-        will: 6,
-        charisma: 4,
-        maxHP: 15,
-        currentHP: 15,
-        armorClass: 12,
-        meleeAttackBonus: 2,
-        rangedAttackBonus: 0,
-        weaponName: "Natural Claws",
-        weaponDamageDice: "1d4",
-        weaponGroup: "InvalidGroup", // Not a valid weapon group
-        discoveredAt: null
-      })
-
-      const mutations = yield* creatureDiscoverySystem(
-        state,
-        Chunk.of(event),
-        Chunk.empty()
-      )
-
-      const createMutation = Chunk.unsafeHead(mutations) as CreateEntityMutation
-      const weapon = getComponent(createMutation.entity, "Weapon")
-
-      expect(weapon).toBeDefined()
-      expect(weapon?.weaponGroup).toBe("Brawling") // Defaults to Brawling
+      // Both have Creature component with names
+      expect(getComponent(first.entity, "Creature")?.name).toBe("Goblin Scout")
+      expect(getComponent(second.entity, "Creature")?.name).toBe("Goblin Warrior")
     }).pipe(Effect.provide(deterministicTestLayer([]))))
 })

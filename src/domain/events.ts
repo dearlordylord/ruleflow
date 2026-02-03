@@ -65,7 +65,7 @@ import {
   ItemLooted,
   LootDistributed
 } from "./inventory/loot-events.js"
-import { CreatureDiscovered } from "./npc/events.js"
+import { CreatureDiscovered, MonsterDamageInflicted } from "./npc/events.js"
 
 export class CurrencyTransferred extends Schema.TaggedClass<CurrencyTransferred>()(
   "CurrencyTransferred",
@@ -102,6 +102,7 @@ export {
   EquipmentRepaired,
   GrappleAttempted,
   InitiativeRolled,
+  MonsterDamageInflicted,
   MoraleChecked,
   MovementPerformed,
   MysteryCastDeclared,
@@ -191,6 +192,7 @@ export const DomainEvent = Schema.Union(
   WeaponDamaged,
   ArmorDamaged,
   // NPC events
-  CreatureDiscovered
+  CreatureDiscovered,
+  MonsterDamageInflicted
 )
 export type DomainEvent = typeof DomainEvent.Type
