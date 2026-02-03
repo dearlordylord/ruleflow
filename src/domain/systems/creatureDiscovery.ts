@@ -2,80 +2,22 @@
  * Creature Discovery System
  * Processes CreatureDiscovered events to create creature entities
  */
-import { Chunk, Effect, Option, Schema } from "effect"
+import { Chunk, Effect } from "effect"
 
-import { AttributesComponent } from "../character/attributes.js"
-import { HealthComponent } from "../character/health.js"
-import { CombatStatsComponent } from "../combat/stats.js"
-import { DiceNotation, WeaponComponent } from "../combat/weapons.js"
 import { EntityId } from "../entities.js"
-import type { Component } from "../entity.js"
 import { Entity } from "../entity.js"
 import { CreateEntityMutation } from "../inventory/mutations.js"
+import { CreatureComponent } from "../npc/encounters.js"
 import type { CreatureDiscovered } from "../npc/events.js"
 import { IdGenerator } from "../services/IdGenerator.js"
 import type { System } from "./types.js"
 
-const VALID_WEAPON_GROUPS = [
-  "Axes",
-  "Blades",
-  "HeavyBlades",
-  "Bows",
-  "Brawling",
-  "Clubs",
-  "Crossbows",
-  "Flails",
-  "Polearms",
-  "Firearms",
-  "Slings",
-  "Spears",
-  "Staves",
-  "Thrown"
-] as const
-
-/**
- * Creates an optional weapon component from event data
- */
-const createWeaponComponent = (
-  weaponName: string | null,
-  weaponDamageDice: string | null,
-  weaponGroup: string | null
-): Option.Option<WeaponComponent> => {
-  if (!weaponName || !weaponDamageDice || !weaponGroup) {
-    return Option.none()
-  }
-
-  const diceResult = Schema.decodeUnknownOption(DiceNotation)(weaponDamageDice)
-  if (Option.isNone(diceResult)) {
-    return Option.none()
-  }
-
-  // Default to "Brawling" if not a valid group
-  const validatedGroup = VALID_WEAPON_GROUPS.includes(weaponGroup as typeof VALID_WEAPON_GROUPS[number])
-    ? (weaponGroup as typeof VALID_WEAPON_GROUPS[number])
-    : "Brawling"
-
-  return Option.some(
-    WeaponComponent.make({
-      name: weaponName,
-      damageDice: diceResult.value,
-      damageType: ["Slashing"], // Default, creatures can override
-      weaponGroup: validatedGroup,
-      size: "Medium",
-      traits: [],
-      reach: 5,
-      rangeClose: null,
-      rangeMedium: null,
-      rangeLong: null,
-      durability: 10,
-      maxDurability: 10
-    })
-  )
-}
-
 /**
  * Creature Discovery System
- * Processes CreatureDiscovered -> creates creature entity with components
+ * Processes CreatureDiscovered -> creates minimal creature entity
+ *
+ * Monsters in this system are minimal - just a name for narrative purposes.
+ * They have no stats, HP, or weapons. The DM declares damage directly.
  */
 export const creatureDiscoverySystem: System<IdGenerator> = (_state, events, _accumulatedMutations) =>
   Effect.gen(function*() {
@@ -88,49 +30,15 @@ export const creatureDiscoverySystem: System<IdGenerator> = (_state, events, _ac
 
     const mutations = yield* Effect.forEach(creatureEvents, (event) =>
       Effect.gen(function*() {
-        // Generate new entity ID for creature using injected IdGenerator
+        // Generate new entity ID for creature
         const creatureId = EntityId.make(yield* idGen.generate())
 
-        // Build base components
-        const baseComponents: ReadonlyArray<Component> = [
-          AttributesComponent.make({
-            strength: event.strength,
-            dexterity: event.dexterity,
-            constitution: event.constitution,
-            intelligence: event.intelligence,
-            will: event.will,
-            charisma: event.charisma
-          }),
-          HealthComponent.make({
-            current: event.currentHP,
-            max: event.maxHP,
-            traumaActive: false,
-            traumaEffect: null
-          }),
-          CombatStatsComponent.make({
-            meleeAttackBonus: event.meleeAttackBonus,
-            rangedAttackBonus: event.rangedAttackBonus,
-            armorClass: event.armorClass,
-            initiativeModifier: 0
-          })
-        ]
-
-        // Optionally add weapon component
-        const weaponOption = createWeaponComponent(
-          event.weaponName,
-          event.weaponDamageDice,
-          event.weaponGroup
-        )
-
-        const components = Option.match(weaponOption, {
-          onNone: () => baseComponents,
-          onSome: (weapon) => [...baseComponents, weapon]
-        })
-
-        // Create creature entity
+        // Create minimal creature entity - just a name
         const creatureEntity = Entity.make({
           id: creatureId,
-          components
+          components: [
+            CreatureComponent.make({ name: event.name })
+          ]
         })
 
         return CreateEntityMutation.make({ entity: creatureEntity })

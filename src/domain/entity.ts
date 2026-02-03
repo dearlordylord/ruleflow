@@ -65,6 +65,7 @@ export const ComponentRegistry = [
   NPC.MoraleComponent,
   NPC.ReactionComponent,
   NPC.LoyaltyComponent,
+  NPC.CreatureComponent,
   // World domain
   World.MovementComponent,
   World.PositionComponent,

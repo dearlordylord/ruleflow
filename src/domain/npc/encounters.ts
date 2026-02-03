@@ -4,6 +4,20 @@
 import { Schema } from "effect"
 
 /**
+ * Creature Component - marks an entity as a creature/monster
+ *
+ * Monsters in this system are minimal - just a name for narrative purposes.
+ * They have no stats, HP, or weapons by default. The DM declares damage directly.
+ * Monsters only become mechanically interesting when looted.
+ */
+export class CreatureComponent extends Schema.TaggedClass<CreatureComponent>()(
+  "Creature",
+  {
+    name: Schema.NonEmptyString
+  }
+) {}
+
+/**
  * Terrain types affecting encounter chances
  */
 export const TerrainType = Schema.Literal(
