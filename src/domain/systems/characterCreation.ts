@@ -19,7 +19,6 @@ import type {
   TraitChosen,
   WeaponGroupSpecializationChosen
 } from "../character/creationEvents.js"
-import { WeaponSpecializationComponent } from "../combat/weapons.js"
 import {
   AttributesComponent,
   calculateBaseSaveBonus,
@@ -42,6 +41,7 @@ import {
   TraitsComponent
 } from "../character/index.js"
 import { UpdateCharacterCreationMutation } from "../character/mutations.js"
+import { WeaponSpecializationComponent } from "../combat/weapons.js"
 import type { Component } from "../entity.js"
 import { getComponent } from "../entity.js"
 import { CurrencyComponent, InventoryComponent } from "../inventory/index.js"
