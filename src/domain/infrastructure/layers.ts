@@ -7,12 +7,15 @@ import { IdGenerator } from "../services/IdGenerator.js"
 import { Committer } from "./Committer.js"
 import { EventLog } from "./EventLog.js"
 import { GameState } from "./GameState.js"
+import { ObservationLog } from "./ObservationLog.js"
+import { Projector } from "./Projector.js"
 import { ReadModelStore } from "./ReadModelStore.js"
 import { Replayer } from "./Replayer.js"
 
 export const baseLayer = Layer.mergeAll(
   ReadModelStore.testLayer,
   EventLog.testLayer,
+  ObservationLog.testLayer,
   IdGenerator.testLayer([
     "00000000-0000-0000-0000-000000000001",
     "00000000-0000-0000-0000-000000000002",
@@ -34,9 +37,14 @@ export const replayerLayer = Replayer.layer.pipe(
   Layer.provide(gameStateLayer)
 )
 
+export const projectorLayer = Projector.layer.pipe(
+  Layer.provide(Layer.mergeAll(baseLayer, gameStateLayer))
+)
+
 export const testLayer = Layer.mergeAll(
   baseLayer,
   gameStateLayer,
   committerLayer,
-  replayerLayer
+  replayerLayer,
+  projectorLayer
 )
