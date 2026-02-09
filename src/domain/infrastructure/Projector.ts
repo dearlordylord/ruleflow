@@ -3,10 +3,10 @@
  */
 import { Chunk, Context, Effect, Layer } from "effect"
 
-import type { DomainError, EntityNotFound } from "../errors.js"
+import type { DomainError, EntityNotFound, ObservationLogWriteError } from "../errors.js"
 import { type AllSystemRequirements, runAllSystems } from "../systems/index.js"
 import { GameState } from "./GameState.js"
-import { ObservationLog } from "./ObservationLog.js"
+import { type ObservationEntry, ObservationLog } from "./ObservationLog.js"
 import { ReadModelStore } from "./ReadModelStore.js"
 
 export class Projector extends Context.Tag("@game/Projector")<
@@ -15,6 +15,13 @@ export class Projector extends Context.Tag("@game/Projector")<
     readonly replayAll: () => Effect.Effect<
       void,
       Chunk.Chunk<DomainError> | EntityNotFound,
+      AllSystemRequirements
+    >
+    readonly projectLatest: (
+      observation: ObservationEntry
+    ) => Effect.Effect<
+      void,
+      Chunk.Chunk<DomainError> | EntityNotFound | ObservationLogWriteError,
       AllSystemRequirements
     >
   }
@@ -51,7 +58,31 @@ export class Projector extends Context.Tag("@game/Projector")<
           }
         }) as Effect.Effect<void, Chunk.Chunk<DomainError> | EntityNotFound, AllSystemRequirements>
 
-      return Projector.of({ replayAll })
+      const projectLatest = (observation: ObservationEntry) =>
+        Effect.gen(function*() {
+          // 1. Append observation to log
+          yield* observationLog.append(observation)
+
+          // 2. If no selected index, nothing to process
+          if (observation.selectedIndex === null) {
+            return
+          }
+
+          // 3. Extract event from selected candidate
+          const event = observation.candidates[observation.selectedIndex].event
+
+          // 4. Run event through all systems
+          const { mutations } = yield* runAllSystems(Chunk.of(event))
+
+          // 5. Apply resulting mutations to state
+          yield* Effect.forEach(mutations, (m) => gameState.applyMutation(m))
+        }) as Effect.Effect<
+          void,
+          Chunk.Chunk<DomainError> | EntityNotFound | ObservationLogWriteError,
+          AllSystemRequirements
+        >
+
+      return Projector.of({ replayAll, projectLatest })
     })
   )
 }
