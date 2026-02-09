@@ -19,38 +19,16 @@ import {
   StartingMoneyRolled,
   TraitChosen
 } from "../src/domain/character/creationEvents.js"
-import { EntityId, ObservationEntryId } from "../src/domain/entities.js"
+import { EntityId } from "../src/domain/entities.js"
 import { getComponent } from "../src/domain/entity.js"
 import { AttackPerformed, CreatureDiscovered, CurrencyTransferred } from "../src/domain/events.js"
 import { GameState } from "../src/domain/infrastructure/GameState.js"
-import { ObservationEntry } from "../src/domain/infrastructure/ObservationLog.js"
 import { Projector } from "../src/domain/infrastructure/Projector.js"
-import { deterministicTestLayerWithIds } from "./layers.js"
-
-/** Helper: wrap a domain event as a single-candidate ObservationEntry */
-const makeObservation = (id: string, event: Parameters<typeof ObservationEntry.make>[0]["candidates"][0]["event"]) =>
-  new ObservationEntry({
-    id: ObservationEntryId.make(id),
-    timestamp: new Date(),
-    candidates: [{ event, confidence: 1.0 }],
-    selectedIndex: null
-  })
-
-/** Observation ID counter for unique IDs within a test */
-let obsCounter = 0
-const nextObsId = () => {
-  obsCounter++
-  const hex = obsCounter.toString(16).padStart(12, "0")
-  return `e0000000-0000-0000-0000-${hex}`
-}
-const resetObsCounter = () => {
-  obsCounter = 0
-}
+import { deterministicTestLayerWithIds, makeObservation } from "./layers.js"
 
 describe("Event Replay", () => {
   it.effect("replays combat event to identical state", () =>
     Effect.gen(function*() {
-      resetObsCounter()
       const state = yield* GameState
       const projector = yield* Projector
 
@@ -74,7 +52,7 @@ describe("Event Replay", () => {
         weaponGroup: "Blades",
         discoveredAt: null
       })
-      yield* projector.projectLatest(makeObservation(nextObsId(), attackerDiscovery))
+      yield* projector.projectLatest(makeObservation(attackerDiscovery))
 
       const attackerId = EntityId.make("00000000-0000-0000-0000-000000000001")
 
@@ -97,7 +75,7 @@ describe("Event Replay", () => {
         weaponGroup: null,
         discoveredAt: null
       })
-      yield* projector.projectLatest(makeObservation(nextObsId(), targetDiscovery))
+      yield* projector.projectLatest(makeObservation(targetDiscovery))
 
       const targetId = EntityId.make("00000000-0000-0000-0000-000000000002")
 
@@ -108,7 +86,7 @@ describe("Event Replay", () => {
         weaponId: attackerId,
         attackRoll: 15
       })
-      yield* projector.projectLatest(makeObservation(nextObsId(), attackEvent))
+      yield* projector.projectLatest(makeObservation(attackEvent))
 
       // Record state after projection
       const targetAfterProject = yield* state.getEntity(targetId)
@@ -134,7 +112,6 @@ describe("Event Replay", () => {
 
   it.effect("replays currency transfer event atomically", () =>
     Effect.gen(function*() {
-      resetObsCounter()
       const state = yield* GameState
       const projector = yield* Projector
 
@@ -148,7 +125,6 @@ describe("Event Replay", () => {
       // Step 1: Create entities via CreatureDiscovered (produces CreateEntity mutations)
       // IdGenerator → ID1 for "from" entity
       yield* projector.projectLatest(makeObservation(
-        nextObsId(),
         CreatureDiscovered.make({
           name: "Sender",
           strength: 10,
@@ -171,7 +147,6 @@ describe("Event Replay", () => {
 
       // IdGenerator → ID2 for "to" entity
       yield* projector.projectLatest(makeObservation(
-        nextObsId(),
         CreatureDiscovered.make({
           name: "Receiver",
           strength: 10,
@@ -219,7 +194,7 @@ describe("Event Replay", () => {
         CharacterCreationCompleted.make({ entityId: fromId })
       ]
       for (const event of fromCharEvents) {
-        yield* projector.projectLatest(makeObservation(nextObsId(), event))
+        yield* projector.projectLatest(makeObservation(event))
       }
 
       const toCharEvents = [
@@ -247,7 +222,7 @@ describe("Event Replay", () => {
         CharacterCreationCompleted.make({ entityId: toId })
       ]
       for (const event of toCharEvents) {
-        yield* projector.projectLatest(makeObservation(nextObsId(), event))
+        yield* projector.projectLatest(makeObservation(event))
       }
 
       // Verify initial currency state
@@ -268,7 +243,7 @@ describe("Event Replay", () => {
         gold: 0,
         platinum: 0
       })
-      yield* projector.projectLatest(makeObservation(nextObsId(), transferEvent))
+      yield* projector.projectLatest(makeObservation(transferEvent))
 
       // Record state after projection
       const fromAfterProject = yield* state.getEntity(fromId)
@@ -300,7 +275,6 @@ describe("Event Replay", () => {
 
   it.effect("replays multiple events in sequence", () =>
     Effect.gen(function*() {
-      resetObsCounter()
       const state = yield* GameState
       const projector = yield* Projector
 
@@ -324,7 +298,7 @@ describe("Event Replay", () => {
         weaponGroup: "Blades",
         discoveredAt: null
       })
-      yield* projector.projectLatest(makeObservation(nextObsId(), attackerDiscovery))
+      yield* projector.projectLatest(makeObservation(attackerDiscovery))
 
       const attackerId = EntityId.make("00000000-0000-0000-0000-000000000001")
 
@@ -347,7 +321,7 @@ describe("Event Replay", () => {
         weaponGroup: null,
         discoveredAt: null
       })
-      yield* projector.projectLatest(makeObservation(nextObsId(), targetDiscovery))
+      yield* projector.projectLatest(makeObservation(targetDiscovery))
 
       const targetId = EntityId.make("00000000-0000-0000-0000-000000000002")
 
@@ -358,7 +332,7 @@ describe("Event Replay", () => {
         weaponId: attackerId,
         attackRoll: 15
       })
-      yield* projector.projectLatest(makeObservation(nextObsId(), attack1))
+      yield* projector.projectLatest(makeObservation(attack1))
 
       const attack2 = AttackPerformed.make({
         attackerId,
@@ -366,7 +340,7 @@ describe("Event Replay", () => {
         weaponId: attackerId,
         attackRoll: 18
       })
-      yield* projector.projectLatest(makeObservation(nextObsId(), attack2))
+      yield* projector.projectLatest(makeObservation(attack2))
 
       // Record final state
       const targetFinal = yield* state.getEntity(targetId)

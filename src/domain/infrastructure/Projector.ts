@@ -8,6 +8,7 @@
 import { Chunk, Context, Effect, Layer } from "effect"
 
 import type { DomainError, EntityNotFound, ObservationLogWriteError } from "../errors.js"
+import { SelectedIndexOutOfBounds } from "../errors.js"
 import type { Mutation } from "../mutations.js"
 import { type AllSystemRequirements, runAllSystems } from "../systems/index.js"
 import type { ConsistencyWarning } from "../warnings.js"
@@ -32,9 +33,13 @@ export class Projector extends Context.Tag("@game/Projector")<
   {
     readonly replayAll: () => Effect.Effect<
       void,
-      Chunk.Chunk<DomainError> | EntityNotFound,
+      Chunk.Chunk<DomainError> | EntityNotFound | SelectedIndexOutOfBounds,
       AllSystemRequirements
     >
+    /**
+     * Evaluate all candidates, select the best, append to log, apply mutations.
+     * Always re-evaluates candidates — `selectedIndex` on the input observation is ignored.
+     */
     readonly projectLatest: (
       observation: ObservationEntry
     ) => Effect.Effect<
@@ -66,7 +71,15 @@ export class Projector extends Context.Tag("@game/Projector")<
               continue
             }
 
-            const event = entry.candidates[entry.selectedIndex].event
+            const candidate = entry.candidates[entry.selectedIndex]
+            if (!candidate) {
+              return yield* SelectedIndexOutOfBounds.make({
+                observationId: entry.id,
+                selectedIndex: entry.selectedIndex,
+                candidatesLength: entry.candidates.length
+              })
+            }
+            const event = candidate.event
 
             // Run event through all systems
             const { mutations } = yield* runAllSystems(Chunk.of(event))
@@ -74,7 +87,11 @@ export class Projector extends Context.Tag("@game/Projector")<
             // Apply resulting mutations to state
             yield* Effect.forEach(mutations, (m) => gameState.applyMutation(m))
           }
-        }) as Effect.Effect<void, Chunk.Chunk<DomainError> | EntityNotFound, AllSystemRequirements>
+        }) as Effect.Effect<
+          void,
+          Chunk.Chunk<DomainError> | EntityNotFound | SelectedIndexOutOfBounds,
+          AllSystemRequirements
+        >
 
       const projectLatest = (observation: ObservationEntry) =>
         Effect.gen(function*() {

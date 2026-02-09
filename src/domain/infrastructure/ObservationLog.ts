@@ -5,7 +5,7 @@ import { Context, Effect, Layer, Option, Schema, SynchronizedRef } from "effect"
 
 import { ObservationEntryId } from "../entities.js"
 import type { ObservationLogWriteError } from "../errors.js"
-import { ObservationEntryNotFound } from "../errors.js"
+import { ObservationEntryNotFound, SelectedIndexOutOfBounds } from "../errors.js"
 import { DomainEvent } from "../events.js"
 
 export class ObservationEntry extends Schema.Class<ObservationEntry>("ObservationEntry")({
@@ -31,7 +31,7 @@ export class ObservationLog extends Context.Tag("@game/ObservationLog")<
     readonly updateSelection: (
       id: ObservationEntryId,
       selectedIndex: number | null
-    ) => Effect.Effect<void, ObservationEntryNotFound>
+    ) => Effect.Effect<void, ObservationEntryNotFound | SelectedIndexOutOfBounds>
   }
 >() {
   static readonly testLayer = Layer.effect(
@@ -58,19 +58,33 @@ export class ObservationLog extends Context.Tag("@game/ObservationLog")<
       const readAll = () => SynchronizedRef.get(store)
 
       const updateSelection = (id: ObservationEntryId, selectedIndex: number | null) =>
-        SynchronizedRef.updateEffect(store, (entries) => {
-          const idx = entries.findIndex((e) => e.id === id)
-          if (idx === -1) {
-            return Effect.fail(ObservationEntryNotFound.make({ id }))
+        SynchronizedRef.updateEffect(
+          store,
+          (entries): Effect.Effect<Array<ObservationEntry>, ObservationEntryNotFound | SelectedIndexOutOfBounds> => {
+            const idx = entries.findIndex((e) => e.id === id)
+            if (idx === -1) {
+              return Effect.fail(ObservationEntryNotFound.make({ id }))
+            }
+            const entry = entries[idx]
+            if (
+              selectedIndex !== null
+              && (selectedIndex < 0 || selectedIndex >= entry.candidates.length || !Number.isInteger(selectedIndex))
+            ) {
+              return Effect.fail(SelectedIndexOutOfBounds.make({
+                observationId: id,
+                selectedIndex,
+                candidatesLength: entry.candidates.length
+              }))
+            }
+            const updated = [...entries]
+            // eslint-disable-next-line functional/immutable-data -- local mutation, converted to new array on return
+            updated[idx] = new ObservationEntry({
+              ...entry,
+              selectedIndex
+            })
+            return Effect.succeed(updated)
           }
-          const updated = [...entries]
-          // eslint-disable-next-line functional/immutable-data -- local mutation, converted to new array on return
-          updated[idx] = new ObservationEntry({
-            ...entries[idx],
-            selectedIndex
-          })
-          return Effect.succeed(updated)
-        })
+        )
 
       return ObservationLog.of({ append, read, readAll, updateSelection })
     })

@@ -30,3 +30,12 @@ export class ObservationEntryNotFound extends Schema.TaggedError<ObservationEntr
   "ObservationEntryNotFound",
   { id: ObservationEntryId }
 ) {}
+
+export class SelectedIndexOutOfBounds extends Schema.TaggedError<SelectedIndexOutOfBounds>()(
+  "SelectedIndexOutOfBounds",
+  {
+    observationId: ObservationEntryId,
+    selectedIndex: Schema.Number,
+    candidatesLength: Schema.Number
+  }
+) {}
