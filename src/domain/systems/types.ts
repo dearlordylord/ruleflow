@@ -8,13 +8,23 @@ import type { Entity } from "../entity.js"
 import type { DomainError, EntityNotFound } from "../errors.js"
 import type { DomainEvent } from "../events.js"
 import type { Mutation } from "../mutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 
 export interface ReadonlyGameState {
   readonly getEntity: (id: EntityId) => Effect.Effect<Entity, EntityNotFound>
 }
 
 /**
- * A system processes domain events and accumulated mutations to produce new mutations.
+ * The result of running a system: mutations to apply and any consistency warnings.
+ */
+export interface SystemResult {
+  readonly mutations: Chunk.Chunk<Mutation>
+  readonly warnings: Chunk.Chunk<ConsistencyWarning>
+}
+
+/**
+ * A system processes domain events and accumulated mutations to produce new mutations
+ * and consistency warnings.
  * Systems may depend on mutations from prior systems in the pipeline, so ordering matters.
  * The accumulatedMutations parameter contains all mutations produced by earlier systems.
  *
@@ -24,7 +34,7 @@ export type System<R = never> = (
   state: ReadonlyGameState,
   events: Chunk.Chunk<DomainEvent>,
   accumulatedMutations: Chunk.Chunk<Mutation>
-) => Effect.Effect<Chunk.Chunk<Mutation>, Chunk.Chunk<DomainError>, R>
+) => Effect.Effect<SystemResult, Chunk.Chunk<DomainError>, R>
 
 /**
  * Helper interface for registry entries with explicit requirements tracking.

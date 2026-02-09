@@ -7,9 +7,10 @@ import type { DomainError } from "../errors.js"
 import type { DomainEvent } from "../events.js"
 import { GameState } from "../infrastructure/GameState.js"
 import type { Mutation } from "../mutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { AllSystemRequirements } from "./registry.js"
 import { getAllSystems } from "./registry.js"
-import type { System } from "./types.js"
+import type { System, SystemResult } from "./types.js"
 
 // Re-export individual systems for backward compatibility
 export { characterCreationSystem } from "./characterCreation.js"
@@ -30,7 +31,7 @@ export {
   itemLootingSystem,
   lootDistributionSystem
 } from "./looting.js"
-export type { System } from "./types.js"
+export type { System, SystemResult } from "./types.js"
 
 // Combat encounter systems
 export { actionEconomySystem } from "./actionEconomy.js"
@@ -68,21 +69,24 @@ export { getAllSystems, getSystemByName, SystemRegistry } from "./registry.js"
 export const runSystemsPipeline = (
   systems: Array<System<AllSystemRequirements>>,
   events: Chunk.Chunk<DomainEvent> = Chunk.empty()
-): Effect.Effect<Chunk.Chunk<Mutation>, Chunk.Chunk<DomainError>, GameState | AllSystemRequirements> =>
+): Effect.Effect<SystemResult, Chunk.Chunk<DomainError>, GameState | AllSystemRequirements> =>
   Effect.gen(function*() {
     const state = yield* GameState
 
-    const mutations = yield* Effect.reduce(
+    const result = yield* Effect.reduce(
       systems,
-      Chunk.empty<Mutation>(),
-      (accumulatedMutations, system) =>
+      { mutations: Chunk.empty<Mutation>(), warnings: Chunk.empty<ConsistencyWarning>() },
+      (acc, system) =>
         Effect.gen(function*() {
-          const newMutations = yield* system(state, events, accumulatedMutations)
-          return Chunk.appendAll(accumulatedMutations, newMutations)
+          const systemResult = yield* system(state, events, acc.mutations)
+          return {
+            mutations: Chunk.appendAll(acc.mutations, systemResult.mutations),
+            warnings: Chunk.appendAll(acc.warnings, systemResult.warnings)
+          }
         })
     )
 
-    return mutations
+    return result
   })
 
 /**
@@ -91,5 +95,5 @@ export const runSystemsPipeline = (
  */
 export const runAllSystems = (
   events: Chunk.Chunk<DomainEvent> = Chunk.empty()
-): Effect.Effect<Chunk.Chunk<Mutation>, Chunk.Chunk<DomainError>, GameState | AllSystemRequirements> =>
+): Effect.Effect<SystemResult, Chunk.Chunk<DomainError>, GameState | AllSystemRequirements> =>
   runSystemsPipeline([...getAllSystems()] as Array<System<AllSystemRequirements>>, events)
