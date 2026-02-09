@@ -6,9 +6,6 @@ import { Schema } from "effect"
 export const EntityId = Schema.UUID.pipe(Schema.brand("EntityId"))
 export type EntityId = typeof EntityId.Type
 
-export const EventLogEntryId = Schema.UUID.pipe(Schema.brand("EventLogEntryId"))
-export type EventLogEntryId = typeof EventLogEntryId.Type
-
 export const ObservationEntryId = Schema.UUID.pipe(Schema.brand("ObservationEntryId"))
 export type ObservationEntryId = typeof ObservationEntryId.Type
 
