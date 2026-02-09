@@ -14,6 +14,7 @@ import { Entity } from "../entity.js"
 import { CreateEntityMutation } from "../inventory/mutations.js"
 import type { CreatureDiscovered } from "../npc/events.js"
 import { IdGenerator } from "../services/IdGenerator.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 const VALID_WEAPON_GROUPS = [
@@ -136,5 +137,5 @@ export const creatureDiscoverySystem: System<IdGenerator> = (_state, events, _ac
         return CreateEntityMutation.make({ entity: creatureEntity })
       }))
 
-    return Chunk.fromIterable(mutations)
+    return { mutations: Chunk.fromIterable(mutations), warnings: Chunk.empty<ConsistencyWarning>() }
   })

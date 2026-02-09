@@ -96,7 +96,7 @@ describe("Full Game Simulation", () => {
 
       // Process each event and commit (state must update between events)
       for (const event of charEvents) {
-        const mutations = yield* runSystemsPipeline(
+        const { mutations } = yield* runSystemsPipeline(
           [characterCreationSystem],
           Chunk.of(event)
         )
@@ -159,7 +159,7 @@ describe("Full Game Simulation", () => {
         discoveredAt: null
       })
 
-      const creatureMutations = yield* runSystemsPipeline(
+      const { mutations: creatureMutations } = yield* runSystemsPipeline(
         [creatureDiscoverySystem],
         Chunk.of(goblinDiscovery)
       )
@@ -216,7 +216,7 @@ describe("Full Game Simulation", () => {
       })
 
       // Process combat
-      const combatMutations = yield* runSystemsPipeline(
+      const { mutations: combatMutations } = yield* runSystemsPipeline(
         [combatToHitSystem, traumaSystem],
         Chunk.of(guidoAttack)
       )
@@ -262,7 +262,7 @@ describe("Full Game Simulation", () => {
         platinum: 0
       })
 
-      const currencyMutations = yield* runSystemsPipeline(
+      const { mutations: currencyMutations } = yield* runSystemsPipeline(
         [currencyTransferSystem],
         Chunk.of(lootCurrency)
       )

@@ -18,6 +18,7 @@ import {
 import { SystemName } from "../entities.js"
 import { getComponent } from "../entity.js"
 import { DomainError } from "../errors.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
@@ -430,8 +431,9 @@ export const equipmentSystem: System = (state, events, _accumulatedMutations) =>
     )
 
     // Combine all mutations
-    return Chunk.flatten(Chunk.unsafeFromArray(weaponEquipMutations)).pipe(
+    const mutations = Chunk.flatten(Chunk.unsafeFromArray(weaponEquipMutations)).pipe(
       Chunk.appendAll(Chunk.flatten(Chunk.unsafeFromArray(armorEquipMutations))),
       Chunk.appendAll(Chunk.flatten(Chunk.unsafeFromArray(shieldEquipMutations)))
     )
+    return { mutations, warnings: Chunk.empty<ConsistencyWarning>() }
   })

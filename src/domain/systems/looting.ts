@@ -27,6 +27,7 @@ import {
   TransferItemMutation
 } from "../inventory/mutations.js"
 import { SetMultipleComponentsMutation } from "../mutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -62,7 +63,7 @@ export const itemDiscoverySystem: System = (_state, events, _accumulatedMutation
       (event): event is ItemDiscovered => event._tag === "ItemDiscovered"
     )
 
-    return Chunk.flatMap(discoveryEvents, (event) => {
+    const mutations = Chunk.flatMap(discoveryEvents, (event) => {
       // Look up template
       const template = ITEM_TEMPLATES[event.templateId]
       if (!template) {
@@ -101,6 +102,7 @@ export const itemDiscoverySystem: System = (_state, events, _accumulatedMutation
 
       return Chunk.of(createMutation)
     })
+    return { mutations, warnings: Chunk.empty<ConsistencyWarning>() }
   })
 
 /**
@@ -108,8 +110,8 @@ export const itemDiscoverySystem: System = (_state, events, _accumulatedMutation
  * Processes ContainerDiscovered → creates container entity
  */
 export const containerDiscoverySystem: System = (_state, events, _accumulatedMutations) =>
-  Effect.succeed(
-    Chunk.flatMap(
+  Effect.succeed({
+    mutations: Chunk.flatMap(
       Chunk.filter(
         events,
         (event): event is ContainerDiscovered => event._tag === "ContainerDiscovered"
@@ -133,8 +135,9 @@ export const containerDiscoverySystem: System = (_state, events, _accumulatedMut
 
         return Chunk.of(CreateEntityMutation.make({ entity: containerEntity }))
       }
-    )
-  )
+    ),
+    warnings: Chunk.empty<ConsistencyWarning>()
+  })
 
 /**
  * Corpse Creation System
@@ -233,7 +236,7 @@ export const corpseCreationSystem: System = (state, events, _accumulatedMutation
       { concurrency: "unbounded" }
     )
 
-    return Chunk.flatten(Chunk.fromIterable(mutationChunks))
+    return { mutations: Chunk.flatten(Chunk.fromIterable(mutationChunks)), warnings: Chunk.empty<ConsistencyWarning>() }
   })
 
 /**
@@ -301,7 +304,7 @@ export const itemLootingSystem: System = (state, events, _accumulatedMutations) 
       { concurrency: "unbounded" }
     )
 
-    return Chunk.flatten(Chunk.fromIterable(mutationChunks))
+    return { mutations: Chunk.flatten(Chunk.fromIterable(mutationChunks)), warnings: Chunk.empty<ConsistencyWarning>() }
   })
 
 /**
@@ -310,8 +313,8 @@ export const itemLootingSystem: System = (state, events, _accumulatedMutations) 
  * Item entity keeps same ID - just changes components
  */
 export const itemDropSystem: System = (_state, events, _accumulatedMutations) =>
-  Effect.succeed(
-    Chunk.flatMap(
+  Effect.succeed({
+    mutations: Chunk.flatMap(
       Chunk.filter(
         events,
         (event): event is ItemDropped => event._tag === "ItemDropped"
@@ -335,8 +338,9 @@ export const itemDropSystem: System = (_state, events, _accumulatedMutations) =>
             removeComponents: []
           })
         )
-    )
-  )
+    ),
+    warnings: Chunk.empty<ConsistencyWarning>()
+  })
 
 /**
  * Container Search System
@@ -399,7 +403,7 @@ export const containerSearchSystem: System = (state, events, _accumulatedMutatio
       { concurrency: "unbounded" }
     )
 
-    return Chunk.flatten(Chunk.fromIterable(mutationChunks))
+    return { mutations: Chunk.flatten(Chunk.fromIterable(mutationChunks)), warnings: Chunk.empty<ConsistencyWarning>() }
   })
 
 /**
@@ -408,15 +412,15 @@ export const containerSearchSystem: System = (state, events, _accumulatedMutatio
  * TODO: Implement using SetMultipleComponentsMutation to update ContainerComponent.isLocked
  */
 export const containerLockDiscoverySystem: System = (_state, _events, _accumulatedMutations) =>
-  Effect.succeed(Chunk.empty())
+  Effect.succeed({ mutations: Chunk.empty(), warnings: Chunk.empty<ConsistencyWarning>() })
 
 /**
  * Loot Distribution System
  * Processes LootDistributed → emits transfer mutations for bulk distribution
  */
 export const lootDistributionSystem: System = (_state, events, _accumulatedMutations) =>
-  Effect.succeed(
-    Chunk.flatMap(
+  Effect.succeed({
+    mutations: Chunk.flatMap(
       Chunk.filter(
         events,
         (event): event is LootDistributed => event._tag === "LootDistributed"
@@ -463,5 +467,6 @@ export const lootDistributionSystem: System = (_state, events, _accumulatedMutat
           }
         )
       }
-    )
-  )
+    ),
+    warnings: Chunk.empty<ConsistencyWarning>()
+  })

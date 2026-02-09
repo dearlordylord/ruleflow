@@ -31,7 +31,7 @@ export class Replayer extends Context.Tag("@game/Replayer")<
           for (const entry of entries) {
             // Run event through systems to generate mutations
             // Cast to AllSystemRequirements since we can't infer R at runtime
-            const mutations = yield* runSystemsPipeline(
+            const { mutations } = yield* runSystemsPipeline(
               systems as Array<System<AllSystemRequirements>>,
               Chunk.of(entry.event)
             )

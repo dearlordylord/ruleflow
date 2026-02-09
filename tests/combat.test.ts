@@ -102,7 +102,7 @@ describe("Combat To-Hit System", () => {
         attackRoll: 10
       })
 
-      const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation), Chunk.empty())
+      const { mutations } = yield* combatToHitSystem(state, Chunk.of(attackMutation), Chunk.empty())
 
       expect(Chunk.size(mutations)).toBe(1)
       const damage = Chunk.unsafeHead(mutations)
@@ -189,7 +189,7 @@ describe("Combat To-Hit System", () => {
         attackRoll: 10
       })
 
-      const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation), Chunk.empty())
+      const { mutations } = yield* combatToHitSystem(state, Chunk.of(attackMutation), Chunk.empty())
 
       expect(Chunk.isEmpty(mutations)).toBe(true)
     }).pipe(Effect.provide(deterministicTestLayer([10]))))
@@ -268,7 +268,7 @@ describe("Combat To-Hit System", () => {
         attackRoll: 20
       })
 
-      const mutations = yield* combatToHitSystem(state, Chunk.of(attackMutation), Chunk.empty())
+      const { mutations } = yield* combatToHitSystem(state, Chunk.of(attackMutation), Chunk.empty())
 
       expect(Chunk.size(mutations)).toBe(1)
       const damage = Chunk.unsafeHead(mutations)
@@ -309,7 +309,7 @@ describe("Trauma System", () => {
         source: EntityId.make(yield* idGen.generate())
       }
 
-      const mutations = yield* traumaSystem(state, Chunk.empty(), Chunk.of(damageMutation))
+      const { mutations } = yield* traumaSystem(state, Chunk.empty(), Chunk.of(damageMutation))
 
       expect(Chunk.size(mutations)).toBe(1)
       const trauma = Chunk.unsafeHead(mutations) as typeof SetHealthMutation.Type

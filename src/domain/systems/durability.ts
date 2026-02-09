@@ -10,6 +10,7 @@ import { SystemName } from "../entities.js"
 import { getComponent } from "../entity.js"
 import { DomainError } from "../errors.js"
 import { UseConsumableMutation } from "../inventory/mutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 export const durabilitySystem: System = (state, events, _accumulatedMutations) =>
@@ -222,8 +223,9 @@ export const durabilitySystem: System = (state, events, _accumulatedMutations) =
     )
 
     // Combine all mutations
-    return Chunk.flatten(Chunk.unsafeFromArray(weaponDamagedMutations)).pipe(
+    const mutations = Chunk.flatten(Chunk.unsafeFromArray(weaponDamagedMutations)).pipe(
       Chunk.appendAll(Chunk.flatten(Chunk.unsafeFromArray(armorDamagedMutations))),
       Chunk.appendAll(Chunk.flatten(Chunk.unsafeFromArray(equipmentRepairedMutations)))
     )
+    return { mutations, warnings: Chunk.empty<ConsistencyWarning>() }
   })

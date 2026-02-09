@@ -7,6 +7,7 @@ import { ConcentrationBroken } from "../combat/concentrationEvents.js"
 import { hasCondition } from "../combat/conditions.js"
 import { RemoveConditionMutation } from "../combat/mutations.js"
 import { getComponent } from "../entity.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -70,5 +71,5 @@ export const concentrationSystem: System = (state, events, accumulatedMutations)
 
     // Emit concentration broken events (these trigger other systems)
     // For now, just return mutations
-    return Chunk.fromIterable(mutations)
+    return { mutations: Chunk.fromIterable(mutations), warnings: Chunk.empty<ConsistencyWarning>() }
   })

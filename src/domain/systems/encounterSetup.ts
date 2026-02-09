@@ -6,6 +6,7 @@ import { Chunk, Effect } from "effect"
 import { StartCombatRoundMutation } from "../combat/encounterMutations.js"
 import type { CombatStarted } from "../combat/events.js"
 import { AddConditionMutation } from "../combat/mutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -21,7 +22,7 @@ export const encounterSetupSystem: System = (state, events, _accumulatedMutation
     )
 
     if (Chunk.isEmpty(combatStartEvents)) {
-      return Chunk.empty()
+      return { mutations: Chunk.empty(), warnings: Chunk.empty<ConsistencyWarning>() }
     }
 
     const combatStart = Chunk.unsafeHead(combatStartEvents)
@@ -41,5 +42,5 @@ export const encounterSetupSystem: System = (state, events, _accumulatedMutation
       })
     ])
 
-    return mutations
+    return { mutations, warnings: Chunk.empty<ConsistencyWarning>() }
   })

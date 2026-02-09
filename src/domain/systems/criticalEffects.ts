@@ -6,6 +6,7 @@ import { Chunk, Effect } from "effect"
 import type { AttackPerformed } from "../combat/events.js"
 import { DamageEquipmentMutation } from "../combat/mutations.js"
 import { getComponent } from "../entity.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -57,5 +58,5 @@ export const criticalEffectsSystem: System = (state, events, _accumulatedMutatio
       }
     }
 
-    return Chunk.fromIterable(mutations)
+    return { mutations: Chunk.fromIterable(mutations), warnings: Chunk.empty<ConsistencyWarning>() }
   })

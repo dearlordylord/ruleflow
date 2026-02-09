@@ -6,6 +6,7 @@ import { Chunk, Effect } from "effect"
 import type { DisarmAttempted, PushAttempted } from "../combat/maneuverEvents.js"
 import { AddConditionMutation, UnequipWeaponMutation } from "../combat/mutations.js"
 // TODO: import { SetDistanceMutation } from "../combat/encounterMutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -62,5 +63,5 @@ export const maneuversSystem: System = (state, events, _accumulatedMutations) =>
       }
     }
 
-    return Chunk.fromIterable(mutations)
+    return { mutations: Chunk.fromIterable(mutations), warnings: Chunk.empty<ConsistencyWarning>() }
   })

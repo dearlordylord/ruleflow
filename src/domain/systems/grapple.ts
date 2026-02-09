@@ -5,6 +5,7 @@ import { Chunk, Effect } from "effect"
 
 import type { GrappleAttempted } from "../combat/events.js"
 import { AddConditionMutation, SetGrappleStateMutation } from "../combat/mutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -56,5 +57,5 @@ export const grappleSystem: System = (state, events, _accumulatedMutations) =>
       // - SetGrappleStateMutation with isPinned: true
     }
 
-    return Chunk.fromIterable(mutations)
+    return { mutations: Chunk.fromIterable(mutations), warnings: Chunk.empty<ConsistencyWarning>() }
   })

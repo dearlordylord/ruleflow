@@ -10,6 +10,7 @@ import type {
 } from "../combat/encounterEvents.js"
 import type { ClearReadyActionMutation as _ClearReadyActionMutation } from "../combat/encounterMutations.js"
 import { SetReadyActionMutation } from "../combat/encounterMutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -56,5 +57,5 @@ export const readyActionSystem: System = (state, events, _accumulatedMutations) 
       // For now, clearing is done externally
     }
 
-    return Chunk.fromIterable(mutations)
+    return { mutations: Chunk.fromIterable(mutations), warnings: Chunk.empty<ConsistencyWarning>() }
   })

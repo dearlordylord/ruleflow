@@ -5,6 +5,7 @@ import { Chunk, Effect } from "effect"
 
 import { SetMoraleResultMutation } from "../combat/encounterMutations.js"
 import type { MoraleChecked } from "../combat/moraleEvents.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -51,5 +52,5 @@ export const moraleSystem: System = (state, events, _accumulatedMutations) =>
     // - Track force strength for half-forces check
     // - Compare participant counts for numerical disadvantage
 
-    return Chunk.fromIterable(mutations)
+    return { mutations: Chunk.fromIterable(mutations), warnings: Chunk.empty<ConsistencyWarning>() }
   })

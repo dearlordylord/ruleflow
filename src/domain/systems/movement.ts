@@ -8,6 +8,7 @@ import { SystemName } from "../entities.js"
 import { getComponent } from "../entity.js"
 import { DomainError } from "../errors.js"
 import type { Mutation } from "../mutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -73,7 +74,8 @@ export const movementSystem: System = (state, events, _accumulatedMutations) =>
       // Distance tracking would be handled by higher-level orchestration
     }
 
-    return errors.length > 0
-      ? yield* Effect.fail(Chunk.fromIterable(errors))
-      : Chunk.fromIterable(mutations)
+    if (errors.length > 0) {
+      return yield* Effect.fail(Chunk.fromIterable(errors))
+    }
+    return { mutations: Chunk.fromIterable(mutations), warnings: Chunk.empty<ConsistencyWarning>() }
   })

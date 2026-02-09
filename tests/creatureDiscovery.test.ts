@@ -37,7 +37,7 @@ describe("Creature Discovery System", () => {
         discoveredAt: null
       })
 
-      const mutations = yield* creatureDiscoverySystem(
+      const { mutations } = yield* creatureDiscoverySystem(
         state,
         Chunk.of(goblinEvent),
         Chunk.empty()
@@ -109,7 +109,7 @@ describe("Creature Discovery System", () => {
         discoveredAt: null
       })
 
-      const mutations = yield* creatureDiscoverySystem(
+      const { mutations } = yield* creatureDiscoverySystem(
         state,
         Chunk.of(skeletonEvent),
         Chunk.empty()
@@ -152,7 +152,7 @@ describe("Creature Discovery System", () => {
         discoveredAt: roomId
       })
 
-      const mutations = yield* creatureDiscoverySystem(
+      const { mutations } = yield* creatureDiscoverySystem(
         state,
         Chunk.of(goblinEvent),
         Chunk.empty()
@@ -207,7 +207,7 @@ describe("Creature Discovery System", () => {
         discoveredAt: null
       })
 
-      const mutations = yield* creatureDiscoverySystem(
+      const { mutations } = yield* creatureDiscoverySystem(
         state,
         Chunk.make(goblin1, goblin2),
         Chunk.empty()
@@ -256,7 +256,7 @@ describe("Creature Discovery System", () => {
         discoveredAt: null
       })
 
-      const mutations = yield* creatureDiscoverySystem(
+      const { mutations } = yield* creatureDiscoverySystem(
         state,
         Chunk.of(event),
         Chunk.empty()

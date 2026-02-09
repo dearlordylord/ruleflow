@@ -10,6 +10,7 @@ import type {
 } from "../combat/encounterEvents.js"
 import { SetMysteryCastingMutation } from "../combat/encounterMutations.js"
 import { AddConditionMutation } from "../combat/mutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -71,5 +72,5 @@ export const declarationPhaseSystem: System = (state, events, _accumulatedMutati
       )
     }
 
-    return Chunk.fromIterable(mutations)
+    return { mutations: Chunk.fromIterable(mutations), warnings: Chunk.empty<ConsistencyWarning>() }
   })

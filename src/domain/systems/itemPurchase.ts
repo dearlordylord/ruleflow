@@ -12,6 +12,7 @@ import type { ItemPurchased } from "../inventory/events.js"
 import { getLoadValue } from "../inventory/items.js"
 import { UpdateInventoryLoadMutation } from "../inventory/mutations.js"
 import { AddItemMutation, CreditCurrencyMutation, DebitCurrencyMutation, TransferItemMutation } from "../mutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 export const itemPurchaseSystem: System = (state, events, _accumulatedMutations) =>
@@ -195,5 +196,5 @@ export const itemPurchaseSystem: System = (state, events, _accumulatedMutations)
       { concurrency: "unbounded" }
     )
 
-    return Chunk.flatten(Chunk.unsafeFromArray(mutations))
+    return { mutations: Chunk.flatten(Chunk.unsafeFromArray(mutations)), warnings: Chunk.empty<ConsistencyWarning>() }
   })

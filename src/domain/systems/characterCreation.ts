@@ -19,7 +19,6 @@ import type {
   TraitChosen,
   WeaponGroupSpecializationChosen
 } from "../character/creationEvents.js"
-import { WeaponSpecializationComponent } from "../combat/weapons.js"
 import {
   AttributesComponent,
   calculateBaseSaveBonus,
@@ -42,11 +41,13 @@ import {
   TraitsComponent
 } from "../character/index.js"
 import { UpdateCharacterCreationMutation } from "../character/mutations.js"
+import { WeaponSpecializationComponent } from "../combat/weapons.js"
 import type { Component } from "../entity.js"
 import { getComponent } from "../entity.js"
 import { CurrencyComponent, InventoryComponent } from "../inventory/index.js"
 import { SetMultipleComponentsMutation } from "../mutations.js"
 import { calculateMaxConcentrationPoints, ConcentrationComponent, KnownMysteriesComponent } from "../mysticism/index.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -412,7 +413,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
       }
     }
 
-    return Chunk.fromIterable(mutations)
+    return { mutations: Chunk.fromIterable(mutations), warnings: Chunk.empty<ConsistencyWarning>() }
   })
 
 /**

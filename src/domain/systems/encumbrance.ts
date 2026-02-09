@@ -7,6 +7,7 @@ import { SystemName } from "../entities.js"
 import { getComponent } from "../entity.js"
 import { DomainError } from "../errors.js"
 import { getLoadValue } from "../inventory/items.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 export const encumbranceValidationSystem: System = (state, _events, accumulatedMutations) =>
@@ -61,12 +62,12 @@ export const encumbranceValidationSystem: System = (state, _events, accumulatedM
         }
       }))
 
-    return Chunk.empty()
+    return { mutations: Chunk.empty(), warnings: Chunk.empty<ConsistencyWarning>() }
   })
 
 export const attributeModifierSystem: System = (_state, _events, _accumulatedMutations) =>
   Effect.gen(function*() {
     // For now, just return empty - full implementation would recalculate
     // AC, load capacity, etc. based on new attribute modifiers
-    return Chunk.empty()
+    return { mutations: Chunk.empty(), warnings: Chunk.empty<ConsistencyWarning>() }
   })

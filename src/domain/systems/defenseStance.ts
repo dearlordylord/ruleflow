@@ -6,6 +6,7 @@ import { Chunk, Effect } from "effect"
 import type { DefenseStanceTaken, TurnStarted } from "../combat/encounterEvents.js"
 import { SetDefenseStanceMutation } from "../combat/encounterMutations.js"
 import { getComponent } from "../entity.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -60,5 +61,5 @@ export const defenseStanceSystem: System = (state, events, _accumulatedMutations
       }
     }
 
-    return Chunk.fromIterable(mutations)
+    return { mutations: Chunk.fromIterable(mutations), warnings: Chunk.empty<ConsistencyWarning>() }
   })

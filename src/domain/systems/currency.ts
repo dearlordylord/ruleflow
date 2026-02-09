@@ -5,6 +5,7 @@ import { Chunk, Effect } from "effect"
 
 import type { CurrencyTransferred } from "../events.js"
 import { CreditCurrencyMutation, DebitCurrencyMutation } from "../mutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 export const currencyTransferSystem: System = (state, events, _accumulatedMutations) =>
@@ -14,7 +15,7 @@ export const currencyTransferSystem: System = (state, events, _accumulatedMutati
       (event): event is CurrencyTransferred => event._tag === "CurrencyTransferred"
     )
 
-    return Chunk.flatMap(transferEvents, (transfer) =>
+    const mutations = Chunk.flatMap(transferEvents, (transfer) =>
       Chunk.make(
         DebitCurrencyMutation.make({
           entityId: transfer.fromEntityId,
@@ -31,4 +32,5 @@ export const currencyTransferSystem: System = (state, events, _accumulatedMutati
           platinum: transfer.platinum
         })
       ))
+    return { mutations, warnings: Chunk.empty<ConsistencyWarning>() }
   })

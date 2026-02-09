@@ -103,7 +103,7 @@ describe("Event Replay", () => {
         attackRoll: 15
       })
 
-      const mutations = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attackEvent))
+      const { mutations } = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attackEvent))
       const entry = yield* committer.commit(attackEvent, mutations)
 
       // Get state after commit
@@ -234,7 +234,7 @@ describe("Event Replay", () => {
         platinum: 0
       })
 
-      const mutations = yield* runSystemsPipeline([currencyTransferSystem], Chunk.of(transferEvent))
+      const { mutations } = yield* runSystemsPipeline([currencyTransferSystem], Chunk.of(transferEvent))
       const entry = yield* committer.commit(transferEvent, mutations)
 
       // Get state after commit
@@ -379,7 +379,7 @@ describe("Event Replay", () => {
         weaponId,
         attackRoll: 15
       })
-      const mutations1 = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attack1))
+      const { mutations: mutations1 } = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attack1))
       const entry1 = yield* committer.commit(attack1, mutations1)
 
       const attack2 = AttackPerformed.make({
@@ -388,7 +388,7 @@ describe("Event Replay", () => {
         weaponId,
         attackRoll: 18
       })
-      const mutations2 = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attack2))
+      const { mutations: mutations2 } = yield* runSystemsPipeline([combatToHitSystem], Chunk.of(attack2))
       const entry2 = yield* committer.commit(attack2, mutations2)
 
       // Get final state

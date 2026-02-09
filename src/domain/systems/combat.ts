@@ -13,6 +13,7 @@ import type { AttackPerformed } from "../events.js"
 import { DealDamageMutation, SetHealthMutation } from "../mutations.js"
 import type { CombatResolver as CombatResolverType } from "../services/CombatResolver.js"
 import { CombatResolver } from "../services/CombatResolver.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 function getSpecializationBonus(
@@ -110,9 +111,10 @@ export const combatToHitSystem: System<CombatResolverType> = (state, events, _ac
       }))
 
     // Filter out None values and extract mutations
-    return Chunk.fromIterable(damageMutations).pipe(
+    const mutations = Chunk.fromIterable(damageMutations).pipe(
       Chunk.filterMap((opt) => opt)
     )
+    return { mutations, warnings: Chunk.empty<ConsistencyWarning>() }
   }).pipe(
     Effect.mapError((err) =>
       err instanceof DomainError
@@ -170,7 +172,8 @@ export const traumaSystem: System = (state, _events, accumulatedMutations) =>
         return Option.none()
       }))
 
-    return Chunk.fromIterable(traumaMutations).pipe(
+    const mutations = Chunk.fromIterable(traumaMutations).pipe(
       Chunk.filterMap((opt) => opt)
     )
+    return { mutations, warnings: Chunk.empty<ConsistencyWarning>() }
   })

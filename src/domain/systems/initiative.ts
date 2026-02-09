@@ -5,6 +5,7 @@ import { Chunk, Effect } from "effect"
 
 import type { InitiativeRolled } from "../combat/events.js"
 import { RollInitiativeMutation } from "../combat/mutations.js"
+import type { ConsistencyWarning } from "../warnings.js"
 import type { System } from "./types.js"
 
 /**
@@ -24,7 +25,7 @@ export const initiativeSystem: System = (state, events, _accumulatedMutations) =
     )
 
     if (Chunk.isEmpty(initiativeEvents)) {
-      return Chunk.empty()
+      return { mutations: Chunk.empty(), warnings: Chunk.empty<ConsistencyWarning>() }
     }
 
     const mutations: Array<typeof RollInitiativeMutation.Type> = []
@@ -45,5 +46,5 @@ export const initiativeSystem: System = (state, events, _accumulatedMutations) =
     // For now, systems will be triggered sequentially, so CombatRoundStarted
     // should be emitted by a higher-level orchestrator after all initiative rolls
 
-    return Chunk.fromIterable(mutations)
+    return { mutations: Chunk.fromIterable(mutations), warnings: Chunk.empty<ConsistencyWarning>() }
   })
