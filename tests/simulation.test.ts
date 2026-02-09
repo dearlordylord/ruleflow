@@ -8,7 +8,7 @@
  * 4. Looting (currency from goblin)
  */
 import { describe, expect, it } from "@effect/vitest"
-import { Chunk, Effect, HashMap, Option, Schema } from "effect"
+import { Effect, HashMap, Option, Schema } from "effect"
 
 import {
   AlignmentChosen,
@@ -25,43 +25,46 @@ import {
 } from "../src/domain/character/creationEvents.js"
 import { CombatStatsComponent } from "../src/domain/combat/stats.js"
 import { DiceNotation, WeaponComponent } from "../src/domain/combat/weapons.js"
-import { EntityId } from "../src/domain/entities.js"
+import { EntityId, ObservationEntryId } from "../src/domain/entities.js"
 import { Entity, getComponent, setComponent } from "../src/domain/entity.js"
 import { AttackPerformed, CreatureDiscovered, CurrencyTransferred } from "../src/domain/events.js"
-import { Committer } from "../src/domain/infrastructure/Committer.js"
 import { GameState } from "../src/domain/infrastructure/GameState.js"
+import { ObservationEntry } from "../src/domain/infrastructure/ObservationLog.js"
+import { Projector } from "../src/domain/infrastructure/Projector.js"
 import { ReadModelStore } from "../src/domain/infrastructure/ReadModelStore.js"
 import { CurrencyComponent } from "../src/domain/inventory/currency.js"
 import { IdGenerator } from "../src/domain/services/IdGenerator.js"
-import {
-  characterCreationSystem,
-  combatToHitSystem,
-  creatureDiscoverySystem,
-  currencyTransferSystem,
-  runSystemsPipeline,
-  traumaSystem
-} from "../src/domain/systems/index.js"
 import { deterministicTestLayer } from "./layers.js"
+
+/** Helper: wrap a domain event as a single-candidate ObservationEntry */
+const makeObservation = (id: string, event: Parameters<typeof ObservationEntry.make>[0]["candidates"][0]["event"]) =>
+  new ObservationEntry({
+    id: ObservationEntryId.make(id),
+    timestamp: new Date(),
+    candidates: [{ event, confidence: 1.0 }],
+    selectedIndex: null
+  })
 
 describe("Full Game Simulation", () => {
   it.effect("simulates character creation -> combat -> looting flow", () =>
     Effect.gen(function*() {
       const state = yield* GameState
       const store = yield* ReadModelStore
-      const committer = yield* Committer
+      const projector = yield* Projector
       const idGen = yield* IdGenerator
 
       // ========================================================================
       // PHASE 1: Character Creation - "Guido the Fighter"
       // ========================================================================
 
+      // IdGenerator sequence: ID 1
       const guidoId = EntityId.make(yield* idGen.generate())
       const playerId = EntityId.make("00000000-0000-0000-0000-000000000099")
 
       // Create empty entity first (entity must exist before mutations)
       yield* store.set(Entity.make({ id: guidoId, components: [] }))
 
-      // Process character creation events one by one (each needs state from previous)
+      // Process character creation events via projectLatest
       const charEvents = [
         CharacterCreationStarted.make({
           entityId: guidoId,
@@ -94,13 +97,11 @@ describe("Full Game Simulation", () => {
         CharacterCreationCompleted.make({ entityId: guidoId })
       ]
 
-      // Process each event and commit (state must update between events)
-      for (const event of charEvents) {
-        const { mutations } = yield* runSystemsPipeline(
-          [characterCreationSystem],
-          Chunk.of(event)
+      // Each event → observation → projectLatest
+      for (const [i, event] of charEvents.entries()) {
+        yield* projector.projectLatest(
+          makeObservation(`a0000000-0000-0000-0000-0000000000${String(i + 1).padStart(2, "0")}`, event)
         )
-        yield* committer.commit(event, mutations)
       }
 
       // Verify character created
@@ -159,18 +160,13 @@ describe("Full Game Simulation", () => {
         discoveredAt: null
       })
 
-      const { mutations: creatureMutations } = yield* runSystemsPipeline(
-        [creatureDiscoverySystem],
-        Chunk.of(goblinDiscovery)
+      // projectLatest runs ALL systems; creatureDiscoverySystem will call idGen → ID 2
+      yield* projector.projectLatest(
+        makeObservation("b0000000-0000-0000-0000-000000000001", goblinDiscovery)
       )
-      yield* committer.commit(goblinDiscovery, creatureMutations)
 
-      // Get goblin entity ID from the mutation
-      const createMutation = Chunk.toReadonlyArray(creatureMutations).find(
-        m => m._tag === "CreateEntity"
-      ) as { entity: { id: typeof EntityId.Type } } | undefined
-      expect(createMutation).toBeDefined()
-      const goblinId = createMutation!.entity.id
+      // Goblin entity ID = ID 2 from the deterministic IdGenerator sequence
+      const goblinId = EntityId.make("00000000-0000-0000-0000-000000000002")
 
       // Verify goblin created
       const goblin = yield* state.getEntity(goblinId)
@@ -186,6 +182,7 @@ describe("Full Game Simulation", () => {
       // ========================================================================
 
       // Create weapon entity with proper WeaponComponent
+      // IdGenerator sequence: ID 3
       const weaponId = EntityId.make(yield* idGen.generate())
       yield* store.set(Entity.make({
         id: weaponId,
@@ -215,20 +212,10 @@ describe("Full Game Simulation", () => {
         attackRoll: 15 // vs AC 13 → HIT
       })
 
-      // Process combat
-      const { mutations: combatMutations } = yield* runSystemsPipeline(
-        [combatToHitSystem, traumaSystem],
-        Chunk.of(guidoAttack)
+      // projectLatest runs all systems (combatToHitSystem + traumaSystem handle this)
+      yield* projector.projectLatest(
+        makeObservation("c0000000-0000-0000-0000-000000000001", guidoAttack)
       )
-
-      // Should have damage mutation
-      const damageMutation = Chunk.toReadonlyArray(combatMutations).find(
-        m => m._tag === "DealDamage"
-      )
-      expect(damageMutation).toBeDefined()
-
-      // Commit combat results
-      yield* committer.commit(guidoAttack, combatMutations)
 
       // Check goblin took damage
       // Damage = 1d8 roll (5) + STR mod (+2) + weapon specialization (+1) = 8
@@ -262,11 +249,9 @@ describe("Full Game Simulation", () => {
         platinum: 0
       })
 
-      const { mutations: currencyMutations } = yield* runSystemsPipeline(
-        [currencyTransferSystem],
-        Chunk.of(lootCurrency)
+      yield* projector.projectLatest(
+        makeObservation("d0000000-0000-0000-0000-000000000001", lootCurrency)
       )
-      yield* committer.commit(lootCurrency, currencyMutations)
 
       // Verify Guido got the silver
       const guidoAfterLoot = yield* state.getEntity(guidoId)
