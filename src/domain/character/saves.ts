@@ -3,8 +3,6 @@
  */
 import { Schema } from "effect"
 
-import type { SetSavingThrowsMutation } from "./mutations.js"
-
 /**
  * Six saving throw types matching OSR rules
  */
@@ -18,7 +16,12 @@ export const SaveType = Schema.Literal(
 )
 export type SaveType = typeof SaveType.Type
 
-const DEFAULT_SAVING_THROWS = {
+/**
+ * Saving throws component
+ * Base save bonus = same for all six types, depends on level
+ * Final save = base bonus + relevant attribute modifier
+ */
+export const DEFAULT_SAVING_THROWS = {
   baseSaveBonus: 0,
   restraintModifier: 0,
   exhaustionModifier: 0,
@@ -28,11 +31,6 @@ const DEFAULT_SAVING_THROWS = {
   curseModifier: 0
 } as const
 
-/**
- * Saving throws component
- * Base save bonus = same for all six types, depends on level
- * Final save = base bonus + relevant attribute modifier
- */
 export class SavingThrowsComponent extends Schema.TaggedClass<SavingThrowsComponent>()("SavingThrows", {
   // Base bonus (0 at level 1, scales to +5 at level 10)
   baseSaveBonus: Schema.Int.pipe(Schema.greaterThanOrEqualTo(0)),
@@ -44,23 +42,7 @@ export class SavingThrowsComponent extends Schema.TaggedClass<SavingThrowsCompon
   suppressionModifier: Schema.Int,
   confusionModifier: Schema.Int,
   curseModifier: Schema.Int
-}) {
-  static applyMutation(
-    existing: SavingThrowsComponent | null,
-    mutation: SetSavingThrowsMutation
-  ): SavingThrowsComponent {
-    const base = existing ?? SavingThrowsComponent.make(DEFAULT_SAVING_THROWS)
-    return SavingThrowsComponent.make({
-      baseSaveBonus: mutation.data.baseSaveBonus ?? base.baseSaveBonus,
-      restraintModifier: mutation.data.restraintModifier ?? base.restraintModifier,
-      exhaustionModifier: mutation.data.exhaustionModifier ?? base.exhaustionModifier,
-      dodgeModifier: mutation.data.dodgeModifier ?? base.dodgeModifier,
-      suppressionModifier: mutation.data.suppressionModifier ?? base.suppressionModifier,
-      confusionModifier: mutation.data.confusionModifier ?? base.confusionModifier,
-      curseModifier: mutation.data.curseModifier ?? base.curseModifier
-    })
-  }
-}
+}) {}
 
 /**
  * Calculate final save bonus

@@ -9,16 +9,15 @@ import { GameState } from "../../domain/infrastructure/GameState.js"
 import { ObservationEntry, ObservationLog } from "../../domain/infrastructure/ObservationLog.js"
 import { scoreCandidate, selectBestIndex } from "../../domain/infrastructure/Projector.js"
 import { type AllSystemRequirements, getAllSystems, runSystemsPipeline } from "../../domain/systems/index.js"
-import type { System } from "../../domain/systems/types.js"
 
 import type { EvaluatedCandidate, ObservationStep, Snapshot } from "../types.js"
 import { DashboardReadModelStore } from "./DashboardReadModelStore.js"
 import { allObservations, setupActions } from "./scenario.js"
 import { validationSystem } from "./validationSystem.js"
 
-const buildPipeline = (): Array<System<AllSystemRequirements>> => [
-  ...(getAllSystems() as Array<System<AllSystemRequirements>>),
-  validationSystem as System<AllSystemRequirements>
+const buildPipeline = () => [
+  ...getAllSystems(),
+  validationSystem
 ]
 
 /**

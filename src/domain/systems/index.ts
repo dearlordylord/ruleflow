@@ -97,4 +97,4 @@ export const runSystemsPipeline = (
 export const runAllSystems = (
   events: Chunk.Chunk<DomainEvent> = Chunk.empty()
 ): Effect.Effect<SystemResult, Chunk.Chunk<DomainError>, GameState | AllSystemRequirements> =>
-  runSystemsPipeline([...getAllSystems()] as Array<System<AllSystemRequirements>>, events)
+  runSystemsPipeline([...getAllSystems()], events)

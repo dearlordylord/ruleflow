@@ -4,16 +4,16 @@
 import { Effect } from "effect"
 
 import {
-  AttributesComponent,
-  ClassComponent,
-  HealthComponent,
-  SavingThrowsComponent,
-  SkillsComponent
-} from "../character/index.js"
+  applyAttributesMutation,
+  applyClassMutation,
+  applyHealthMutation,
+  applySavingThrowsMutation,
+  applySkillsMutation
+} from "../character/componentMutations.js"
 import type { EntityId } from "../entities.js"
 import { type Component, type Entity, getComponent } from "../entity.js"
 import type { EntityNotFound } from "../errors.js"
-import { InventoryComponent } from "../inventory/items.js"
+import { applyAddItemMutation, applyRemoveItemMutation } from "../inventory/componentMutations.js"
 import type { Mutation } from "../mutations.js"
 
 /**
@@ -27,10 +27,7 @@ function getExistingComponent<T extends Component["_tag"]>(
   componentTag: T
 ): Effect.Effect<Extract<Component, { _tag: T }> | null, never> {
   return store.get(entityId).pipe(
-    Effect.map(entity => {
-      const component = getComponent(entity, componentTag)
-      return component as Extract<Component, { _tag: T }> | null
-    }),
+    Effect.map(entity => getComponent(entity, componentTag) ?? null),
     Effect.orElseSucceed(() => null)
   )
 }
@@ -49,43 +46,43 @@ export function createComponentFromMutation(
 ): Effect.Effect<Component, never> {
   if (mutation._tag === "SetAttributes") {
     return getExistingComponent(store, mutation.entityId, "Attributes").pipe(
-      Effect.map(existing => AttributesComponent.applyMutation(existing, mutation))
+      Effect.map(existing => applyAttributesMutation(existing, mutation))
     )
   }
 
   if (mutation._tag === "SetHealth") {
     return getExistingComponent(store, mutation.entityId, "Health").pipe(
-      Effect.map(existing => HealthComponent.applyMutation(existing, mutation))
+      Effect.map(existing => applyHealthMutation(existing, mutation))
     )
   }
 
   if (mutation._tag === "SetClass") {
     return getExistingComponent(store, mutation.entityId, "Class").pipe(
-      Effect.map(existing => ClassComponent.applyMutation(existing, mutation))
+      Effect.map(existing => applyClassMutation(existing, mutation))
     )
   }
 
   if (mutation._tag === "SetSkills") {
     return getExistingComponent(store, mutation.entityId, "Skills").pipe(
-      Effect.map(existing => SkillsComponent.applyMutation(existing, mutation))
+      Effect.map(existing => applySkillsMutation(existing, mutation))
     )
   }
 
   if (mutation._tag === "SetSavingThrows") {
     return getExistingComponent(store, mutation.entityId, "SavingThrows").pipe(
-      Effect.map(existing => SavingThrowsComponent.applyMutation(existing, mutation))
+      Effect.map(existing => applySavingThrowsMutation(existing, mutation))
     )
   }
 
   if (mutation._tag === "AddItem") {
     return getExistingComponent(store, mutation.entityId, "Inventory").pipe(
-      Effect.map(existing => InventoryComponent.applyAddItem(existing, mutation))
+      Effect.map(existing => applyAddItemMutation(existing, mutation))
     )
   }
 
   if (mutation._tag === "RemoveItem") {
     return getExistingComponent(store, mutation.entityId, "Inventory").pipe(
-      Effect.map(existing => InventoryComponent.applyRemoveItem(existing, mutation))
+      Effect.map(existing => applyRemoveItemMutation(existing, mutation))
     )
   }
 

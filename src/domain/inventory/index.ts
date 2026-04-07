@@ -15,6 +15,8 @@ export * from "./consumables.js"
 export * from "./looting.js"
 
 // Events only (mutations exported from top-level mutations.ts)
+// Note: componentMutations.ts is not re-exported here to avoid circular dependency
+// with entity.ts. Import directly from "./componentMutations.js" when needed.
 export * from "./events.js"
 
 // Looting events

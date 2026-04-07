@@ -29,14 +29,19 @@ export const LanguageGroup = Schema.Literal(
 )
 export type LanguageGroup = typeof LanguageGroup.Type
 
+type LanguageEntry = {
+  readonly group: LanguageGroup
+  readonly translationDC: number
+}
+
 /**
  * Common languages by difficulty (DC for Linguist translation)
  */
 export const COMMON_LANGUAGES = {
-  Local: { group: "Common" as LanguageGroup, translationDC: 10 },
-  Trade: { group: "Common" as LanguageGroup, translationDC: 10 },
-  Elvish: { group: "Exotic" as LanguageGroup, translationDC: 15 },
-  Dwarvish: { group: "Exotic" as LanguageGroup, translationDC: 15 },
-  Ancient: { group: "Ancient" as LanguageGroup, translationDC: 18 },
-  Draconic: { group: "Mystical" as LanguageGroup, translationDC: 20 }
-} as const
+  Local: { group: "Common", translationDC: 10 },
+  Trade: { group: "Common", translationDC: 10 },
+  Elvish: { group: "Exotic", translationDC: 15 },
+  Dwarvish: { group: "Exotic", translationDC: 15 },
+  Ancient: { group: "Ancient", translationDC: 18 },
+  Draconic: { group: "Mystical", translationDC: 20 }
+} as const satisfies Record<string, LanguageEntry>

@@ -4,8 +4,6 @@
  * This pattern is inspired by ComponentRegistry in entity.ts.
  * All system types are derived from this registry.
  */
-import type { CombatResolver } from "../services/CombatResolver.js"
-import type { IdGenerator } from "../services/IdGenerator.js"
 import { actionEconomySystem } from "./actionEconomy.js"
 import { characterCreationSystem } from "./characterCreation.js"
 import { combatToHitSystem, traumaSystem } from "./combat.js"
@@ -38,7 +36,7 @@ import { movementSystem } from "./movement.js"
 import { mysteryCastingSystem } from "./mysteryCasting.js"
 import { readyActionSystem } from "./readyAction.js"
 import { turnManagementSystem } from "./turnManagement.js"
-import type { SystemEntry } from "./types.js"
+import type { System, SystemEntry, SystemRequirements } from "./types.js"
 
 /**
  * System Registry - defines all systems with their requirements.
@@ -51,59 +49,59 @@ import type { SystemEntry } from "./types.js"
  */
 export const SystemRegistry = [
   // Combat systems (with dependencies)
-  { name: "combatToHit", system: combatToHitSystem, _R: {} as CombatResolver },
+  { name: "combatToHit", system: combatToHitSystem },
 
   // Combat systems (no dependencies)
-  { name: "trauma", system: traumaSystem, _R: {} as never },
-  { name: "criticalEffects", system: criticalEffectsSystem, _R: {} as never },
-  { name: "grapple", system: grappleSystem, _R: {} as never },
-  { name: "maneuvers", system: maneuversSystem, _R: {} as never },
-  { name: "concentration", system: concentrationSystem, _R: {} as never },
-  { name: "mysteryCasting", system: mysteryCastingSystem, _R: {} as never },
+  { name: "trauma", system: traumaSystem },
+  { name: "criticalEffects", system: criticalEffectsSystem },
+  { name: "grapple", system: grappleSystem },
+  { name: "maneuvers", system: maneuversSystem },
+  { name: "concentration", system: concentrationSystem },
+  { name: "mysteryCasting", system: mysteryCastingSystem },
 
   // Combat encounter systems
-  { name: "encounterSetup", system: encounterSetupSystem, _R: {} as never },
-  { name: "declarationPhase", system: declarationPhaseSystem, _R: {} as never },
-  { name: "initiative", system: initiativeSystem, _R: {} as never },
-  { name: "turnManagement", system: turnManagementSystem, _R: {} as never },
-  { name: "actionEconomy", system: actionEconomySystem, _R: {} as never },
-  { name: "movement", system: movementSystem, _R: {} as never },
-  { name: "defenseStance", system: defenseStanceSystem, _R: {} as never },
-  { name: "readyAction", system: readyActionSystem, _R: {} as never },
-  { name: "morale", system: moraleSystem, _R: {} as never },
+  { name: "encounterSetup", system: encounterSetupSystem },
+  { name: "declarationPhase", system: declarationPhaseSystem },
+  { name: "initiative", system: initiativeSystem },
+  { name: "turnManagement", system: turnManagementSystem },
+  { name: "actionEconomy", system: actionEconomySystem },
+  { name: "movement", system: movementSystem },
+  { name: "defenseStance", system: defenseStanceSystem },
+  { name: "readyAction", system: readyActionSystem },
+  { name: "morale", system: moraleSystem },
 
   // Character systems
-  { name: "characterCreation", system: characterCreationSystem, _R: {} as never },
+  { name: "characterCreation", system: characterCreationSystem },
 
   // Equipment systems
-  { name: "equipment", system: equipmentSystem, _R: {} as never },
-  { name: "durability", system: durabilitySystem, _R: {} as never },
-  { name: "encumbranceValidation", system: encumbranceValidationSystem, _R: {} as never },
-  { name: "attributeModifier", system: attributeModifierSystem, _R: {} as never },
+  { name: "equipment", system: equipmentSystem },
+  { name: "durability", system: durabilitySystem },
+  { name: "encumbranceValidation", system: encumbranceValidationSystem },
+  { name: "attributeModifier", system: attributeModifierSystem },
 
   // Economy systems
-  { name: "currencyTransfer", system: currencyTransferSystem, _R: {} as never },
-  { name: "itemPurchase", system: itemPurchaseSystem, _R: {} as never },
+  { name: "currencyTransfer", system: currencyTransferSystem },
+  { name: "itemPurchase", system: itemPurchaseSystem },
 
   // Looting systems
-  { name: "itemDiscovery", system: itemDiscoverySystem, _R: {} as never },
-  { name: "containerDiscovery", system: containerDiscoverySystem, _R: {} as never },
-  { name: "corpseCreation", system: corpseCreationSystem, _R: {} as never },
-  { name: "itemLooting", system: itemLootingSystem, _R: {} as never },
-  { name: "itemDrop", system: itemDropSystem, _R: {} as never },
-  { name: "containerSearch", system: containerSearchSystem, _R: {} as never },
-  { name: "containerLockDiscovery", system: containerLockDiscoverySystem, _R: {} as never },
-  { name: "lootDistribution", system: lootDistributionSystem, _R: {} as never },
+  { name: "itemDiscovery", system: itemDiscoverySystem },
+  { name: "containerDiscovery", system: containerDiscoverySystem },
+  { name: "corpseCreation", system: corpseCreationSystem },
+  { name: "itemLooting", system: itemLootingSystem },
+  { name: "itemDrop", system: itemDropSystem },
+  { name: "containerSearch", system: containerSearchSystem },
+  { name: "containerLockDiscovery", system: containerLockDiscoverySystem },
+  { name: "lootDistribution", system: lootDistributionSystem },
 
   // NPC systems
-  { name: "creatureDiscovery", system: creatureDiscoverySystem, _R: {} as IdGenerator }
+  { name: "creatureDiscovery", system: creatureDiscoverySystem }
 ] as const satisfies ReadonlyArray<SystemEntry<unknown>>
 
 /**
  * Derive union of all system requirements from registry.
  * This captures all services that any system in the pipeline might need.
  */
-export type AllSystemRequirements = typeof SystemRegistry[number]["_R"]
+export type AllSystemRequirements = SystemRequirements<typeof SystemRegistry[number]["system"]>
 
 /**
  * Derive list of all system names (for type-safe system lookup).
@@ -132,7 +130,9 @@ export function getSystemByName<N extends SystemName>(
 
 /**
  * Get all systems as an array (for running the full pipeline).
+ * Returns System<AllSystemRequirements> since every system's R is a subset
+ * of AllSystemRequirements (Effect is covariant in R).
  */
-export function getAllSystems(): ReadonlyArray<RegisteredSystem> {
+export function getAllSystems(): ReadonlyArray<System<AllSystemRequirements>> {
   return SystemRegistry.map((entry) => entry.system)
 }

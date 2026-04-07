@@ -94,13 +94,20 @@ export class Entity extends Schema.TaggedClass<Entity>()("Entity", {
 }) {}
 
 /**
+ * Type predicate: narrows a Component to the variant matching the given _tag.
+ */
+function isTagged<T extends ComponentTag>(tag: T) {
+  return (c: Component): c is Extract<Component, { _tag: T }> => c._tag === tag
+}
+
+/**
  * Helper: Get component by tag (type-safe lookup)
  */
 export function getComponent<T extends ComponentTag>(
   entity: Entity,
   tag: T
 ): Extract<Component, { _tag: T }> | undefined {
-  return entity.components.find((c) => c._tag === tag) as Extract<Component, { _tag: T }> | undefined
+  return entity.components.find(isTagged(tag))
 }
 
 /**

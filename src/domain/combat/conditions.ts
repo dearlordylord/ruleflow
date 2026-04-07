@@ -66,11 +66,18 @@ export function hasCondition(conditions: ReadonlyArray<ConditionWithData>, type:
 /**
  * Helper to get a specific condition (useful for conditions with data)
  */
+/**
+ * Type predicate: narrows a ConditionWithData to the variant matching the given _type.
+ */
+function isConditionType<T extends ConditionType>(type: T) {
+  return (c: ConditionWithData): c is Extract<ConditionWithData, { _type: T }> => c._type === type
+}
+
 export function getCondition<T extends ConditionType>(
   conditions: ReadonlyArray<ConditionWithData>,
   type: T
 ): Extract<ConditionWithData, { _type: T }> | undefined {
-  return conditions.find(c => c._type === type) as Extract<ConditionWithData, { _type: T }> | undefined
+  return conditions.find(isConditionType(type))
 }
 
 /**

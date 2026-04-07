@@ -3,8 +3,6 @@
  */
 import { Schema } from "effect"
 
-import type { SetSkillsMutation } from "./mutations.js"
-
 /**
  * Skill proficiency levels
  * - Untrained: base attribute modifier only
@@ -39,7 +37,7 @@ const DEFAULT_SKILL = Skill.make({
   levelBonus: 0
 })
 
-const DEFAULT_SKILLS = {
+export const DEFAULT_SKILLS = {
   melee: DEFAULT_SKILL,
   might: DEFAULT_SKILL,
   accuracy: DEFAULT_SKILL,
@@ -55,7 +53,7 @@ const DEFAULT_SKILLS = {
   occultism: DEFAULT_SKILL,
   performance: DEFAULT_SKILL,
   animalHandling: DEFAULT_SKILL
-}
+} as const
 
 /**
  * All 15 skills attached to a character
@@ -85,31 +83,7 @@ export class SkillsComponent extends Schema.TaggedClass<SkillsComponent>()("Skil
   // Social Skills (Charisma)
   performance: Skill, // Performance - acting, music, storytelling
   animalHandling: Skill // Animal Handling - animal training, mounted control
-}) {
-  static applyMutation(
-    existing: SkillsComponent | null,
-    mutation: SetSkillsMutation
-  ): SkillsComponent {
-    const base = existing ?? SkillsComponent.make(DEFAULT_SKILLS)
-    return SkillsComponent.make({
-      melee: mutation.data.melee ?? base.melee,
-      might: mutation.data.might ?? base.might,
-      accuracy: mutation.data.accuracy ?? base.accuracy,
-      movement: mutation.data.movement ?? base.movement,
-      sleightOfHand: mutation.data.sleightOfHand ?? base.sleightOfHand,
-      stealth: mutation.data.stealth ?? base.stealth,
-      alchemy: mutation.data.alchemy ?? base.alchemy,
-      craft: mutation.data.craft ?? base.craft,
-      knowledge: mutation.data.knowledge ?? base.knowledge,
-      medicine: mutation.data.medicine ?? base.medicine,
-      awareness: mutation.data.awareness ?? base.awareness,
-      survival: mutation.data.survival ?? base.survival,
-      occultism: mutation.data.occultism ?? base.occultism,
-      performance: mutation.data.performance ?? base.performance,
-      animalHandling: mutation.data.animalHandling ?? base.animalHandling
-    })
-  }
-}
+}) {}
 
 /**
  * Calculate total skill bonus

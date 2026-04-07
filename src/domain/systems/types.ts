@@ -38,12 +38,15 @@ export type System<R = never> = (
 
 /**
  * Helper interface for registry entries with explicit requirements tracking.
- * The _R field is a phantom type that captures the requirements at the type level.
+ * Requirements are inferred from the System<R> type parameter.
  */
-// eslint-disable-next-line functional/no-mixed-types -- Intentional: system is a function, name/_R are metadata
+// eslint-disable-next-line functional/no-mixed-types -- Intentional: system is a function, name is metadata
 export interface SystemEntry<R = never> {
   readonly name: string
   readonly system: System<R>
-  /** Phantom type field - not used at runtime, only for type inference */
-  readonly _R: R
 }
+
+/**
+ * Extract the requirements type R from a System<R>.
+ */
+export type SystemRequirements<S extends System<unknown>> = S extends System<infer R> ? R : never

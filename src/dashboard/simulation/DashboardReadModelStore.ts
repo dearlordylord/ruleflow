@@ -63,7 +63,7 @@ export class DashboardReadModelStore extends Context.Tag("@dashboard/ReadModelSt
 
       const clear = () => SynchronizedRef.update(store, () => new Map<EntityId, Entity>())
 
-      const getAll = () => SynchronizedRef.get(store) as Effect.Effect<ReadonlyMap<EntityId, Entity>>
+      const getAll = (): Effect.Effect<ReadonlyMap<EntityId, Entity>> => SynchronizedRef.get(store)
 
       return DashboardReadModelStore.of({ get, set, update, clear, getAll })
     })

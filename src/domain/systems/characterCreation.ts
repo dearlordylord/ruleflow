@@ -3,22 +3,6 @@
  */
 import { Chunk, Effect, HashMap, Option } from "effect"
 
-import type {
-  AlignmentChosen,
-  AttributesRolled,
-  CharacterCreationCompleted,
-  CharacterCreationStarted,
-  ClassChosen,
-  EquipmentPurchased,
-  HitPointsRolled,
-  LanguagesChosen,
-  MysteriesChosen,
-  NameChosen,
-  SkillsChosen,
-  StartingMoneyRolled,
-  TraitChosen,
-  WeaponGroupSpecializationChosen
-} from "../character/creationEvents.js"
 import {
   AttributesComponent,
   calculateBaseSaveBonus,
@@ -88,16 +72,15 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
     for (const event of events) {
       switch (event._tag) {
         case "CharacterCreationStarted": {
-          const e = event as CharacterCreationStarted
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             SetMultipleComponentsMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               components: [
                 CharacterCreationComponent.make({
-                  playerId: e.playerId,
+                  playerId: event.playerId,
                   currentStep: "Started",
-                  startingLevel: e.startingLevel,
+                  startingLevel: event.startingLevel,
                   startingMoney: 0,
                   remainingMoney: 0,
                   purchasedItems: [],
@@ -119,20 +102,19 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         }
 
         case "AttributesRolled": {
-          const e = event as AttributesRolled
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               data: {
                 currentStep: "AttributesRolled",
                 attributes: {
-                  strength: e.strength,
-                  dexterity: e.dexterity,
-                  constitution: e.constitution,
-                  intelligence: e.intelligence,
-                  will: e.will,
-                  charisma: e.charisma
+                  strength: event.strength,
+                  dexterity: event.dexterity,
+                  constitution: event.constitution,
+                  intelligence: event.intelligence,
+                  will: event.will,
+                  charisma: event.charisma
                 }
               }
             })
@@ -141,14 +123,13 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         }
 
         case "ClassChosen": {
-          const e = event as ClassChosen
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               data: {
                 currentStep: "ClassChosen",
-                class: e.class
+                class: event.class
               }
             })
           )
@@ -157,11 +138,10 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
         case "WeaponGroupSpecializationChosen": {
           // Fighter class ability: choose weapon group for +1 damage bonus
-          const e = event as WeaponGroupSpecializationChosen
-          const entityResult = yield* state.getEntity(e.entityId).pipe(Effect.option)
+          const entityResult = yield* state.getEntity(event.entityId).pipe(Effect.option)
 
           if (Option.isNone(entityResult)) {
-            yield* Effect.logError(`Entity ${e.entityId} not found for weapon specialization`)
+            yield* Effect.logError(`Entity ${event.entityId} not found for weapon specialization`)
             break
           }
 
@@ -172,12 +152,12 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
           const currentSpecs = existingSpec?.specializations ?? HashMap.empty()
 
           // Add or update the weapon group (currently always +1, could increase with level)
-          const newSpecs = HashMap.set(currentSpecs, e.weaponGroup, 1)
+          const newSpecs = HashMap.set(currentSpecs, event.weaponGroup, 1)
 
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             SetMultipleComponentsMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               components: [
                 WeaponSpecializationComponent.make({
                   specializations: newSpecs
@@ -190,16 +170,15 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         }
 
         case "SkillsChosen": {
-          const e = event as SkillsChosen
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               data: {
                 currentStep: "SkillsChosen",
                 skills: {
-                  primary: e.primarySkills,
-                  secondary: e.secondarySkills
+                  primary: event.primarySkills,
+                  secondary: event.secondarySkills
                 }
               }
             })
@@ -208,14 +187,13 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         }
 
         case "TraitChosen": {
-          const e = event as TraitChosen
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               data: {
                 currentStep: "TraitChosen",
-                trait: e.traitName
+                trait: event.traitName
               }
             })
           )
@@ -223,17 +201,16 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         }
 
         case "HitPointsRolled": {
-          const e = event as HitPointsRolled
-          const total = Math.max(1, e.rolledValue + e.constitutionModifier)
+          const total = Math.max(1, event.rolledValue + event.constitutionModifier)
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               data: {
                 currentStep: "HitPointsRolled",
                 hitPoints: {
-                  rolled: e.rolledValue,
-                  modifier: e.constitutionModifier,
+                  rolled: event.rolledValue,
+                  modifier: event.constitutionModifier,
                   total
                 }
               }
@@ -243,14 +220,13 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         }
 
         case "StartingMoneyRolled": {
-          const e = event as StartingMoneyRolled
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               data: {
-                startingMoney: e.silverAmount,
-                remainingMoney: e.silverAmount
+                startingMoney: event.silverAmount,
+                remainingMoney: event.silverAmount
               }
             })
           )
@@ -258,11 +234,10 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         }
 
         case "EquipmentPurchased": {
-          const e = event as EquipmentPurchased
-          const entityResult = yield* state.getEntity(e.entityId).pipe(Effect.option)
+          const entityResult = yield* state.getEntity(event.entityId).pipe(Effect.option)
 
           if (Option.isNone(entityResult)) {
-            yield* Effect.logError(`Entity ${e.entityId} not found for equipment purchase`)
+            yield* Effect.logError(`Entity ${event.entityId} not found for equipment purchase`)
             break
           }
 
@@ -271,7 +246,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
 
           if (!creation) {
             yield* Effect.logError(
-              `CharacterCreation component not found for equipment purchase at entity ${e.entityId}`
+              `CharacterCreation component not found for equipment purchase at entity ${event.entityId}`
             )
             break
           }
@@ -279,11 +254,11 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               data: {
                 currentStep: "EquipmentPhase",
-                remainingMoney: creation.remainingMoney - e.costInSilver,
-                purchasedItems: [...creation.purchasedItems, e.itemId]
+                remainingMoney: creation.remainingMoney - event.costInSilver,
+                purchasedItems: [...creation.purchasedItems, event.itemId]
               }
             })
           )
@@ -291,14 +266,13 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         }
 
         case "LanguagesChosen": {
-          const e = event as LanguagesChosen
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               data: {
                 currentStep: "LanguagesChosen",
-                languages: e.languages
+                languages: event.languages
               }
             })
           )
@@ -306,14 +280,13 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         }
 
         case "AlignmentChosen": {
-          const e = event as AlignmentChosen
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               data: {
                 currentStep: "AlignmentChosen",
-                alignment: e.alignment
+                alignment: event.alignment
               }
             })
           )
@@ -321,14 +294,13 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         }
 
         case "NameChosen": {
-          const e = event as NameChosen
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               data: {
                 currentStep: "NameChosen",
-                name: e.name
+                name: event.name
               }
             })
           )
@@ -336,13 +308,12 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         }
 
         case "MysteriesChosen": {
-          const e = event as MysteriesChosen
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             UpdateCharacterCreationMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               data: {
-                mysteries: e.mysteryNames
+                mysteries: event.mysteryNames
               }
             })
           )
@@ -350,11 +321,10 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
         }
 
         case "CharacterCreationCompleted": {
-          const e = event as CharacterCreationCompleted
-          const entityResult = yield* state.getEntity(e.entityId).pipe(Effect.option)
+          const entityResult = yield* state.getEntity(event.entityId).pipe(Effect.option)
 
           if (Option.isNone(entityResult)) {
-            yield* Effect.logError(`Entity ${e.entityId} not found for character creation completion`)
+            yield* Effect.logError(`Entity ${event.entityId} not found for character creation completion`)
             break
           }
 
@@ -362,14 +332,14 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
           const creation = getComponent(entity, "CharacterCreation")
 
           if (!creation) {
-            yield* Effect.logError(`CharacterCreation component not found for entity ${e.entityId}`)
+            yield* Effect.logError(`CharacterCreation component not found for entity ${event.entityId}`)
             break
           }
 
           // Validate all required fields using type guard
           if (!isValidatedCreation(creation)) {
             yield* Effect.logError(
-              `Character creation incomplete for ${e.entityId}: missing ${
+              `Character creation incomplete for ${event.entityId}: missing ${
                 !creation.attributes
                   ? "attributes"
                   : !creation.class
@@ -389,13 +359,13 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
           // At this point TypeScript knows creation is ValidatedCharacterCreation
           // Validate Mystic has mysteries
           if (creation.class === "Mystic" && (!creation.mysteries || creation.mysteries.length === 0)) {
-            yield* Effect.logError(`Mystic character ${e.entityId} missing mysteries`)
+            yield* Effect.logError(`Mystic character ${event.entityId} missing mysteries`)
             break
           }
 
           // Validate non-Mystics don't have mysteries
           if (creation.class !== "Mystic" && creation.mysteries && creation.mysteries.length > 0) {
-            yield* Effect.logError(`Non-Mystic character ${e.entityId} has mysteries`)
+            yield* Effect.logError(`Non-Mystic character ${event.entityId} has mysteries`)
             break
           }
 
@@ -403,7 +373,7 @@ export const characterCreationSystem: System = (state, events, _accumulated) =>
           // eslint-disable-next-line functional/immutable-data -- local mutation within system, converted to immutable Chunk on return
           mutations.push(
             SetMultipleComponentsMutation.make({
-              entityId: e.entityId,
+              entityId: event.entityId,
               components,
               removeComponents: ["CharacterCreation"]
             })

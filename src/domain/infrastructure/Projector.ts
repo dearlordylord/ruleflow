@@ -43,7 +43,7 @@ export class Projector extends Context.Tag("@game/Projector")<
     readonly replayAll: () => Effect.Effect<
       void,
       Chunk.Chunk<DomainError> | EntityNotFound | SelectedIndexOutOfBounds,
-      AllSystemRequirements
+      GameState | AllSystemRequirements
     >
     /**
      * Evaluate all candidates, select the best, append to log, apply mutations.
@@ -54,7 +54,7 @@ export class Projector extends Context.Tag("@game/Projector")<
     ) => Effect.Effect<
       void,
       Chunk.Chunk<DomainError> | EntityNotFound | ObservationLogWriteError,
-      AllSystemRequirements
+      GameState | AllSystemRequirements
     >
   }
 >() {
@@ -65,7 +65,11 @@ export class Projector extends Context.Tag("@game/Projector")<
       const readModelStore = yield* ReadModelStore
       const gameState = yield* GameState
 
-      const replayAll = () =>
+      const replayAll = (): Effect.Effect<
+        void,
+        Chunk.Chunk<DomainError> | EntityNotFound | SelectedIndexOutOfBounds,
+        GameState | AllSystemRequirements
+      > =>
         Effect.gen(function*() {
           // 1. Clear current state
           yield* readModelStore.clear()
@@ -96,13 +100,13 @@ export class Projector extends Context.Tag("@game/Projector")<
             // Apply resulting mutations to state
             yield* Effect.forEach(mutations, (m) => gameState.applyMutation(m))
           }
-        }) as Effect.Effect<
-          void,
-          Chunk.Chunk<DomainError> | EntityNotFound | SelectedIndexOutOfBounds,
-          AllSystemRequirements
-        >
+        })
 
-      const projectLatest = (observation: ObservationEntry) =>
+      const projectLatest = (observation: ObservationEntry): Effect.Effect<
+        void,
+        Chunk.Chunk<DomainError> | EntityNotFound | ObservationLogWriteError,
+        GameState | AllSystemRequirements
+      > =>
         Effect.gen(function*() {
           // 1. Evaluate each candidate independently against current (unchanged) state.
           //    Pipeline is read-only: systems read via state.getEntity() but produce
@@ -132,11 +136,7 @@ export class Projector extends Context.Tag("@game/Projector")<
 
           // 4. Apply the winning candidate's mutations to state
           yield* Effect.forEach(bestMutations, (m) => gameState.applyMutation(m))
-        }) as Effect.Effect<
-          void,
-          Chunk.Chunk<DomainError> | EntityNotFound | ObservationLogWriteError,
-          AllSystemRequirements
-        >
+        })
 
       return Projector.of({ replayAll, projectLatest })
     })

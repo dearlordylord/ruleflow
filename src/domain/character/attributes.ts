@@ -3,8 +3,6 @@
  */
 import { Schema } from "effect"
 
-import type { SetAttributesMutation } from "./mutations.js"
-
 // OSR formula: (attribute - 10) / 2 rounded down
 const calculateModifier = (attribute: number): number => Math.floor((attribute - 10) / 2)
 
@@ -24,22 +22,7 @@ export class AttributesComponent extends Schema.TaggedClass<AttributesComponent>
   will: Schema.Int.pipe(Schema.between(3, 18)),
   constitution: Schema.Int.pipe(Schema.between(3, 18)),
   charisma: Schema.Int.pipe(Schema.between(3, 18))
-}) {
-  static applyMutation(
-    existing: AttributesComponent | null,
-    mutation: SetAttributesMutation
-  ): AttributesComponent {
-    const base = existing ?? AttributesComponent.make(DEFAULT_ATTRIBUTES)
-    return AttributesComponent.make({
-      strength: mutation.data.strength ?? base.strength,
-      dexterity: mutation.data.dexterity ?? base.dexterity,
-      intelligence: mutation.data.intelligence ?? base.intelligence,
-      will: mutation.data.will ?? base.will,
-      constitution: mutation.data.constitution ?? base.constitution,
-      charisma: mutation.data.charisma ?? base.charisma
-    })
-  }
-}
+}) {}
 
 // Utility functions for attribute modifiers
 export function getStrengthMod(attrs: AttributesComponent): number {

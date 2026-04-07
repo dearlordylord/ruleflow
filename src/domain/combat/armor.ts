@@ -37,6 +37,12 @@ export class ShieldComponent extends Schema.TaggedClass<ShieldComponent>()("Shie
   maxDurability: Schema.Int.pipe(Schema.greaterThan(0))
 }) {}
 
+type ArmorEntry = {
+  readonly baseAC: number
+  readonly armorCategory: ArmorCategory
+  readonly skillPenalty: number
+}
+
 /**
  * Predefined armor types from rulebook (06_Equipment.md)
  * skillPenalty matches the "Штраф" column values
@@ -44,40 +50,40 @@ export class ShieldComponent extends Schema.TaggedClass<ShieldComponent>()("Shie
 export const ARMOR_DEFINITIONS = {
   "No Protection": {
     baseAC: 11,
-    armorCategory: "None" as ArmorCategory,
+    armorCategory: "None",
     skillPenalty: 0
   },
   "Leather Clothing": {
     baseAC: 12,
-    armorCategory: "Light" as ArmorCategory,
+    armorCategory: "Light",
     skillPenalty: 0
   },
   "Quilted Clothing": {
     baseAC: 13,
-    armorCategory: "Light" as ArmorCategory,
+    armorCategory: "Light",
     skillPenalty: 0
   },
   "Scale Armor": {
     baseAC: 14,
-    armorCategory: "Medium" as ArmorCategory,
+    armorCategory: "Medium",
     skillPenalty: -1
   },
   "Chain Mail": {
     baseAC: 15,
-    armorCategory: "Medium" as ArmorCategory,
+    armorCategory: "Medium",
     skillPenalty: -2
   },
   "Plate Armor": {
     baseAC: 16,
-    armorCategory: "Heavy" as ArmorCategory,
+    armorCategory: "Heavy",
     skillPenalty: -3
   },
   "Full Plate": {
     baseAC: 17,
-    armorCategory: "Heavy" as ArmorCategory,
+    armorCategory: "Heavy",
     skillPenalty: -4
   }
-} as const
+} as const satisfies Record<string, ArmorEntry>
 
 /**
  * Cover bonuses from environment

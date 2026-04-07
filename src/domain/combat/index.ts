@@ -5,8 +5,14 @@
 // Core combat stats
 export * from "./stats.js"
 
+// Weapon types (shared schemas)
+export * from "./weaponTypes.js"
+
 // Weapons and specialization
 export * from "./weapons.js"
+
+// Weapon registry (predefined definitions and lookup helpers)
+export * from "./weaponRegistry.js"
 
 // Armor and shields
 export * from "./armor.js"
@@ -34,4 +40,5 @@ export * from "./encounterComponents.js"
 export * from "./encounterMutations.js"
 
 // Helper functions
-export * from "./vulnerability.js"
+// Note: vulnerability.ts is not re-exported here to avoid circular dependency
+// with entity.ts. Import directly from "./vulnerability.js" when needed.

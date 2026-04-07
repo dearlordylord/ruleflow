@@ -28,3 +28,6 @@ export * from "./creationEvents.js"
 // Mutations and events
 export * from "./events.js"
 export * from "./mutations.js"
+
+// Component mutation applicators
+export * from "./componentMutations.js"

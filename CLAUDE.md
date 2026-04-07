@@ -1,8 +1,14 @@
 # Effect Project Instructions
 
+Rules are reflexive: when adding a rule, apply it immediately.
+
 ## Package Manager
 
-**Use pnpm, not npm.** This project uses pnpm-lock.yaml.
+**Use pnpm, not npm.** This project uses pnpm-lock.yaml. Prefer package.json scripts over raw commands (e.g., `pnpm typecheck` not `pnpm tsc --noEmit`).
+
+## Type Safety
+
+Type casts (`as T`) are a sin. Avoid them. All data crossing system boundaries (APIs etc.) must be strongly typed with Effect Schema. Use `satisfies` for registry data, type guards for narrowing, and discriminated union narrowing for events.
 
 <!-- effect-solutions:start -->
 ## Effect Best Practices
@@ -27,15 +33,29 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for event sourcing flow, layer deps, fi
 - Components are data-only; derived values → utility functions (pure ECS)
 - Cross-entity logic → systems
 
+## Project Harness
+
+Quality gates that must all pass:
+
+1. **Typecheck** (`pnpm typecheck`): strict mode, zero errors.
+2. **Lint** (`pnpm lint`): ESLint + jscpd duplication detection (2% threshold).
+3. **Circular dependency detection** (`pnpm circular`): madge catches import cycles.
+4. **Tests** (`pnpm test`): vitest, all must pass.
+5. **Test coverage**: TODO — add `@vitest/coverage-v8` with 99% thresholds.
+6. **Pre-commit hooks** (`.husky/pre-commit`): lint-staged + gitleaks secrets scanning.
+7. **Formatting** (`pnpm format` / `pnpm check-format`): dprint rules via ESLint.
+
+**Unified gate:** `pnpm check-all` (runs typecheck + lint + circular + test).
+
 ## Pre-Commit Verification
 
 **Before committing (especially in worktrees), run all checks:**
 
 ```bash
-pnpm tsc --noEmit && pnpm lint --fix && pnpm test
+pnpm check-all
 ```
 
-If any fail, fix and re-run the full chain. Don't commit until all three pass.
+If any fail, fix and re-run. Don't commit until all pass.
 
 **Lint warnings = 0.** If a warning is an intentional architectural choice, add `eslint-disable-next-line` with explanation:
 ```typescript

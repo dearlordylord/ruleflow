@@ -29,13 +29,22 @@ export class ArtifactComponent extends Schema.TaggedClass<ArtifactComponent>()("
   maxCharges: Schema.NullOr(Schema.Int.pipe(Schema.greaterThan(0)))
 }) {}
 
+type ArtifactEntry = {
+  readonly name: string
+  readonly rarity: ArtifactRarity
+  readonly properties: ReadonlyArray<string>
+  readonly requiresAttunement: boolean
+  readonly isCursed: boolean
+  readonly curseDescription?: string
+}
+
 /**
  * Sample artifacts from rulebook
  */
 export const ARTIFACT_DEFINITIONS = {
   "Crown of the Sage": {
     name: "Crown of the Sage",
-    rarity: "Rare" as ArtifactRarity,
+    rarity: "Rare",
     properties: ["Soul-reading ability", "1 in 6 false information chance"],
     requiresAttunement: true,
     isCursed: false
@@ -43,10 +52,10 @@ export const ARTIFACT_DEFINITIONS = {
 
   "Lucky Acorn": {
     name: "Lucky Acorn",
-    rarity: "Uncommon" as ArtifactRarity,
+    rarity: "Uncommon",
     properties: ["Double rolls on checks/saves", "1 in 6 daily loss chance"],
     requiresAttunement: true,
     isCursed: true,
     curseDescription: "Curse of misfortune if lost"
   }
-} as const
+} as const satisfies Record<string, ArtifactEntry>

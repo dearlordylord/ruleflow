@@ -41,64 +41,87 @@ export class ConsumableComponent extends Schema.TaggedClass<ConsumableComponent>
   effectDice: Schema.NullOr(Schema.String) // e.g., "1d6", "2d8"
 }) {}
 
+type PoisonEntry = {
+  readonly consumableType: ConsumableType
+  readonly effect: string
+  readonly saveDC: number
+  readonly effectDice: string
+}
+
 /**
  * Poison definitions from rulebook
  */
 export const POISON_DEFINITIONS = {
   "White Arsenic": {
-    consumableType: "Poison" as ConsumableType,
+    consumableType: "Poison",
     effect: "Causes nausea and weakness",
     saveDC: 15,
     effectDice: "1d6"
   },
   "Wolfsbane Death": {
-    consumableType: "Poison" as ConsumableType,
+    consumableType: "Poison",
     effect: "Lethal poison affecting heart",
     saveDC: 18,
     effectDice: "2d8"
   },
   Cantarella: {
-    consumableType: "Poison" as ConsumableType,
+    consumableType: "Poison",
     effect: "Slow-acting poison",
     saveDC: 16,
     effectDice: "1d8"
   },
   "Salt of the Hanged": {
-    consumableType: "Poison" as ConsumableType,
+    consumableType: "Poison",
     effect: "Paralytic poison",
     saveDC: 17,
     effectDice: "1d10"
   }
-} as const
+} as const satisfies Record<string, PoisonEntry>
+
+type AlchemicalEntry = {
+  readonly consumableType: ConsumableType
+  readonly effect: string
+  readonly saveDC?: number
+  readonly effectDice: string | null
+}
 
 /**
  * Alchemical item definitions
  */
 export const ALCHEMICAL_DEFINITIONS = {
   "Alchemical Fire": {
-    consumableType: "AlchemicalFire" as ConsumableType,
+    consumableType: "AlchemicalFire",
     effect: "1d6 damage per round for 1d4+1 rounds",
     effectDice: "1d6"
   },
   "Smoke Pellet": {
-    consumableType: "SmokeGrenade" as ConsumableType,
+    consumableType: "SmokeGrenade",
     effect: "10' vision obstruction for 1d4+1 rounds",
     effectDice: null
   },
   "Powder Grenade": {
-    consumableType: "PowderGrenade" as ConsumableType,
+    consumableType: "PowderGrenade",
     effect: "1d10 damage, 5' radius, DC 15 save for half",
     saveDC: 15,
     effectDice: "1d10"
   }
-} as const
+} as const satisfies Record<string, AlchemicalEntry>
+
+type KitEntry = {
+  readonly consumableType: ConsumableType
+  readonly effect: string
+  readonly usesRemaining: number
+  readonly maxUses: number
+  readonly durabilityPool: number | null
+  readonly effectDice: string | null
+}
 
 /**
  * Kit definitions from rulebook
  */
 export const KIT_DEFINITIONS = {
   "Repair Kit": {
-    consumableType: "RepairKit" as ConsumableType,
+    consumableType: "RepairKit",
     effect: "Repairs equipment durability",
     usesRemaining: 10,
     maxUses: 10,
@@ -106,11 +129,11 @@ export const KIT_DEFINITIONS = {
     effectDice: null
   },
   "Healing Kit": {
-    consumableType: "HealingKit" as ConsumableType,
+    consumableType: "HealingKit",
     effect: "Medical aid for wounds and poison, or 10 days of care",
     usesRemaining: 10,
     maxUses: 10,
     durabilityPool: null, // Not for repairs
     effectDice: null
   }
-} as const
+} as const satisfies Record<string, KitEntry>
