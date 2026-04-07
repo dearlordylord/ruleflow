@@ -3,12 +3,15 @@
  *
  * Demonstrates event sourcing flow:
  * 1. Character creation (Guido the Fighter)
- * 2. Enemy encounter (goblin appears via CreatureDiscovered)
- * 3. Combat (Guido attacks goblin with longsword)
+ * 2. Enemy encounter (goblin appears - just a name, no stats)
+ * 3. Combat (Guido attacks goblin - no mechanical resolution against monsters)
  * 4. Looting (currency from goblin)
+ *
+ * Note: Monsters in this system are minimal - just names for narrative purposes.
+ * The DM declares damage directly. Combat resolution only works between characters.
  */
 import { describe, expect, it } from "@effect/vitest"
-import { Effect, HashMap, Option, Schema } from "effect"
+import { Effect, HashMap, Option } from "effect"
 
 import {
   AlignmentChosen,
@@ -24,10 +27,9 @@ import {
   WeaponGroupSpecializationChosen
 } from "../src/domain/character/creationEvents.js"
 import { CombatStatsComponent } from "../src/domain/combat/stats.js"
-import { DiceNotation, WeaponComponent } from "../src/domain/combat/weapons.js"
 import { EntityId } from "../src/domain/entities.js"
 import { Entity, getComponent, setComponent } from "../src/domain/entity.js"
-import { AttackPerformed, CreatureDiscovered, CurrencyTransferred } from "../src/domain/events.js"
+import { CreatureDiscovered, CurrencyTransferred } from "../src/domain/events.js"
 import { GameState } from "../src/domain/infrastructure/GameState.js"
 import { Projector } from "../src/domain/infrastructure/Projector.js"
 import { ReadModelStore } from "../src/domain/infrastructure/ReadModelStore.js"
@@ -36,7 +38,7 @@ import { IdGenerator } from "../src/domain/services/IdGenerator.js"
 import { deterministicTestLayer, makeObservation } from "./layers.js"
 
 describe("Full Game Simulation", () => {
-  it.effect("simulates character creation -> combat -> looting flow", () =>
+  it.effect("simulates character creation -> encounter -> looting flow", () =>
     Effect.gen(function*() {
       const state = yield* GameState
       const store = yield* ReadModelStore
@@ -127,24 +129,11 @@ describe("Full Game Simulation", () => {
 
       // ========================================================================
       // PHASE 2: Enemy Encounter - Goblin Appears
+      // Monsters are minimal - just a name for narrative purposes
       // ========================================================================
 
       const goblinDiscovery = CreatureDiscovered.make({
         name: "Goblin",
-        strength: 10,
-        dexterity: 14,
-        constitution: 12,
-        intelligence: 8,
-        will: 10,
-        charisma: 6,
-        maxHP: 5,
-        currentHP: 5,
-        armorClass: 13,
-        meleeAttackBonus: 2,
-        rangedAttackBonus: 4,
-        weaponName: "Short Sword",
-        weaponDamageDice: "1d6",
-        weaponGroup: "Blades",
         discoveredAt: null
       })
 
@@ -154,65 +143,22 @@ describe("Full Game Simulation", () => {
       // Goblin entity ID = ID 2 from the deterministic IdGenerator sequence
       const goblinId = EntityId.make("00000000-0000-0000-0000-000000000002")
 
-      // Verify goblin created
+      // Verify goblin created with minimal Creature component (just name)
       const goblin = yield* state.getEntity(goblinId)
-      const goblinHealth = getComponent(goblin, "Health")
-      expect(goblinHealth?.current).toBe(5)
-      expect(goblinHealth?.max).toBe(5)
+      const goblinCreature = getComponent(goblin, "Creature")
+      expect(goblinCreature?.name).toBe("Goblin")
 
-      const goblinCombat = getComponent(goblin, "CombatStats")
-      expect(goblinCombat?.armorClass).toBe(13)
-
-      // ========================================================================
-      // PHASE 3: Combat - Guido attacks Goblin with a longsword
-      // ========================================================================
-
-      // Create weapon entity with proper WeaponComponent
-      // IdGenerator sequence: ID 3
-      const weaponId = EntityId.make(yield* idGen.generate())
-      yield* store.set(Entity.make({
-        id: weaponId,
-        components: [
-          WeaponComponent.make({
-            name: "Longsword",
-            damageDice: Schema.decodeSync(DiceNotation)("1d8"),
-            damageType: ["Slashing"],
-            weaponGroup: "HeavyBlades", // Matches Fighter's weapon specialization
-            size: "Medium",
-            traits: [],
-            reach: 5,
-            rangeClose: null,
-            rangeMedium: null,
-            rangeLong: null,
-            durability: 10,
-            maxDurability: 10
-          })
-        ]
-      }))
-
-      // Attack event
-      const guidoAttack = AttackPerformed.make({
-        attackerId: guidoId,
-        targetId: goblinId,
-        weaponId,
-        attackRoll: 15 // vs AC 13 → HIT
-      })
-
-      // projectLatest runs all systems (combatToHitSystem + traumaSystem handle this)
-      yield* projector.projectLatest(makeObservation(guidoAttack))
-
-      // Check goblin took damage
-      // Damage = 1d8 roll (5) + STR mod (+2) + weapon specialization (+1) = 8
-      // Goblin HP: 5 - 8 = -3
-      const goblinAfterAttack = yield* state.getEntity(goblinId)
-      const goblinHealthAfter = getComponent(goblinAfterAttack, "Health")
-      expect(goblinHealthAfter!.current).toBe(-3) // 5 HP - 8 damage = -3 (dead)
+      // Monsters don't have Health, CombatStats, etc.
+      expect(getComponent(goblin, "Health")).toBeUndefined()
+      expect(getComponent(goblin, "CombatStats")).toBeUndefined()
 
       // ========================================================================
-      // PHASE 4: Looting Currency
+      // PHASE 3: Looting Currency
+      // (Combat is DM-declared in this system - no mechanical attack resolution
+      // against monsters. DM says "you kill it", then looting happens.)
       // ========================================================================
 
-      // First give goblin some currency to loot
+      // Give goblin some currency to loot (DM decides what's on the body)
       yield* store.update(goblinId, (entity) =>
         Effect.succeed(setComponent(
           entity,
@@ -246,7 +192,7 @@ describe("Full Game Simulation", () => {
 
       const finalGuido = yield* state.getEntity(guidoId)
 
-      // Health unchanged (goblin didn't hit back)
+      // Health unchanged (no combat damage in this test)
       const finalHealth = getComponent(finalGuido, "Health")
       expect(finalHealth?.current).toBe(8)
 
@@ -254,8 +200,8 @@ describe("Full Game Simulation", () => {
       const finalCurrency = getComponent(finalGuido, "Currency")
       expect(finalCurrency?.silver).toBe(122)
 
-      // Success! Simulation completed: character creation → combat → looting
+      // Success! Simulation completed: character creation → encounter → looting
     }).pipe(
-      Effect.provide(deterministicTestLayer([5, 5, 5])) // Deterministic dice rolls (damage = 5)
+      Effect.provide(deterministicTestLayer([5, 5, 5])) // Deterministic dice rolls
     ))
 })

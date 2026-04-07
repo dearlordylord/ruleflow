@@ -121,11 +121,7 @@ const charCreationEvents: Array<LabeledObservation> = [
 // ============================================================================
 
 const goblin1Discovery = makeSingleObs("Goblin Discovered", CreatureDiscovered.make({
-  name: "Goblin", strength: 10, dexterity: 14, constitution: 12,
-  intelligence: 8, will: 10, charisma: 6,
-  maxHP: 5, currentHP: 5, armorClass: 13,
-  meleeAttackBonus: 2, rangedAttackBonus: 4,
-  weaponName: "Short Sword", weaponDamageDice: "1d6", weaponGroup: "Blades",
+  name: "Goblin",
   discoveredAt: null
 }))
 
@@ -151,11 +147,7 @@ const attack1 = makeMultiObs("Attack Goblin #1", [
 ])
 
 const goblin2Discovery = makeSingleObs("Goblin #2 Discovered", CreatureDiscovered.make({
-  name: "Goblin Scout", strength: 10, dexterity: 14, constitution: 12,
-  intelligence: 8, will: 10, charisma: 6,
-  maxHP: 5, currentHP: 5, armorClass: 13,
-  meleeAttackBonus: 2, rangedAttackBonus: 4,
-  weaponName: "Short Sword", weaponDamageDice: "1d6", weaponGroup: "Blades",
+  name: "Goblin Scout",
   discoveredAt: null
 }))
 

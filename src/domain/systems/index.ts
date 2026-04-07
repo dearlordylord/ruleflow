@@ -31,6 +31,7 @@ export {
   itemLootingSystem,
   lootDistributionSystem
 } from "./looting.js"
+export { monsterDamageSystem } from "./monsterDamage.js"
 export type { System, SystemResult } from "./types.js"
 
 // Combat encounter systems

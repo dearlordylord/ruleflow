@@ -10,37 +10,36 @@ import { EntityId } from "../entities.js"
  *
  * This IS a domain event - represents DM saying "A goblin appears!" during gameplay.
  * The discovery itself is an observable in-game action with narrative significance.
- * NOT infrastructure setup - it's what happens when players encounter enemies/NPCs.
  *
- * Player action: "I enter the cave"
- * DM response: CreatureDiscovered event -> creates creature entity with inline stats
- *
- * Uses inline stats since we don't have monster templates yet.
+ * Monsters in this system are minimal - just a name for narrative purposes.
+ * They have no stats, HP, or weapons. The DM declares damage directly.
+ * Monsters only become mechanically interesting when looted.
  */
 export class CreatureDiscovered extends Schema.TaggedClass<CreatureDiscovered>()(
   "CreatureDiscovered",
   {
-    // Creature stats inline
+    // Monster name for narrative
     name: Schema.NonEmptyString,
-    // Attributes
-    strength: Schema.Int.pipe(Schema.between(3, 18)),
-    dexterity: Schema.Int.pipe(Schema.between(3, 18)),
-    constitution: Schema.Int.pipe(Schema.between(3, 18)),
-    intelligence: Schema.Int.pipe(Schema.between(3, 18)),
-    will: Schema.Int.pipe(Schema.between(3, 18)),
-    charisma: Schema.Int.pipe(Schema.between(3, 18)),
-    // Health
-    maxHP: Schema.Int.pipe(Schema.greaterThan(0)),
-    currentHP: Schema.Int.pipe(Schema.greaterThan(0)),
-    // Combat
-    armorClass: Schema.Int.pipe(Schema.greaterThanOrEqualTo(10)),
-    meleeAttackBonus: Schema.Int,
-    rangedAttackBonus: Schema.Int,
-    // Optional weapon info
-    weaponName: Schema.NullOr(Schema.NonEmptyString),
-    weaponDamageDice: Schema.NullOr(Schema.NonEmptyString), // e.g. "1d6"
-    weaponGroup: Schema.NullOr(Schema.NonEmptyString),
-    // Where discovered
+    // Where discovered (optional location reference)
     discoveredAt: Schema.NullOr(EntityId)
+  }
+) {}
+
+/**
+ * DOMAIN EVENT: Monster inflicts damage (DM-declared)
+ *
+ * The DM declares "the dragon bites you for 14 damage" - no attack roll from
+ * the monster's perspective, no damage type usually needed.
+ * The source is a monster name (string), not an entity with stats.
+ */
+export class MonsterDamageInflicted extends Schema.TaggedClass<MonsterDamageInflicted>()(
+  "MonsterDamageInflicted",
+  {
+    // Who takes damage
+    targetId: EntityId,
+    // Damage amount (DM-declared)
+    damageAmount: Schema.Int.pipe(Schema.greaterThan(0)),
+    // Source description (monster name, trap, etc.)
+    source: Schema.NonEmptyString
   }
 ) {}
