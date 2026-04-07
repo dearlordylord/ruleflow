@@ -13,7 +13,7 @@ interface AppProps {
   readonly totalSteps: number
 }
 
-const emptyEntities = new Map() as ReadonlyMap<any, any>
+const emptyEntities: Snapshot["entities"] = new Map()
 
 export const App: React.FC<AppProps> = ({ computeSnapshots, labels, totalSteps }) => {
   const { exit } = useApp()

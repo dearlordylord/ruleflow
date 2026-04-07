@@ -6,6 +6,8 @@ import type { DomainEvent } from "../domain/events.js"
 import type { Mutation } from "../domain/mutations.js"
 import type { ConsistencyWarning } from "../domain/warnings.js"
 
+export type Phase = "scored" | "applied" | "fast-forward"
+
 export interface CandidateScore {
   readonly burden: number
   readonly confidence: number

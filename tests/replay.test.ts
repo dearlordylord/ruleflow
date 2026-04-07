@@ -20,12 +20,52 @@ import {
   TraitChosen,
   WeaponGroupSpecializationChosen
 } from "../src/domain/character/creationEvents.js"
+import type { WeaponGroup } from "../src/domain/combat/weapons.js"
 import { EntityId } from "../src/domain/entities.js"
 import { getComponent } from "../src/domain/entity.js"
 import { CreatureDiscovered, CurrencyTransferred } from "../src/domain/events.js"
 import { GameState } from "../src/domain/infrastructure/GameState.js"
 import { Projector } from "../src/domain/infrastructure/Projector.js"
 import { deterministicTestLayerWithIds, makeObservation } from "./layers.js"
+
+const makeCharCreationEvents = (
+  entityId: ReturnType<typeof EntityId.make>,
+  playerId: ReturnType<typeof EntityId.make>,
+  opts: {
+    name: string
+    silver: number
+    rolledHP: number
+    constitutionModifier?: number
+    strength?: number
+    weaponGroup?: WeaponGroup
+  }
+) => [
+  CharacterCreationStarted.make({ entityId, playerId, startingLevel: 1 }),
+  AttributesRolled.make({
+    entityId,
+    strength: opts.strength ?? 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    will: 10,
+    charisma: 10
+  }),
+  ClassChosen.make({ entityId, class: "Fighter" }),
+  ...(opts.weaponGroup !== undefined
+    ? [WeaponGroupSpecializationChosen.make({ entityId, weaponGroup: opts.weaponGroup })]
+    : []),
+  SkillsChosen.make({
+    entityId,
+    primarySkills: ["MeleeCombat", "Accuracy"],
+    secondarySkills: ["Awareness", "Survival", "Medicine"]
+  }),
+  TraitChosen.make({ entityId, traitName: "Combat Reflexes" }),
+  HitPointsRolled.make({ entityId, rolledValue: opts.rolledHP, constitutionModifier: opts.constitutionModifier ?? 0 }),
+  StartingMoneyRolled.make({ entityId, silverAmount: opts.silver }),
+  AlignmentChosen.make({ entityId, alignment: "Neutral" }),
+  NameChosen.make({ entityId, name: opts.name }),
+  CharacterCreationCompleted.make({ entityId })
+]
 
 describe("Event Replay", () => {
   it.effect("replays character creation to identical state", () =>
@@ -41,37 +81,13 @@ describe("Event Replay", () => {
 
       const guidoId = EntityId.make("00000000-0000-0000-0000-000000000001")
 
-      // Run character creation on the entity
-      const charEvents = [
-        CharacterCreationStarted.make({
-          entityId: guidoId,
-          playerId: EntityId.make("00000000-0000-0000-0000-000000000099"),
-          startingLevel: 1
-        }),
-        AttributesRolled.make({
-          entityId: guidoId,
-          strength: 14,
-          dexterity: 12,
-          constitution: 15,
-          intelligence: 10,
-          will: 13,
-          charisma: 8
-        }),
-        ClassChosen.make({ entityId: guidoId, class: "Fighter" }),
-        WeaponGroupSpecializationChosen.make({ entityId: guidoId, weaponGroup: "HeavyBlades" }),
-        SkillsChosen.make({
-          entityId: guidoId,
-          primarySkills: ["MeleeCombat", "Accuracy"],
-          secondarySkills: ["Awareness", "Survival", "Medicine"]
-        }),
-        TraitChosen.make({ entityId: guidoId, traitName: "Combat Reflexes" }),
-        HitPointsRolled.make({ entityId: guidoId, rolledValue: 7, constitutionModifier: 1 }),
-        StartingMoneyRolled.make({ entityId: guidoId, silverAmount: 110 }),
-        AlignmentChosen.make({ entityId: guidoId, alignment: "Neutral" }),
-        NameChosen.make({ entityId: guidoId, name: "Guido" }),
-        CharacterCreationCompleted.make({ entityId: guidoId })
-      ]
-      for (const event of charEvents) {
+      for (
+        const event of makeCharCreationEvents(
+          guidoId,
+          EntityId.make("00000000-0000-0000-0000-000000000099"),
+          { name: "Guido", silver: 110, rolledHP: 7, constitutionModifier: 1, strength: 14, weaponGroup: "HeavyBlades" }
+        )
+      ) {
         yield* projector.projectLatest(makeObservation(event))
       }
 
@@ -120,60 +136,10 @@ describe("Event Replay", () => {
         CreatureDiscovered.make({ name: "Receiver", discoveredAt: null })
       ))
 
-      // Step 2: Character creation on existing entities to add Currency via events
-      const fromCharEvents = [
-        CharacterCreationStarted.make({ entityId: fromId, playerId: playerId1, startingLevel: 1 }),
-        AttributesRolled.make({
-          entityId: fromId,
-          strength: 10,
-          dexterity: 10,
-          constitution: 10,
-          intelligence: 10,
-          will: 10,
-          charisma: 10
-        }),
-        ClassChosen.make({ entityId: fromId, class: "Fighter" }),
-        SkillsChosen.make({
-          entityId: fromId,
-          primarySkills: ["MeleeCombat", "Accuracy"],
-          secondarySkills: ["Awareness", "Survival", "Medicine"]
-        }),
-        TraitChosen.make({ entityId: fromId, traitName: "Combat Reflexes" }),
-        HitPointsRolled.make({ entityId: fromId, rolledValue: 6, constitutionModifier: 0 }),
-        StartingMoneyRolled.make({ entityId: fromId, silverAmount: 100 }),
-        AlignmentChosen.make({ entityId: fromId, alignment: "Neutral" }),
-        NameChosen.make({ entityId: fromId, name: "Sender" }),
-        CharacterCreationCompleted.make({ entityId: fromId })
-      ]
-      for (const event of fromCharEvents) {
+      for (const event of makeCharCreationEvents(fromId, playerId1, { name: "Sender", silver: 100, rolledHP: 6 })) {
         yield* projector.projectLatest(makeObservation(event))
       }
-
-      const toCharEvents = [
-        CharacterCreationStarted.make({ entityId: toId, playerId: playerId2, startingLevel: 1 }),
-        AttributesRolled.make({
-          entityId: toId,
-          strength: 10,
-          dexterity: 10,
-          constitution: 10,
-          intelligence: 10,
-          will: 10,
-          charisma: 10
-        }),
-        ClassChosen.make({ entityId: toId, class: "Fighter" }),
-        SkillsChosen.make({
-          entityId: toId,
-          primarySkills: ["MeleeCombat", "Accuracy"],
-          secondarySkills: ["Awareness", "Survival", "Medicine"]
-        }),
-        TraitChosen.make({ entityId: toId, traitName: "Combat Reflexes" }),
-        HitPointsRolled.make({ entityId: toId, rolledValue: 6, constitutionModifier: 0 }),
-        StartingMoneyRolled.make({ entityId: toId, silverAmount: 1 }),
-        AlignmentChosen.make({ entityId: toId, alignment: "Neutral" }),
-        NameChosen.make({ entityId: toId, name: "Receiver" }),
-        CharacterCreationCompleted.make({ entityId: toId })
-      ]
-      for (const event of toCharEvents) {
+      for (const event of makeCharCreationEvents(toId, playerId2, { name: "Receiver", silver: 1, rolledHP: 6 })) {
         yield* projector.projectLatest(makeObservation(event))
       }
 
@@ -242,67 +208,22 @@ describe("Event Replay", () => {
         CreatureDiscovered.make({ name: "Char2", discoveredAt: null })
       ))
 
-      const char1Events = [
-        CharacterCreationStarted.make({
-          entityId: char1Id,
-          playerId: EntityId.make("00000000-0000-0000-0000-000000000099"),
-          startingLevel: 1
-        }),
-        AttributesRolled.make({
-          entityId: char1Id,
-          strength: 12,
-          dexterity: 10,
-          constitution: 10,
-          intelligence: 10,
-          will: 10,
-          charisma: 10
-        }),
-        ClassChosen.make({ entityId: char1Id, class: "Fighter" }),
-        SkillsChosen.make({
-          entityId: char1Id,
-          primarySkills: ["MeleeCombat", "Accuracy"],
-          secondarySkills: ["Awareness", "Survival", "Medicine"]
-        }),
-        TraitChosen.make({ entityId: char1Id, traitName: "Combat Reflexes" }),
-        HitPointsRolled.make({ entityId: char1Id, rolledValue: 8, constitutionModifier: 0 }),
-        StartingMoneyRolled.make({ entityId: char1Id, silverAmount: 200 }),
-        AlignmentChosen.make({ entityId: char1Id, alignment: "Neutral" }),
-        NameChosen.make({ entityId: char1Id, name: "Char1" }),
-        CharacterCreationCompleted.make({ entityId: char1Id })
-      ]
-      for (const event of char1Events) {
+      for (
+        const event of makeCharCreationEvents(
+          char1Id,
+          EntityId.make("00000000-0000-0000-0000-000000000099"),
+          { name: "Char1", silver: 200, rolledHP: 8, strength: 12 }
+        )
+      ) {
         yield* projector.projectLatest(makeObservation(event))
       }
-
-      const char2Events = [
-        CharacterCreationStarted.make({
-          entityId: char2Id,
-          playerId: EntityId.make("00000000-0000-0000-0000-000000000098"),
-          startingLevel: 1
-        }),
-        AttributesRolled.make({
-          entityId: char2Id,
-          strength: 10,
-          dexterity: 10,
-          constitution: 10,
-          intelligence: 10,
-          will: 10,
-          charisma: 10
-        }),
-        ClassChosen.make({ entityId: char2Id, class: "Fighter" }),
-        SkillsChosen.make({
-          entityId: char2Id,
-          primarySkills: ["MeleeCombat", "Accuracy"],
-          secondarySkills: ["Awareness", "Survival", "Medicine"]
-        }),
-        TraitChosen.make({ entityId: char2Id, traitName: "Combat Reflexes" }),
-        HitPointsRolled.make({ entityId: char2Id, rolledValue: 6, constitutionModifier: 0 }),
-        StartingMoneyRolled.make({ entityId: char2Id, silverAmount: 50 }),
-        AlignmentChosen.make({ entityId: char2Id, alignment: "Neutral" }),
-        NameChosen.make({ entityId: char2Id, name: "Char2" }),
-        CharacterCreationCompleted.make({ entityId: char2Id })
-      ]
-      for (const event of char2Events) {
+      for (
+        const event of makeCharCreationEvents(
+          char2Id,
+          EntityId.make("00000000-0000-0000-0000-000000000098"),
+          { name: "Char2", silver: 50, rolledHP: 6 }
+        )
+      ) {
         yield* projector.projectLatest(makeObservation(event))
       }
 

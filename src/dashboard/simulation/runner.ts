@@ -5,26 +5,16 @@
  */
 import { Chunk, Effect } from "effect"
 
-import { ObservationEntry } from "../../domain/infrastructure/ObservationLog.js"
-import type { Mutation } from "../../domain/mutations.js"
+import { GameState } from "../../domain/infrastructure/GameState.js"
+import { ObservationEntry, ObservationLog } from "../../domain/infrastructure/ObservationLog.js"
+import { scoreCandidate, selectBestIndex } from "../../domain/infrastructure/Projector.js"
 import { type AllSystemRequirements, getAllSystems, runSystemsPipeline } from "../../domain/systems/index.js"
 import type { System } from "../../domain/systems/types.js"
-import type { ConsistencyWarning } from "../../domain/warnings.js"
-import { GameState } from "../../domain/infrastructure/GameState.js"
-import { ObservationLog } from "../../domain/infrastructure/ObservationLog.js"
 
 import type { EvaluatedCandidate, ObservationStep, Snapshot } from "../types.js"
 import { DashboardReadModelStore } from "./DashboardReadModelStore.js"
 import { allObservations, setupActions } from "./scenario.js"
 import { validationSystem } from "./validationSystem.js"
-
-const scoreCandidate = (
-  warnings: Chunk.Chunk<ConsistencyWarning>,
-  confidence: number
-) => ({
-  burden: Chunk.reduce(warnings, 0, (acc, w) => acc + w.severity),
-  confidence
-})
 
 const buildPipeline = (): Array<System<AllSystemRequirements>> => [
   ...(getAllSystems() as Array<System<AllSystemRequirements>>),
@@ -74,24 +64,8 @@ export const computeAllSnapshots: Effect.Effect<
       })
     }
 
-    // Select best candidate
-    let bestIndex = 0
-    let bestScore = evaluated[0].score
-    let bestMutations: Chunk.Chunk<Mutation> = evaluated[0].mutations
-    for (let j = 1; j < evaluated.length; j++) {
-      const current = evaluated[j]
-      if (
-        current.score.burden < bestScore.burden
-        || (current.score.burden === bestScore.burden
-          && current.score.confidence > bestScore.confidence)
-      ) {
-        bestIndex = j
-        bestScore = current.score
-        bestMutations = current.mutations
-      }
-    }
-
-    // Apply winning mutations
+    const bestIndex = selectBestIndex(evaluated)
+    const bestMutations = evaluated[bestIndex].mutations
     const withSelection = new ObservationEntry({
       ...entry,
       selectedIndex: bestIndex

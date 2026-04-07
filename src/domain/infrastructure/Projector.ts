@@ -9,24 +9,33 @@ import { Chunk, Context, Effect, Layer } from "effect"
 
 import type { DomainError, EntityNotFound, ObservationLogWriteError } from "../errors.js"
 import { SelectedIndexOutOfBounds } from "../errors.js"
-import type { Mutation } from "../mutations.js"
 import { type AllSystemRequirements, runAllSystems } from "../systems/index.js"
 import type { ConsistencyWarning } from "../warnings.js"
 import { GameState } from "./GameState.js"
 import { ObservationEntry, ObservationLog } from "./ObservationLog.js"
 import { ReadModelStore } from "./ReadModelStore.js"
 
-/**
- * Score a candidate by warning burden and confidence.
- * Lower burden is better; for ties, higher confidence wins.
- */
-const scoreCandidate = (
+export const scoreCandidate = (
   warnings: Chunk.Chunk<ConsistencyWarning>,
   confidence: number
 ): { readonly burden: number; readonly confidence: number } => ({
   burden: Chunk.reduce(warnings, 0, (acc, w) => acc + w.severity),
   confidence
 })
+
+export const selectBestIndex = (
+  items: ReadonlyArray<{ readonly score: { readonly burden: number; readonly confidence: number } }>
+): number => {
+  let best = 0
+  for (let i = 1; i < items.length; i++) {
+    const curr = items[i].score
+    const b = items[best].score
+    if (curr.burden < b.burden || (curr.burden === b.burden && curr.confidence > b.confidence)) {
+      best = i
+    }
+  }
+  return best
+}
 
 export class Projector extends Context.Tag("@game/Projector")<
   Projector,
@@ -111,21 +120,8 @@ export class Projector extends Context.Tag("@game/Projector")<
           )
 
           // 2. Select the best candidate: lowest burden, then highest confidence.
-          let bestIndex = 0
-          let bestScore = evaluated[0].score
-          let bestMutations: Chunk.Chunk<Mutation> = evaluated[0].mutations
-          for (let i = 1; i < evaluated.length; i++) {
-            const current = evaluated[i]
-            if (
-              current.score.burden < bestScore.burden
-              || (current.score.burden === bestScore.burden
-                && current.score.confidence > bestScore.confidence)
-            ) {
-              bestIndex = i
-              bestScore = current.score
-              bestMutations = current.mutations
-            }
-          }
+          const bestIndex = selectBestIndex(evaluated)
+          const bestMutations = evaluated[bestIndex].mutations
 
           // 3. Record the selected index on the observation and append to log
           const withSelection = new ObservationEntry({

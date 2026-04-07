@@ -1,9 +1,11 @@
 import { Box, Text } from "ink"
 import React from "react"
 
+import type { Phase } from "../types.js"
+
 interface StatusBarProps {
   readonly autoMode: boolean
-  readonly phase: string
+  readonly phase: Phase
   readonly currentStep: number
   readonly totalSteps: number
 }

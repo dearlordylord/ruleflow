@@ -2,14 +2,15 @@ import { Chunk } from "effect"
 import { Box, Text } from "ink"
 import React from "react"
 
-import type { ObservationStep } from "../types.js"
+import type { DomainEvent } from "../../domain/events.js"
+import type { ObservationStep, Phase } from "../types.js"
 
 interface CandidatePanelProps {
   readonly step: ObservationStep | undefined
-  readonly phase: string
+  readonly phase: Phase
 }
 
-const formatEvent = (event: { readonly _tag: string; [key: string]: unknown }): string => {
+const formatEvent = (event: DomainEvent): string => {
   switch (event._tag) {
     case "AttackPerformed":
       return `AttackPerformed roll=${event.attackRoll}`
@@ -47,7 +48,6 @@ export const CandidatePanel: React.FC<CandidatePanelProps> = ({ step, phase }) =
       <Text> </Text>
       {step.candidates.map((candidate, idx) => {
         const isWinner = idx === step.winnerIndex && (phase === "scored" || phase === "applied")
-        const warningCount = Chunk.size(candidate.warnings)
         const warningLines = Chunk.toReadonlyArray(candidate.warnings)
 
         return (
@@ -55,13 +55,13 @@ export const CandidatePanel: React.FC<CandidatePanelProps> = ({ step, phase }) =
             <Text>
               {isWinner ? <Text color="green"> &gt; </Text> : "   "}
               <Text color={isWinner ? "green" : "white"} bold={isWinner}>
-                [{idx}] {formatEvent(candidate.event as any)}
+                [{idx}] {formatEvent(candidate.event)}
               </Text>
               {"    "}
               <Text color="cyan">conf: {candidate.confidence.toFixed(2)}</Text>
             </Text>
 
-            {warningCount > 0 ? (
+            {warningLines.length > 0 ? (
               warningLines.map((w, wi) => (
                 <Text key={wi} color="yellow">
                   {"       "} ! {w.problem} (sev: {w.severity.toFixed(2)})
