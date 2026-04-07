@@ -31,5 +31,6 @@
         "name": "@effect/language-service"
       }
     ]
-  }
+  },
+  "exclude": ["src/dashboard"]
 }

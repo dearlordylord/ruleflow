@@ -9,7 +9,7 @@ import sortDestructureKeys from "eslint-plugin-sort-destructure-keys"
 
 export default [
   {
-    ignores: ["**/dist", "**/build", "**/*.md", "**/.reference"]
+    ignores: ["**/dist", "**/build", "**/*.md", "**/.reference", "**/src/dashboard"]
   },
 
   // TypeScript recommended (not strictTypeChecked to start lenient)
