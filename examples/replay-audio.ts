@@ -1,0 +1,369 @@
+#!/usr/bin/env tsx
+/* eslint-disable no-console, functional/immutable-data */
+/**
+ * Recorded-audio replay / snapshot tool.
+ *
+ * Run:
+ *   pnpm demo:audio-replay -- path/to/file.wav
+ *
+ * Optional env:
+ *   TRANSCRIPT_REPLAY_OUTPUT=path/to/snapshots.json
+ *   WHISPER_TRANSCRIBER_MODE=live|fixture
+ *   TRANSCRIPT_INTERPRETER_MODE=mock|demo|live
+ */
+import { writeFileSync } from "node:fs"
+import process from "node:process"
+
+import { Effect, Layer, ManagedRuntime, Schema } from "effect"
+
+import { CombatStatsComponent } from "../src/domain/combat/stats.js"
+import { DiceNotation, WeaponComponent } from "../src/domain/combat/weapons.js"
+import { EntityId } from "../src/domain/entities.js"
+import { Entity } from "../src/domain/entity.js"
+import { GameState } from "../src/domain/infrastructure/GameState.js"
+import { ObservationLog } from "../src/domain/infrastructure/ObservationLog.js"
+import { Projector } from "../src/domain/infrastructure/Projector.js"
+import { ReadModelStore } from "../src/domain/infrastructure/ReadModelStore.js"
+import { CombatResolver } from "../src/domain/services/CombatResolver.js"
+import { DiceRoller } from "../src/domain/services/DiceRoller.js"
+import { IdGenerator } from "../src/domain/services/IdGenerator.js"
+import { WeaponTemplates } from "../src/domain/services/Templates.js"
+import { MovementComponent } from "../src/domain/world/movement.js"
+import type { InterpretationContext } from "../src/transcript/index.js"
+import {
+  AudioTranscriptSource,
+  TranscriptBuffer,
+  TranscriptBufferConfig,
+  TranscriptInterpreter,
+  TranscriptLlm,
+  TranscriptPipeline,
+  TranscriptSegment,
+  TranscriptStream,
+  TranscriptStreamConfig,
+  TranscriptStreamState,
+  WhisperTranscriber
+} from "../src/transcript/index.js"
+
+process.loadEnvFile()
+
+const GUIDO_ID = EntityId.make("00000000-0000-0000-0000-000000000001")
+const WEAPON_ID = EntityId.make("00000000-0000-0000-0000-000000000010")
+const GOBLIN_ID = EntityId.make("00000000-0000-0000-0000-000000000020")
+const ORC_ID = EntityId.make("00000000-0000-0000-0000-000000000021")
+
+const context: InterpretationContext = {
+  entities: [
+    { id: GUIDO_ID, name: "Guido", type: "character" },
+    { id: GOBLIN_ID, name: "Goblin", type: "creature" },
+    { id: ORC_ID, name: "Orc", type: "creature" }
+  ],
+  activeCharacterId: GUIDO_ID,
+  activeWeaponId: WEAPON_ID
+}
+
+function seedEntities(): Effect.Effect<void, never, ReadModelStore> {
+  return Effect.gen(function*() {
+    const store = yield* ReadModelStore
+
+    yield* store.set(Entity.make({
+      id: GUIDO_ID,
+      components: [
+        CombatStatsComponent.make({
+          meleeAttackBonus: 4,
+          rangedAttackBonus: 2,
+          armorClass: 15,
+          initiativeModifier: 0
+        }),
+        MovementComponent.make({
+          baseSpeed: 30,
+          currentSpeed: 30,
+          armorPenalty: 0,
+          encumbrancePenalty: 0,
+          canFly: false,
+          flySpeed: null,
+          canSwim: false,
+          swimSpeed: null,
+          canClimb: false,
+          climbSpeed: null
+        })
+      ]
+    }))
+
+    yield* store.set(Entity.make({
+      id: WEAPON_ID,
+      components: [
+        WeaponComponent.make({
+          name: "Longsword",
+          damageDice: Schema.decodeSync(DiceNotation)("1d8"),
+          damageType: ["Slashing"],
+          weaponGroup: "HeavyBlades",
+          size: "Medium",
+          traits: [],
+          reach: 5,
+          rangeClose: null,
+          rangeMedium: null,
+          rangeLong: null,
+          durability: 10,
+          maxDurability: 10
+        })
+      ]
+    }))
+
+    yield* store.set(Entity.make({
+      id: GOBLIN_ID,
+      components: [
+        CombatStatsComponent.make({
+          meleeAttackBonus: 2,
+          rangedAttackBonus: 1,
+          armorClass: 12,
+          initiativeModifier: 0
+        })
+      ]
+    }))
+
+    yield* store.set(Entity.make({
+      id: ORC_ID,
+      components: [
+        CombatStatsComponent.make({
+          meleeAttackBonus: 3,
+          rangedAttackBonus: 1,
+          armorClass: 13,
+          initiativeModifier: 0
+        })
+      ]
+    }))
+  })
+}
+
+const interpreterMode = process.env.TRANSCRIPT_INTERPRETER_MODE ?? "mock"
+const whisperMode = process.env.WHISPER_TRANSCRIBER_MODE ?? "live"
+const demoLatencyMs = Number(process.env.TRANSCRIPT_DEMO_LATENCY_MS ?? "0")
+const replayOutputPath = process.env.TRANSCRIPT_REPLAY_OUTPUT
+
+const baseLayer = Layer.mergeAll(
+  ReadModelStore.testLayer,
+  ObservationLog.testLayer,
+  IdGenerator.liveLayer,
+  DiceRoller.liveLayer,
+  WeaponTemplates.testLayer
+)
+
+const gameStateLayer = GameState.layer.pipe(Layer.provide(baseLayer))
+const projectorLayer = Projector.layer.pipe(Layer.provide(Layer.mergeAll(baseLayer, gameStateLayer)))
+const combatLayer = CombatResolver.layer.pipe(Layer.provide(baseLayer))
+const bufferLayer = TranscriptBuffer.layer.pipe(Layer.provide(TranscriptBufferConfig.defaultLayer))
+
+const interpreterLayer = interpreterMode === "live"
+  ? TranscriptInterpreter.liveLayer.pipe(Layer.provide(TranscriptLlm.liveLayer))
+  : interpreterMode === "demo"
+  ? TranscriptInterpreter.liveLayer.pipe(Layer.provide(TranscriptLlm.demoLayer({ latencyMs: demoLatencyMs })))
+  : TranscriptInterpreter.mockLayer
+
+const fixtureSegments = {
+  "fixtures/audio/attack-goblin.wav": [
+    new TranscriptSegment({
+      text: "I attack the goblin",
+      timestamp: new Date("2026-04-08T12:00:00.000Z"),
+      speakerHint: "player"
+    })
+  ],
+  "fixtures/audio/attack-goblin-with-roll.wav": [
+    new TranscriptSegment({
+      text: "I attack the goblin",
+      timestamp: new Date("2026-04-08T12:00:00.000Z"),
+      speakerHint: "player"
+    }),
+    new TranscriptSegment({
+      text: "that's a 17 plus 5",
+      timestamp: new Date("2026-04-08T12:00:00.700Z"),
+      speakerHint: "player"
+    })
+  ],
+  "fixtures/audio/attack-then-move.wav": [
+    new TranscriptSegment({
+      text: "I attack the goblin",
+      timestamp: new Date("2026-04-08T12:00:00.000Z"),
+      speakerHint: "player"
+    }),
+    new TranscriptSegment({
+      text: "I move 30 feet",
+      timestamp: new Date("2026-04-08T12:00:03.000Z"),
+      speakerHint: "player"
+    })
+  ],
+  "fixtures/audio/attack-then-move-weak.wav": [
+    new TranscriptSegment({
+      text: "I attack the goblin",
+      timestamp: new Date("2026-04-08T12:00:00.000Z"),
+      speakerHint: "player"
+    }),
+    new TranscriptSegment({
+      text: "I move 30 feet",
+      timestamp: new Date("2026-04-08T12:00:03.000Z"),
+      speakerHint: "player"
+    })
+  ],
+  "fixtures/audio/ambiguous-attack.wav": [
+    new TranscriptSegment({
+      text: "I attack",
+      timestamp: new Date("2026-04-08T12:00:00.000Z"),
+      speakerHint: "player"
+    })
+  ],
+  "fixtures/audio/non-action-think.wav": [
+    new TranscriptSegment({
+      text: "Hmm, let me think",
+      timestamp: new Date("2026-04-08T12:00:00.000Z"),
+      speakerHint: "player"
+    })
+  ]
+}
+
+const whisperLayer = whisperMode === "fixture"
+  ? WhisperTranscriber.fixtureLayer(fixtureSegments)
+  : WhisperTranscriber.liveLayer
+
+const pipelineLayer = TranscriptPipeline.layer.pipe(
+  Layer.provide(Layer.mergeAll(baseLayer, gameStateLayer, projectorLayer, interpreterLayer))
+)
+
+const streamLayer = TranscriptStream.layer.pipe(
+  Layer.provide(Layer.mergeAll(
+    baseLayer,
+    gameStateLayer,
+    projectorLayer,
+    interpreterLayer,
+    pipelineLayer,
+    TranscriptStreamConfig.defaultLayer
+  ))
+)
+
+const runtime = ManagedRuntime.make(
+  Layer.mergeAll(
+    baseLayer,
+    gameStateLayer,
+    projectorLayer,
+    combatLayer,
+    bufferLayer,
+    interpreterLayer,
+    whisperLayer,
+    pipelineLayer,
+    streamLayer
+  )
+)
+
+interface ReplaySnapshot {
+  readonly stage: string
+  readonly rawSegments: ReadonlyArray<string>
+  readonly currentSegment?: string
+  readonly emittedWindow?: ReadonlyArray<string>
+  readonly pendingBuffer: ReadonlyArray<string>
+  readonly committed: ReadonlyArray<ReadonlyArray<string>>
+  readonly tail: ReadonlyArray<{
+    readonly segments: ReadonlyArray<string>
+    readonly candidates: ReadonlyArray<string>
+  }>
+}
+
+function snapshotFromState(
+  stage: string,
+  state: TranscriptStreamState,
+  pendingBuffer: ReadonlyArray<string>,
+  rawSegments: ReadonlyArray<string>,
+  currentSegment?: string,
+  emittedWindow?: ReadonlyArray<string>
+): ReplaySnapshot {
+  return {
+    stage,
+    rawSegments,
+    currentSegment,
+    emittedWindow,
+    pendingBuffer,
+    committed: state.committed.map((entry) =>
+      entry.candidates.map((candidate) => String(candidate.event._tag))
+    ),
+    tail: state.tail.map((item) => ({
+      segments: item.segments.map((segment) => segment.text),
+      candidates: item.observation.candidates.map((candidate) => String(candidate.event._tag))
+    }))
+  }
+}
+
+async function main(): Promise<void> {
+  const audioFilePath = process.argv.slice(2).find((arg) => arg !== "--")
+  if (!audioFilePath) {
+    console.error("Usage: pnpm demo:audio-replay -- path/to/file.wav")
+    process.exitCode = 1
+    return
+  }
+
+  await runtime.runPromise(seedEntities())
+
+  const snapshots = await runtime.runPromise(Effect.gen(function*() {
+    const transcriber = yield* WhisperTranscriber
+    const buffer = yield* TranscriptBuffer
+    const stream = yield* TranscriptStream
+
+    const rawSegments = yield* transcriber.transcribe(new AudioTranscriptSource({ audioFilePath }))
+    const rawTexts = rawSegments.map((segment) => segment.text)
+    const collected: Array<ReplaySnapshot> = []
+
+    collected.push(snapshotFromState(
+      "initial",
+      yield* stream.state(),
+      yield* buffer.pending().pipe(Effect.map((pending) => pending.map((segment) => segment.text))),
+      rawTexts
+    ))
+
+    for (const segment of rawSegments) {
+      const pushed = yield* buffer.push(segment)
+      collected.push(snapshotFromState(
+        "after-segment",
+        yield* stream.state(),
+        pushed.pending.map((item) => item.text),
+        rawTexts,
+        segment.text
+      ))
+
+      for (const window of pushed.emitted) {
+        const state = yield* stream.pushWindow(window.segments, context)
+        collected.push(snapshotFromState(
+          "after-window",
+          state,
+          yield* buffer.pending().pipe(Effect.map((pending) => pending.map((item) => item.text))),
+          rawTexts,
+          segment.text,
+          window.segments.map((item) => item.text)
+        ))
+      }
+    }
+
+    const flushedWindows = yield* buffer.flush()
+    for (const window of flushedWindows) {
+      const state = yield* stream.pushWindow(window.segments, context)
+      collected.push(snapshotFromState(
+        "after-buffer-flush-window",
+        state,
+        [],
+        rawTexts,
+        undefined,
+        window.segments.map((item) => item.text)
+      ))
+    }
+
+    const finalState = yield* stream.flush()
+    collected.push(snapshotFromState("after-stream-flush", finalState, [], rawTexts))
+
+    return collected
+  }))
+
+  const json = JSON.stringify(snapshots, null, 2)
+  if (replayOutputPath) {
+    writeFileSync(replayOutputPath, `${json}\n`, "utf8")
+    console.log(`Wrote ${snapshots.length} snapshots to ${replayOutputPath}`)
+  } else {
+    console.log(json)
+  }
+}
+
+void main()

@@ -17,7 +17,8 @@
     "check-all": "pnpm typecheck && pnpm lint && pnpm circular && pnpm test",
     "dashboard": "tsx --tsconfig src/dashboard/tsconfig.json src/dashboard/index.tsx",
     "demo:transcript": "tsx examples/transcript-demo.ts",
-    "demo:audio": "tsx examples/transcribe-audio.ts"
+    "demo:audio": "tsx examples/transcribe-audio.ts",
+    "demo:audio-replay": "tsx examples/replay-audio.ts"
   },
   "lint-staged": {
     "*.ts": "eslint --fix --no-warn-ignored",
