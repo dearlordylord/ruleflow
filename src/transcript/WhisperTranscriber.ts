@@ -155,13 +155,7 @@ export class WhisperTranscriber extends Context.Tag("@game/WhisperTranscriber")<
 function decodeTranscriptSegments(
   segments: ReadonlyArray<LocalWhisperSegment>
 ): ReadonlyArray<TranscriptSegment> {
-  return segments.map((segment) =>
-    new TranscriptSegment({
-      text: segment.text,
-      timestamp: new Date(segment.startMs),
-      speakerHint: null
-    })
-  )
+  return segments.flatMap(splitLocalWhisperSegment)
 }
 
 function formatWhisperProcessError(error: unknown): string {
@@ -181,6 +175,42 @@ function getChildProcessStderr(error: Error): string | null {
 function getEnv(name: string): string | undefined {
   const value = process.env[name]?.trim()
   return value && value.length > 0 ? value : undefined
+}
+
+function splitLocalWhisperSegment(segment: LocalWhisperSegment): ReadonlyArray<TranscriptSegment> {
+  const clauses = splitTranscriptClauses(segment.text)
+  if (clauses.length <= 1) {
+    return [
+      new TranscriptSegment({
+        text: segment.text,
+        timestamp: new Date(segment.startMs),
+        speakerHint: null
+      })
+    ]
+  }
+
+  const durationMs = Math.max(segment.endMs - segment.startMs, clauses.length)
+  const totalTextLength = clauses.reduce((sum, clause) => sum + clause.length, 0)
+
+  return clauses.map((clause, index) => {
+    const precedingLength = clauses.slice(0, index).reduce((sum, previousClause) => sum + previousClause.length, 0)
+    const offsetMs = totalTextLength === 0
+      ? 0
+      : Math.floor((precedingLength / totalTextLength) * durationMs)
+
+    return new TranscriptSegment({
+      text: clause,
+      timestamp: new Date(segment.startMs + offsetMs),
+      speakerHint: null
+    })
+  })
+}
+
+function splitTranscriptClauses(text: string): ReadonlyArray<string> {
+  return text
+    .split(/(?<=[.!?])\s+(?=(?:i\s+)?(?:attack|move|withdraw|retreat|defend|take\s+defense|hold\s+my\s+ground)\b)/i)
+    .map((clause) => clause.trim())
+    .filter((clause) => clause.length > 0)
 }
 
 function makeCachedWhisperLayer(

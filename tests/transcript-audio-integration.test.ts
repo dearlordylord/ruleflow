@@ -170,4 +170,55 @@ describe("WhisperTranscriber + TranscriptBuffer + TranscriptPipeline", () => {
         })
       )
     )))
+
+  it.effect("turns a single whisper segment with two actions into two projected actions", () =>
+    Effect.gen(function*() {
+      const transcriber = yield* WhisperTranscriber
+      const buffer = yield* TranscriptBuffer
+      const pipeline = yield* TranscriptPipeline
+      const log = yield* ObservationLog
+
+      yield* seedAttackScene()
+
+      const segments = yield* transcriber.transcribe(
+        new AudioTranscriptSource({
+          audioFilePath: "fixtures/audio/attack-then-move.wav"
+        })
+      )
+
+      let emittedWindows = 0
+      for (const segment of segments) {
+        const pushResult = yield* buffer.push(segment)
+        for (const window of pushResult.emitted) {
+          emittedWindows += 1
+          yield* pipeline.process(window.segments, singleTargetContext)
+        }
+      }
+
+      const flushed = yield* buffer.flush()
+      for (const window of flushed) {
+        emittedWindows += 1
+        yield* pipeline.process(window.segments, singleTargetContext)
+      }
+
+      expect(segments.map((segment) => segment.text)).toEqual([
+        "I attack the goblin.",
+        "I move 30 feet."
+      ])
+      expect(emittedWindows).toBe(2)
+
+      const entries = yield* log.readAll()
+      expect(entries).toHaveLength(2)
+      expect(entries[0].candidates[0].event._tag).toBe("AttackPerformed")
+      expect(entries[1].candidates[0].event._tag).toBe("MovementPerformed")
+    }).pipe(Effect.provide(
+      Layer.mergeAll(
+        audioTranscriptTestLayer([5]),
+        WhisperTranscriber.testLayer(() =>
+          Effect.succeed({
+            segments: [{ text: "I attack the goblin. I move 30 feet.", startMs: 0, endMs: 2400 }]
+          })
+        )
+      )
+    )))
 })

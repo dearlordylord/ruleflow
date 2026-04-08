@@ -32,6 +32,27 @@ describe("WhisperTranscriber.liveLayer", () => {
     })))
   })
 
+  it.effect("splits a single whisper segment when it contains a second action clause", () =>
+    Effect.gen(function*() {
+      const transcriber = yield* WhisperTranscriber
+      const segments = yield* transcriber.transcribe(
+        new AudioTranscriptSource({
+          audioFilePath: "fixtures/audio/attack-then-move.wav"
+        })
+      )
+
+      expect(segments).toHaveLength(2)
+      expect(segments[0].text).toBe("I attack the goblin.")
+      expect(segments[1].text).toBe("I move 30 feet.")
+      expect(segments[0].timestamp.getTime()).toBe(0)
+      expect(segments[1].timestamp.getTime()).toBeGreaterThan(0)
+      expect(segments[1].timestamp.getTime()).toBeLessThanOrEqual(2400)
+    }).pipe(Effect.provide(WhisperTranscriber.testLayer(() =>
+      Effect.succeed({
+        segments: [{ text: "I attack the goblin. I move 30 feet.", startMs: 0, endMs: 2400 }]
+      })
+    ))))
+
   it.effect("caches repeated transcriptions for the same audio file", () => {
     let callCount = 0
 

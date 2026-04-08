@@ -6,6 +6,8 @@
  * - Long pauses end the current player action.
  * - Dice-result continuations ("that's a 17 plus 5") stay attached to
  *   the previous player declaration even across short pauses.
+ * - Explicit action restarts ("I move 30 feet", "I withdraw") start a new
+ *   buffered window even without a long pause.
  *
  * ⚡ Electric field: In the D&D project this becomes the phrase-to-turn
  * buffering layer between Whisper output and transcript interpretation.
@@ -105,18 +107,35 @@ function shouldFlushBeforeAppending(
   next: TranscriptSegment,
   pauseThresholdMs: number
 ): boolean {
+  if (isDiceContinuation(next.text)) {
+    return false
+  }
+
+  if (startsNewAction(next.text) && containsCommittedAction(pending)) {
+    return true
+  }
+
   const lastPending = pending[pending.length - 1]
   const pauseMs = next.timestamp.getTime() - lastPending.timestamp.getTime()
   if (pauseMs <= pauseThresholdMs) {
     return false
   }
 
-  return !isDiceContinuation(next.text)
+  return true
 }
 
 function isDiceContinuation(text: string): boolean {
   const normalized = text.trim().toLowerCase()
   return /^(that'?s|thats|rolled|roll|natural|nat |plus |\d)/.test(normalized)
+}
+
+function startsNewAction(text: string): boolean {
+  const normalized = text.trim().toLowerCase()
+  return /^(i\s+)?(attack|move|withdraw|retreat|defend|take\s+defense|hold\s+my\s+ground)\b/.test(normalized)
+}
+
+function containsCommittedAction(segments: ReadonlyArray<TranscriptSegment>): boolean {
+  return segments.some((segment) => startsNewAction(segment.text))
 }
 
 function makeWindow(
