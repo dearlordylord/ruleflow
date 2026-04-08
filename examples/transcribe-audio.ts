@@ -218,6 +218,18 @@ const fixtureSegments = {
       speakerHint: "player"
     })
   ],
+  "fixtures/audio/attack-then-move-weak.wav": [
+    new TranscriptSegment({
+      text: "I attack the goblin",
+      timestamp: new Date("2026-04-08T12:00:00.000Z"),
+      speakerHint: "player"
+    }),
+    new TranscriptSegment({
+      text: "I move 30 feet",
+      timestamp: new Date("2026-04-08T12:00:03.000Z"),
+      speakerHint: "player"
+    })
+  ],
   "fixtures/audio/ambiguous-attack.wav": [
     new TranscriptSegment({
       text: "I attack",

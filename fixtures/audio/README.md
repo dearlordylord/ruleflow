@@ -11,6 +11,7 @@ Current matrix:
 - `attack-goblin.wav`: single committed attack
 - `attack-goblin-with-roll.wav`: action plus dice-result continuation
 - `attack-then-move.wav`: two distinct actions in one recording
+- `attack-then-move-weak.wav`: weaker `then` boundary between two actions
 - `ambiguous-attack.wav`: intentionally underspecified attack
 - `non-action-think.wav`: non-action chatter
 

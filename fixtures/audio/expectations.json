@@ -1,0 +1,40 @@
+{
+  "fixtures": [
+    {
+      "file": "attack-goblin.wav",
+      "rawSegments": ["I attack the goblin."],
+      "postProcessedSegments": ["I attack the goblin."],
+      "bufferedWindows": [["I attack the goblin."]]
+    },
+    {
+      "file": "attack-goblin-with-roll.wav",
+      "rawSegments": ["I attack the goblin. That is a 17 plus 5."],
+      "postProcessedSegments": ["I attack the goblin. That is a 17 plus 5."],
+      "bufferedWindows": [["I attack the goblin. That is a 17 plus 5."]]
+    },
+    {
+      "file": "attack-then-move.wav",
+      "rawSegments": ["I attack the goblin. I move 30 feet."],
+      "postProcessedSegments": ["I attack the goblin.", "I move 30 feet."],
+      "bufferedWindows": [["I attack the goblin."], ["I move 30 feet."]]
+    },
+    {
+      "file": "attack-then-move-weak.wav",
+      "rawSegments": ["I attack the goblin, then I move 30 feet."],
+      "postProcessedSegments": ["I attack the goblin.", "I move 30 feet."],
+      "bufferedWindows": [["I attack the goblin."], ["I move 30 feet."]]
+    },
+    {
+      "file": "ambiguous-attack.wav",
+      "rawSegments": ["I attack."],
+      "postProcessedSegments": ["I attack."],
+      "bufferedWindows": [["I attack."]]
+    },
+    {
+      "file": "non-action-think.wav",
+      "rawSegments": ["Hmm, let me think."],
+      "postProcessedSegments": ["Hmm, let me think."],
+      "bufferedWindows": [["Hmm, let me think."]]
+    }
+  ]
+}

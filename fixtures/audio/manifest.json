@@ -16,6 +16,11 @@
       "focus": "two distinct actions in one recording"
     },
     {
+      "file": "attack-then-move-weak.wav",
+      "spokenText": "I attack the goblin, then I move thirty feet.",
+      "focus": "weaker action boundary using then-clause splitting"
+    },
+    {
       "file": "ambiguous-attack.wav",
       "spokenText": "I attack.",
       "focus": "ambiguity should be preserved when multiple targets exist"
