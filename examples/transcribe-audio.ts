@@ -36,6 +36,9 @@ import {
   TranscriptLlm,
   TranscriptPipeline,
   TranscriptSegment,
+  TranscriptStream,
+  TranscriptStreamConfig,
+  TranscriptStreamState,
   WhisperTranscriber
 } from "../src/transcript/index.js"
 
@@ -254,6 +257,17 @@ const pipelineLayer = TranscriptPipeline.layer.pipe(
   Layer.provide(Layer.mergeAll(baseLayer, gameStateLayer, projectorLayer, interpreterLayer))
 )
 
+const streamLayer = TranscriptStream.layer.pipe(
+  Layer.provide(Layer.mergeAll(
+    baseLayer,
+    gameStateLayer,
+    projectorLayer,
+    interpreterLayer,
+    pipelineLayer,
+    TranscriptStreamConfig.defaultLayer
+  ))
+)
+
 const runtime = ManagedRuntime.make(
   Layer.mergeAll(
     baseLayer,
@@ -263,9 +277,29 @@ const runtime = ManagedRuntime.make(
     bufferLayer,
     interpreterLayer,
     whisperLayer,
-    pipelineLayer
+    pipelineLayer,
+    streamLayer
   )
 )
+
+function printStreamState(state: TranscriptStreamState, label: string): void {
+  console.log(`\n${label}:`)
+  console.log(`  committed observations: ${state.committed.length}`)
+  for (const [index, entry] of state.committed.entries()) {
+    console.log(`\n  committed[${index}] selected=${entry.selectedIndex}`)
+    for (const candidate of entry.candidates) {
+      console.log(formatEvent(candidate.event as unknown as Record<string, unknown>))
+    }
+  }
+
+  console.log(`\n  live tail windows: ${state.tail.length}`)
+  for (const [index, item] of state.tail.entries()) {
+    console.log(`\n  tail[${index}] segments: ${item.segments.map((segment) => segment.text).join(" | ")}`)
+    for (const candidate of item.observation.candidates) {
+      console.log(formatEvent(candidate.event as unknown as Record<string, unknown>))
+    }
+  }
+}
 
 async function main(): Promise<void> {
   const audioFilePath = process.argv.slice(2).find((arg) => arg !== "--")
@@ -280,8 +314,7 @@ async function main(): Promise<void> {
   const program = Effect.gen(function*() {
     const transcriber = yield* WhisperTranscriber
     const buffer = yield* TranscriptBuffer
-    const pipeline = yield* TranscriptPipeline
-    const log = yield* ObservationLog
+    const stream = yield* TranscriptStream
 
     const segments = yield* transcriber.transcribe(new AudioTranscriptSource({ audioFilePath }))
     console.log(`\nRaw segments (${segments.length}):`)
@@ -297,19 +330,16 @@ async function main(): Promise<void> {
     windows.push(...(yield* buffer.flush()))
 
     console.log(`\nBuffered windows (${windows.length}):`)
+    let currentState = yield* stream.state()
     for (const [index, window] of windows.entries()) {
       console.log(`  Window ${index + 1}: ${window.segments.map((segment) => segment.text).join(" | ")}`)
-      yield* pipeline.process(window.segments, context)
+      currentState = yield* stream.pushWindow(window.segments, context)
     }
 
-    const entries = yield* log.readAll()
-    console.log(`\nObservation entries (${entries.length}):`)
-    for (const [index, entry] of entries.entries()) {
-      console.log(`\n  Observation ${index + 1}: selected=${entry.selectedIndex}`)
-      for (const candidate of entry.candidates) {
-        console.log(formatEvent(candidate.event as unknown as Record<string, unknown>))
-      }
-    }
+    printStreamState(currentState, "Stream state before flush")
+
+    const flushedState = yield* stream.flush()
+    printStreamState(flushedState, "Stream state after flush")
   })
 
   await runtime.runPromise(program)

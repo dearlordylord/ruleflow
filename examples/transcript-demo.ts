@@ -35,7 +35,14 @@ import { IdGenerator } from "../src/domain/services/IdGenerator.js"
 import { WeaponTemplates } from "../src/domain/services/Templates.js"
 import { MovementComponent } from "../src/domain/world/movement.js"
 import type { InterpretationContext } from "../src/transcript/index.js"
-import { TranscriptInterpreter, TranscriptLlm, TranscriptPipeline, TranscriptSegment } from "../src/transcript/index.js"
+import {
+  TranscriptInterpreter,
+  TranscriptLlm,
+  TranscriptPipeline,
+  TranscriptSegment,
+  TranscriptStream,
+  TranscriptStreamConfig
+} from "../src/transcript/index.js"
 
 process.loadEnvFile()
 
@@ -170,13 +177,25 @@ const demoPipelineLayer = TranscriptPipeline.layer.pipe(
   ))
 )
 
+const demoStreamLayer = TranscriptStream.layer.pipe(
+  Layer.provide(Layer.mergeAll(
+    demoBaseLayer,
+    demoGameStateLayer,
+    demoProjectorLayer,
+    interpreterLayer,
+    demoPipelineLayer,
+    TranscriptStreamConfig.defaultLayer
+  ))
+)
+
 const demoLayer = Layer.mergeAll(
   demoBaseLayer,
   demoGameStateLayer,
   demoProjectorLayer,
   demoCombatLayer,
   interpreterLayer,
-  demoPipelineLayer
+  demoPipelineLayer,
+  demoStreamLayer
 )
 
 // Single runtime — all effects share the same service instances
@@ -224,26 +243,33 @@ async function processLine(
   })
 
   const program = Effect.gen(function*() {
-    const pipeline = yield* TranscriptPipeline
-    const log = yield* ObservationLog
-    const result = yield* pipeline.process([segment], context)
+    const stream = yield* TranscriptStream
+    const state = yield* stream.pushWindow([segment], context)
 
-    if (result.candidateCount === 0) {
+    if (state.committed.length === 0 && state.tail.length === 0) {
       console.log("\n  (no actionable input detected)")
     } else {
-      // Read from the log to get the projector's selection
-      const entries = yield* log.readAll()
-      const latest = entries[entries.length - 1]
-
-      console.log(`\n  ${result.candidateCount} candidate(s):`)
-      for (let i = 0; i < latest.candidates.length; i++) {
-        const c = latest.candidates[i]
-        const selected = latest.selectedIndex === i ? " << SELECTED" : ""
-        console.log(`\n  [${i}] confidence: ${c.confidence}${selected}`)
-        console.log(formatEvent(c.event as unknown as Record<string, unknown>))
+      console.log(`\n  committed observations: ${state.committed.length}`)
+      for (const [index, entry] of state.committed.entries()) {
+        console.log(`\n  committed[${index}] selected=${entry.selectedIndex}`)
+        for (let i = 0; i < entry.candidates.length; i++) {
+          const candidate = entry.candidates[i]
+          const selected = entry.selectedIndex === i ? " << SELECTED" : ""
+          console.log(`\n  [${i}] confidence: ${candidate.confidence}${selected}`)
+          console.log(formatEvent(candidate.event as unknown as Record<string, unknown>))
+        }
       }
 
-      console.log(`\n  (${entries.length} total observations in log)`)
+      console.log(`\n  live tail windows: ${state.tail.length}`)
+      for (const [index, item] of state.tail.entries()) {
+        console.log(`\n  tail[${index}] segments: ${item.segments.map((s) => s.text).join(" | ")}`)
+        for (let i = 0; i < item.observation.candidates.length; i++) {
+          const candidate = item.observation.candidates[i]
+          const selected = item.observation.selectedIndex === i ? " << SELECTED" : ""
+          console.log(`\n  [${i}] confidence: ${candidate.confidence}${selected}`)
+          console.log(formatEvent(candidate.event as unknown as Record<string, unknown>))
+        }
+      }
     }
   })
 
@@ -273,8 +299,10 @@ async function main(): Promise<void> {
   console.log("  \"I take a defensive stance\" (defense)")
   console.log("  \"I withdraw\"                (withdrawal)")
   console.log("  \"hmm let me think\"          (non-actionable, no candidates)")
+  console.log("  \"/flush\"                    (commit the remaining live tail)")
   console.log("")
   console.log("Type a line of speech. Ctrl-C to exit.")
+  console.log("This demo now shows committed history separately from the live tail.")
   if (interpreterMode === "live") {
     console.log("Using OPENROUTER_API_KEY from .env or the process environment.")
   }
@@ -299,7 +327,16 @@ async function main(): Promise<void> {
     }
 
     try {
-      await processLine(trimmed)
+      if (trimmed === "/flush") {
+        const flushProgram = Effect.gen(function*() {
+          const stream = yield* TranscriptStream
+          return yield* stream.flush()
+        })
+        const flushed = await runtime.runPromise(flushProgram)
+        console.log(`\n  flushed tail -> committed observations: ${flushed.committed.length}, live tail: ${flushed.tail.length}`)
+      } else {
+        await processLine(trimmed)
+      }
     } catch (err) {
       console.error("\n  Error:", err)
     }
