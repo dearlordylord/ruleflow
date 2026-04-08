@@ -16,7 +16,8 @@
     "circular": "madge --extensions ts --circular src",
     "check-all": "pnpm typecheck && pnpm lint && pnpm circular && pnpm test",
     "dashboard": "tsx --tsconfig src/dashboard/tsconfig.json src/dashboard/index.tsx",
-    "demo:transcript": "tsx examples/transcript-demo.ts"
+    "demo:transcript": "tsx examples/transcript-demo.ts",
+    "demo:audio": "tsx examples/transcribe-audio.ts"
   },
   "lint-staged": {
     "*.ts": "eslint --fix --no-warn-ignored",
@@ -37,6 +38,7 @@
     "@effect/vitest": "^0.27.0",
     "@eslint/compat": "^2.0.2",
     "@eslint/eslintrc": "^3.3.3",
+    "@types/node": "^24.12.2",
     "@types/react": "^19.2.13",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",

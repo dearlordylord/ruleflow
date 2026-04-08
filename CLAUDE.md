@@ -12,6 +12,10 @@ Rules are reflexive: when adding a rule, apply it immediately.
 - Copy `.env.example` to `.env` when setting up a new machine.
 - `OPENROUTER_API_KEY` is the token for the transcript interpreter's future live LLM layer.
 - Get that token from the OpenRouter dashboard's API Keys page, then place it in `.env` as `OPENROUTER_API_KEY=...`.
+- `WHISPER_MODEL` controls the local Whisper model for recorded-audio transcription. Default: `tiny.en`.
+- `WHISPER_LANGUAGE` controls the language hint passed to local Whisper. Default: `en`.
+- Local Whisper runs through `uv run` and currently supports recorded `.wav` files only. This avoids an `ffmpeg` dependency inside the Docker devcontainer.
+- First real Whisper run will download the model weights into the local cache. Use `pnpm demo:audio -- path/to/file.wav` to smoke-test the backend.
 
 ## Type Safety
 

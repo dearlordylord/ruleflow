@@ -1,0 +1,29 @@
+{
+  "fixtures": [
+    {
+      "file": "attack-goblin.wav",
+      "spokenText": "I attack the goblin.",
+      "focus": "single committed attack"
+    },
+    {
+      "file": "attack-goblin-with-roll.wav",
+      "spokenText": "I attack the goblin. That is a seventeen plus five.",
+      "focus": "attack plus dice-result continuation in one recording"
+    },
+    {
+      "file": "attack-then-move.wav",
+      "spokenText": "I attack the goblin. I move thirty feet.",
+      "focus": "two distinct actions in one recording"
+    },
+    {
+      "file": "ambiguous-attack.wav",
+      "spokenText": "I attack.",
+      "focus": "ambiguity should be preserved when multiple targets exist"
+    },
+    {
+      "file": "non-action-think.wav",
+      "spokenText": "Hmm, let me think.",
+      "focus": "non-action chatter should produce no actionable result"
+    }
+  ]
+}
