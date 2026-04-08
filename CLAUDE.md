@@ -6,6 +6,13 @@ Rules are reflexive: when adding a rule, apply it immediately.
 
 **Use pnpm, not npm.** This project uses pnpm-lock.yaml. Prefer package.json scripts over raw commands (e.g., `pnpm typecheck` not `pnpm tsc --noEmit`).
 
+## Environment
+
+- Local secrets live in `.env`. Do not commit real tokens.
+- Copy `.env.example` to `.env` when setting up a new machine.
+- `OPENROUTER_API_KEY` is the token for the transcript interpreter's future live LLM layer.
+- Get that token from the OpenRouter dashboard's API Keys page, then place it in `.env` as `OPENROUTER_API_KEY=...`.
+
 ## Type Safety
 
 Type casts (`as T`) are a sin. Avoid them. All data crossing system boundaries (APIs etc.) must be strongly typed with Effect Schema. Use `satisfies` for registry data, type guards for narrowing, and discriminated union narrowing for events.

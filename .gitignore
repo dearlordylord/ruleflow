@@ -1,3 +1,6 @@
 node_modules/
 .reference/
 tsconfig.tsbuildinfo
+.env
+.env.*
+!.env.example

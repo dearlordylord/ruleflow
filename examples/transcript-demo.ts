@@ -14,6 +14,7 @@
  * Run: pnpm demo:transcript
  */
 import * as readline from "node:readline"
+import process from "node:process"
 
 import { Effect, Layer, ManagedRuntime, Schema } from "effect"
 
@@ -31,7 +32,9 @@ import { IdGenerator } from "../src/domain/services/IdGenerator.js"
 import { WeaponTemplates } from "../src/domain/services/Templates.js"
 import { MovementComponent } from "../src/domain/world/movement.js"
 import type { InterpretationContext } from "../src/transcript/index.js"
-import { TranscriptInterpreter, TranscriptPipeline, TranscriptSegment } from "../src/transcript/index.js"
+import { TranscriptInterpreter, TranscriptLlm, TranscriptPipeline, TranscriptSegment } from "../src/transcript/index.js"
+
+process.loadEnvFile()
 
 // ---------------------------------------------------------------------------
 // Demo scenario (hardcoded — this is scaffolding, not foundational)
@@ -146,12 +149,16 @@ const demoProjectorLayer = Projector.layer.pipe(
 
 const demoCombatLayer = CombatResolver.layer.pipe(Layer.provide(demoBaseLayer))
 
+const interpreterLayer = process.env.TRANSCRIPT_INTERPRETER_MODE === "live"
+  ? TranscriptInterpreter.liveLayer.pipe(Layer.provide(TranscriptLlm.liveLayer))
+  : TranscriptInterpreter.mockLayer
+
 const demoPipelineLayer = TranscriptPipeline.layer.pipe(
   Layer.provide(Layer.mergeAll(
     demoBaseLayer,
     demoGameStateLayer,
     demoProjectorLayer,
-    TranscriptInterpreter.mockLayer
+    interpreterLayer
   ))
 )
 
@@ -160,7 +167,7 @@ const demoLayer = Layer.mergeAll(
   demoGameStateLayer,
   demoProjectorLayer,
   demoCombatLayer,
-  TranscriptInterpreter.mockLayer,
+  interpreterLayer,
   demoPipelineLayer
 )
 
@@ -202,6 +209,11 @@ function formatEvent(event: Record<string, unknown>): string {
 async function processLine(
   trimmed: string
 ): Promise<void> {
+  const fakeLatencyMs = Number(process.env.TRANSCRIPT_DEMO_LATENCY_MS ?? "0")
+  if (fakeLatencyMs > 0) {
+    await new Promise((resolve) => setTimeout(resolve, fakeLatencyMs))
+  }
+
   const segment = new TranscriptSegment({
     text: Schema.decodeSync(Schema.NonEmptyString)(trimmed),
     timestamp: new Date(),
@@ -240,7 +252,8 @@ async function main(): Promise<void> {
   await runtime.runPromise(seedEntities())
 
   console.log("=".repeat(60))
-  console.log("Transcript Pipeline Demo (mock interpreter)")
+  const mode = process.env.TRANSCRIPT_INTERPRETER_MODE === "live" ? "live OpenRouter interpreter" : "mock interpreter"
+  console.log(`Transcript Pipeline Demo (${mode})`)
   console.log("=".repeat(60))
   console.log("")
   console.log("Scenario: Guido the Fighter vs a Goblin and an Orc")
@@ -255,6 +268,9 @@ async function main(): Promise<void> {
   console.log("  \"hmm let me think\"          (non-actionable, no candidates)")
   console.log("")
   console.log("Type a line of speech. Ctrl-C to exit.")
+  if (process.env.TRANSCRIPT_INTERPRETER_MODE === "live") {
+    console.log("Using OPENROUTER_API_KEY from .env or the process environment.")
+  }
   console.log("-".repeat(60))
 
   const rl = readline.createInterface({

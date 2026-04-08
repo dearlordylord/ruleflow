@@ -14,7 +14,7 @@ import { ObservationLog } from "../src/domain/infrastructure/ObservationLog.js"
 import { ReadModelStore } from "../src/domain/infrastructure/ReadModelStore.js"
 import { MovementComponent } from "../src/domain/world/movement.js"
 import type { InterpretationContext } from "../src/transcript/index.js"
-import { TranscriptInterpreter, TranscriptPipeline, TranscriptSegment } from "../src/transcript/index.js"
+import { TranscriptInterpreter, TranscriptLlm, TranscriptPipeline, TranscriptSegment } from "../src/transcript/index.js"
 import { deterministicTestLayer } from "./layers.js"
 
 // ---------------------------------------------------------------------------
@@ -183,6 +183,109 @@ describe("Transcript Pipeline", () => {
         expect(candidates).toHaveLength(1)
         expect(candidates[0].confidence).toBeGreaterThanOrEqual(0.8)
       }).pipe(Effect.provide(TranscriptInterpreter.mockLayer)))
+  })
+
+  describe("live interpreter mapping", () => {
+    it("maps a named attack candidate from the LLM into a domain event", async () => {
+      const program = Effect.gen(function*() {
+        const interpreter = yield* TranscriptInterpreter
+
+        const candidates = yield* interpreter.interpret(
+          [seg("I attack the goblin")],
+          multiTargetContext
+        )
+
+        expect(candidates).toHaveLength(1)
+        expect(candidates[0].event._tag).toBe("AttackPerformed")
+        if (candidates[0].event._tag === "AttackPerformed") {
+          expect(candidates[0].event.targetId).toBe(GOBLIN_ID)
+          expect(candidates[0].event.attackRoll).toBe(17)
+        }
+      }).pipe(Effect.provide(
+        TranscriptInterpreter.liveLayer.pipe(
+          Layer.provide(TranscriptLlm.testLayer(() => Effect.succeed({
+            candidates: [{
+              type: "attack",
+              confidence: 0.92,
+              reasoning: "Direct attack declaration against the goblin",
+              targetName: "Goblin",
+              attackRoll: 17
+            }]
+          })))
+        )
+      ))
+
+      await Effect.runPromise(program)
+    })
+
+    it("expands an ambiguous attack candidate across all available targets", async () => {
+      const program = Effect.gen(function*() {
+        const interpreter = yield* TranscriptInterpreter
+
+        const candidates = yield* interpreter.interpret(
+          [seg("I attack")],
+          multiTargetContext
+        )
+
+        expect(candidates).toHaveLength(2)
+        const targetIds = candidates
+          .map((candidate) => candidate.event)
+          .filter((event) => event._tag === "AttackPerformed")
+          .map((event) => event.targetId)
+
+        expect(targetIds).toEqual([GOBLIN_ID, ORC_ID])
+      }).pipe(Effect.provide(
+        TranscriptInterpreter.liveLayer.pipe(
+          Layer.provide(TranscriptLlm.testLayer(() => Effect.succeed({
+            candidates: [{
+              type: "attack",
+              confidence: 0.55,
+              reasoning: "Attack declared without a target"
+            }]
+          })))
+        )
+      ))
+
+      await Effect.runPromise(program)
+    })
+
+    it("caches identical requests within the live interpreter layer", async () => {
+      let calls = 0
+
+      const program = Effect.gen(function*() {
+        const interpreter = yield* TranscriptInterpreter
+
+        const request = interpreter.interpret(
+          [seg("I move 20 feet")],
+          singleTargetContext
+        )
+
+        const first = yield* request
+        const second = yield* request
+
+        expect(first).toHaveLength(1)
+        expect(second).toHaveLength(1)
+      }).pipe(Effect.provide(
+        TranscriptInterpreter.liveLayer.pipe(
+          Layer.provide(TranscriptLlm.testLayer(() =>
+            Effect.sync(() => {
+              calls += 1
+              return {
+                candidates: [{
+                  type: "move",
+                  confidence: 0.88,
+                  reasoning: "Movement amount is explicit",
+                  distanceMoved: 20
+                }]
+              }
+            })
+          ))
+        )
+      ))
+
+      await Effect.runPromise(program)
+      expect(calls).toBe(1)
+    })
   })
 
   describe("end-to-end pipeline", () => {

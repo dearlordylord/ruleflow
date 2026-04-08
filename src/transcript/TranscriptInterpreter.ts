@@ -11,12 +11,12 @@
  * warnings (burden scoring). The interpreter interface stays the same —
  * only the downstream validation changes.
  */
-import { Context, Effect, Layer } from "effect"
+import { Context, Effect, Layer, Schema, SynchronizedRef } from "effect"
 
 import type { EntityId } from "../domain/entities.js"
 import type { DomainEvent } from "../domain/events.js"
 import { AttackPerformed, DefenseStanceTaken, MovementPerformed, WithdrawalDeclared } from "../domain/events.js"
-import type { TranscriptInterpretationError } from "./errors.js"
+import { TranscriptInterpretationError } from "./errors.js"
 import type { TranscriptSegment } from "./TranscriptSegment.js"
 
 // ---------------------------------------------------------------------------
@@ -55,6 +55,97 @@ export interface CandidateInterpretation {
   readonly reasoning: string
 }
 
+const LiveTranscriptLlmCandidate = Schema.Struct({
+  type: Schema.Literal("attack", "move", "withdraw", "defense", "none"),
+  confidence: Schema.Number.pipe(Schema.between(0, 1)),
+  reasoning: Schema.NonEmptyString,
+  targetName: Schema.optional(Schema.String),
+  attackRoll: Schema.optional(Schema.Int),
+  distanceMoved: Schema.optional(Schema.NonNegativeInt)
+})
+
+type LiveTranscriptLlmCandidate = typeof LiveTranscriptLlmCandidate.Type
+
+const LiveTranscriptLlmResponse = Schema.Struct({
+  candidates: Schema.Array(LiveTranscriptLlmCandidate)
+})
+
+type LiveTranscriptLlmResponse = typeof LiveTranscriptLlmResponse.Type
+
+interface TranscriptLlmRequest {
+  readonly text: string
+  readonly context: InterpretationContext
+}
+
+export class TranscriptLlm extends Context.Tag("@game/TranscriptLlm")<
+  TranscriptLlm,
+  {
+    readonly complete: (
+      request: TranscriptLlmRequest
+    ) => Effect.Effect<LiveTranscriptLlmResponse, TranscriptInterpretationError>
+  }
+>() {
+  static readonly liveLayer = Layer.succeed(TranscriptLlm, {
+    complete: (request) =>
+      Effect.tryPromise({
+        try: async () => {
+          const apiKey = getEnv("OPENROUTER_API_KEY")
+          if (!apiKey) {
+            return Promise.reject(new Error("OPENROUTER_API_KEY is not set"))
+          }
+
+          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              model: getEnv("OPENROUTER_MODEL") ?? "openai/gpt-4.1-mini",
+              temperature: 0,
+              messages: [
+                {
+                  role: "system",
+                  content: buildSystemPrompt(request.context)
+                },
+                {
+                  role: "user",
+                  content: [
+                    `Transcript: ${request.text}`,
+                    "",
+                    "Return JSON only."
+                  ].join("\n")
+                }
+              ]
+            })
+          })
+
+          if (!response.ok) {
+            return Promise.reject(new Error(`OpenRouter request failed (${response.status})`))
+          }
+
+          const json: unknown = await response.json()
+          const content = extractMessageContent(json)
+          if (!content) {
+            return Promise.reject(new Error("OpenRouter response did not include text content"))
+          }
+          const parsed: unknown = JSON.parse(content)
+          return Schema.decodeUnknownSync(LiveTranscriptLlmResponse)(parsed)
+        },
+        catch: (error) =>
+          new TranscriptInterpretationError({
+            message: error instanceof Error ? error.message : "OpenRouter request failed"
+          })
+      })
+  })
+
+  static readonly testLayer = (
+    complete: (
+      request: TranscriptLlmRequest
+    ) => Effect.Effect<LiveTranscriptLlmResponse, TranscriptInterpretationError>
+  ) => Layer.succeed(TranscriptLlm, { complete })
+}
+
 // ---------------------------------------------------------------------------
 // Service definition
 // ---------------------------------------------------------------------------
@@ -91,6 +182,46 @@ export class TranscriptInterpreter extends Context.Tag("@game/TranscriptInterpre
         return matchPatterns(text, context)
       })
   })
+
+  static readonly liveLayer = Layer.effect(
+    TranscriptInterpreter,
+    Effect.gen(function*() {
+      const llm = yield* TranscriptLlm
+      const cache = yield* SynchronizedRef.make(new Map<string, ReadonlyArray<CandidateInterpretation>>())
+
+      const interpret = (
+        segments: ReadonlyArray<TranscriptSegment>,
+        context: InterpretationContext
+      ) =>
+        Effect.gen(function*() {
+          const text = segments.map((segment) => segment.text).join(" ").trim()
+          const cacheKey = JSON.stringify({
+            activeCharacterId: context.activeCharacterId,
+            activeWeaponId: context.activeWeaponId,
+            entities: context.entities,
+            text
+          })
+
+          const cached = yield* SynchronizedRef.modify(cache, (entries) => {
+            const hit = entries.get(cacheKey)
+            return [hit, entries] as const
+          })
+
+          if (cached) {
+            return cached
+          }
+
+          const response = yield* llm.complete({ text, context })
+          const interpretations = decodeLiveCandidates(response.candidates, context)
+
+          yield* SynchronizedRef.update(cache, (entries) => new Map([...entries, [cacheKey, interpretations]]))
+
+          return interpretations
+        })
+
+      return TranscriptInterpreter.of({ interpret })
+    })
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -206,4 +337,178 @@ function matchPatterns(
 
   // --- Non-actionable input ---
   return []
+}
+
+function extractMessageContent(json: unknown): string | undefined {
+  if (
+    typeof json !== "object"
+    || json === null
+    || !("choices" in json)
+    || !Array.isArray(json.choices)
+  ) {
+    return undefined
+  }
+
+  const firstChoice = json.choices[0]
+  if (
+    typeof firstChoice !== "object"
+    || firstChoice === null
+    || !("message" in firstChoice)
+    || typeof firstChoice.message !== "object"
+    || firstChoice.message === null
+    || !("content" in firstChoice.message)
+  ) {
+    return undefined
+  }
+
+  const content = firstChoice.message.content
+  if (typeof content === "string") {
+    return content
+  }
+  if (Array.isArray(content)) {
+    return content
+      .filter(isTextContentPart)
+      .map((part) => part.text)
+      .join("\n")
+  }
+  return undefined
+}
+
+function buildSystemPrompt(context: InterpretationContext): string {
+  const entities = context.entities
+    .map((entity) => `- ${entity.name} (${entity.type})`)
+    .join("\n")
+
+  return [
+    "You classify tabletop RPG transcript text into candidate game actions.",
+    "Return JSON only with shape:",
+    '{"candidates":[{"type":"attack|move|withdraw|defense|none","confidence":0.0,"reasoning":"...","targetName":"optional","attackRoll":10,"distanceMoved":30}]}',
+    "Use only the listed entities when naming targets.",
+    "Rules:",
+    '- "attack" may omit targetName when ambiguous or unknown.',
+    '- "move" must include distanceMoved.',
+    '- "withdraw" and "defense" do not need extra fields.',
+    '- "none" means the text is not an actionable game command.',
+    "Current entities:",
+    entities
+  ].join("\n")
+}
+
+function getEnv(name: string): string | undefined {
+  const processValue = Reflect.get(globalThis, "process")
+  if (
+    typeof processValue === "object"
+    && processValue !== null
+    && "env" in processValue
+    && typeof processValue.env === "object"
+    && processValue.env !== null
+    && name in processValue.env
+  ) {
+    const value = processValue.env[name]
+    return typeof value === "string" && value.length > 0 ? value : undefined
+  }
+  return undefined
+}
+
+function isTextContentPart(value: unknown): value is { readonly type: "text", readonly text: string } {
+  return (
+    typeof value === "object"
+    && value !== null
+    && "type" in value
+    && value.type === "text"
+    && "text" in value
+    && typeof value.text === "string"
+  )
+}
+
+function decodeLiveCandidates(
+  candidates: ReadonlyArray<LiveTranscriptLlmCandidate>,
+  context: InterpretationContext
+): ReadonlyArray<CandidateInterpretation> {
+  const actionableCandidates = candidates.filter((candidate) => candidate.type !== "none")
+  const interpretations = actionableCandidates.flatMap((candidate) => toCandidateInterpretations(candidate, context))
+
+  return interpretations
+}
+
+function toCandidateInterpretations(
+  candidate: LiveTranscriptLlmCandidate,
+  context: InterpretationContext
+): ReadonlyArray<CandidateInterpretation> {
+  switch (candidate.type) {
+    case "attack": {
+      if (!context.activeWeaponId) {
+        return []
+      }
+      const weaponId = context.activeWeaponId
+
+      const attackRoll = candidate.attackRoll === undefined
+        ? 10
+        : Math.min(20, Math.max(1, candidate.attackRoll))
+
+      if (candidate.targetName) {
+        const target = resolveTarget(candidate.targetName, context)
+        if (!target) {
+          return []
+        }
+
+        return [{
+          event: AttackPerformed.make({
+            attackerId: context.activeCharacterId,
+            targetId: target.id,
+            weaponId,
+            attackRoll
+          }),
+          confidence: candidate.confidence,
+          reasoning: candidate.reasoning
+        }]
+      }
+
+      return allTargets(context).map((target) => ({
+        event: AttackPerformed.make({
+          attackerId: context.activeCharacterId,
+          targetId: target.id,
+          weaponId,
+          attackRoll
+        }),
+        confidence: candidate.confidence,
+        reasoning: candidate.reasoning
+      }))
+    }
+
+    case "move":
+      return candidate.distanceMoved === undefined
+        ? []
+        : [{
+            event: MovementPerformed.make({
+              entityId: context.activeCharacterId,
+              distanceMoved: candidate.distanceMoved,
+              isWithdrawal: false,
+              isRetreat: false
+            }),
+            confidence: candidate.confidence,
+            reasoning: candidate.reasoning
+          }]
+
+    case "withdraw":
+      return [{
+        event: WithdrawalDeclared.make({
+          entityId: context.activeCharacterId
+        }),
+        confidence: candidate.confidence,
+        reasoning: candidate.reasoning
+      }]
+
+    case "defense":
+      return [{
+        event: DefenseStanceTaken.make({
+          entityId: context.activeCharacterId
+        }),
+        confidence: candidate.confidence,
+        reasoning: candidate.reasoning
+      }]
+
+    case "none":
+      return []
+  }
 }
