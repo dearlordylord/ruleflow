@@ -19,8 +19,8 @@
     "demo:transcript": "tsx examples/transcript-demo.ts"
   },
   "lint-staged": {
-    "*.ts": "eslint --fix",
-    "*.tsx": "eslint --fix"
+    "*.ts": "eslint --fix --no-warn-ignored",
+    "*.tsx": "eslint --fix --no-warn-ignored"
   },
   "keywords": [],
   "author": "",
