@@ -1,4 +1,5 @@
 export { TranscriptInterpretationError } from "./errors.js"
+export { BufferedTranscriptWindow, TranscriptBuffer, TranscriptBufferConfig } from "./TranscriptBuffer.js"
 export type { CandidateInterpretation, EntitySummary, InterpretationContext } from "./TranscriptInterpreter.js"
 export { TranscriptInterpreter, TranscriptLlm } from "./TranscriptInterpreter.js"
 export type { PipelineResult } from "./TranscriptPipeline.js"
