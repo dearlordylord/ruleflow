@@ -15,7 +15,8 @@
     "check-format": "eslint src tests --rule '@effect/dprint: error'",
     "circular": "madge --extensions ts --circular src",
     "check-all": "pnpm typecheck && pnpm lint && pnpm circular && pnpm test",
-    "dashboard": "tsx --tsconfig src/dashboard/tsconfig.json src/dashboard/index.tsx"
+    "dashboard": "tsx --tsconfig src/dashboard/tsconfig.json src/dashboard/index.tsx",
+    "demo:transcript": "tsx examples/transcript-demo.ts"
   },
   "lint-staged": {
     "*.ts": "eslint --fix",

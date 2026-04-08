@@ -32,5 +32,5 @@
       }
     ]
   },
-  "exclude": ["src/dashboard"]
+  "exclude": ["src/dashboard", "examples"]
 }
