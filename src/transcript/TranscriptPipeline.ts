@@ -45,6 +45,17 @@ export interface PipelineResult {
 export class TranscriptPipeline extends Context.Tag("@game/TranscriptPipeline")<
   TranscriptPipeline,
   {
+    readonly evaluate: (
+      segments: ReadonlyArray<TranscriptSegment>,
+      context: InterpretationContext
+    ) => Effect.Effect<PipelineResult, TranscriptInterpretationError>
+    readonly commit: (
+      observation: ObservationEntry
+    ) => Effect.Effect<
+      void,
+      ObservationLogWriteError | EntityNotFound | Chunk.Chunk<DomainError>,
+      GameState | AllSystemRequirements
+    >
     /**
      * Process transcript segments end-to-end:
      * 1. Interpret segments into candidate domain events
@@ -69,23 +80,17 @@ export class TranscriptPipeline extends Context.Tag("@game/TranscriptPipeline")<
       const interpreter = yield* TranscriptInterpreter
       const projector = yield* Projector
 
-      const process = (
+      const evaluate = (
         segments: ReadonlyArray<TranscriptSegment>,
         context: InterpretationContext
-      ): Effect.Effect<
-        PipelineResult,
-        TranscriptInterpretationError | ObservationLogWriteError | EntityNotFound | Chunk.Chunk<DomainError>,
-        GameState | AllSystemRequirements
-      > =>
+      ): Effect.Effect<PipelineResult, TranscriptInterpretationError> =>
         Effect.gen(function*() {
-          // 1. Interpret
           const candidates = yield* interpreter.interpret(segments, context)
 
           if (candidates.length === 0) {
             return { observation: null, candidateCount: 0 }
           }
 
-          // 2. Build ObservationEntry from candidates
           const first = { event: candidates[0].event, confidence: candidates[0].confidence }
           const rest = candidates.slice(1).map((c) => ({ event: c.event, confidence: c.confidence }))
           const observation = new ObservationEntry({
@@ -95,13 +100,35 @@ export class TranscriptPipeline extends Context.Tag("@game/TranscriptPipeline")<
             selectedIndex: null
           })
 
-          // 3. Project through systems pipeline → score → apply best
-          yield* projector.projectLatest(observation)
-
           return { observation, candidateCount: candidates.length }
         })
 
-      return TranscriptPipeline.of({ process })
+      const commit = (
+        observation: ObservationEntry
+      ): Effect.Effect<
+        void,
+        ObservationLogWriteError | EntityNotFound | Chunk.Chunk<DomainError>,
+        GameState | AllSystemRequirements
+      > => projector.projectLatest(observation)
+
+      const process = (
+        segments: ReadonlyArray<TranscriptSegment>,
+        context: InterpretationContext
+      ): Effect.Effect<
+        PipelineResult,
+        TranscriptInterpretationError | ObservationLogWriteError | EntityNotFound | Chunk.Chunk<DomainError>,
+        GameState | AllSystemRequirements
+      > =>
+        Effect.gen(function*() {
+          const result = yield* evaluate(segments, context)
+          if (result.observation !== null) {
+            yield* commit(result.observation)
+          }
+
+          return result
+        })
+
+      return TranscriptPipeline.of({ commit, evaluate, process })
     })
   )
 }
