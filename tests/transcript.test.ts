@@ -203,15 +203,17 @@ describe("Transcript Pipeline", () => {
         }
       }).pipe(Effect.provide(
         TranscriptInterpreter.liveLayer.pipe(
-          Layer.provide(TranscriptLlm.testLayer(() => Effect.succeed({
-            candidates: [{
-              type: "attack",
-              confidence: 0.92,
-              reasoning: "Direct attack declaration against the goblin",
-              targetName: "Goblin",
-              attackRoll: 17
-            }]
-          })))
+          Layer.provide(TranscriptLlm.testLayer(() =>
+            Effect.succeed({
+              candidates: [{
+                type: "attack",
+                confidence: 0.92,
+                reasoning: "Direct attack declaration against the goblin",
+                targetName: "Goblin",
+                attackRoll: 17
+              }]
+            })
+          ))
         )
       ))
 
@@ -236,13 +238,15 @@ describe("Transcript Pipeline", () => {
         expect(targetIds).toEqual([GOBLIN_ID, ORC_ID])
       }).pipe(Effect.provide(
         TranscriptInterpreter.liveLayer.pipe(
-          Layer.provide(TranscriptLlm.testLayer(() => Effect.succeed({
-            candidates: [{
-              type: "attack",
-              confidence: 0.55,
-              reasoning: "Attack declared without a target"
-            }]
-          })))
+          Layer.provide(TranscriptLlm.testLayer(() =>
+            Effect.succeed({
+              candidates: [{
+                type: "attack",
+                confidence: 0.55,
+                reasoning: "Attack declared without a target"
+              }]
+            })
+          ))
         )
       ))
 
@@ -285,6 +289,31 @@ describe("Transcript Pipeline", () => {
 
       await Effect.runPromise(program)
       expect(calls).toBe(1)
+    })
+
+    it("supports demo-mode mocked LLM responses through the live interpreter boundary", async () => {
+      const program = Effect.gen(function*() {
+        const interpreter = yield* TranscriptInterpreter
+
+        const candidates = yield* interpreter.interpret(
+          [seg("I attack")],
+          multiTargetContext
+        )
+
+        expect(candidates).toHaveLength(2)
+        const targetIds = candidates
+          .map((candidate) => candidate.event)
+          .filter((event) => event._tag === "AttackPerformed")
+          .map((event) => event.targetId)
+
+        expect(targetIds).toEqual([GOBLIN_ID, ORC_ID])
+      }).pipe(Effect.provide(
+        TranscriptInterpreter.liveLayer.pipe(
+          Layer.provide(TranscriptLlm.demoLayer())
+        )
+      ))
+
+      await Effect.runPromise(program)
     })
   })
 

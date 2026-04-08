@@ -3,15 +3,15 @@
  * transcript segments into candidate domain events.
  *
  * Layers:
- * - mockLayer: Pattern-matching against known phrases. Deterministic, no LLM.
- * - (future) liveLayer: LLM-backed interpretation with caching.
+ * - mockLayer: local deterministic recognizer, no LLM service boundary.
+ * - liveLayer: LLM-backed interpretation via TranscriptLlm.
  *
  * ⚡ Electric field: In the D&D project, candidates are validated against
  * Quint spec guards (hard reject) instead of Hellenvald's soft consistency
  * warnings (burden scoring). The interpreter interface stays the same —
  * only the downstream validation changes.
  */
-import { Context, Effect, Layer, Schema, SynchronizedRef } from "effect"
+import { Context, Duration, Effect, Layer, Schema, SynchronizedRef } from "effect"
 
 import type { EntityId } from "../domain/entities.js"
 import type { DomainEvent } from "../domain/events.js"
@@ -77,6 +77,123 @@ interface TranscriptLlmRequest {
   readonly context: InterpretationContext
 }
 
+class OpenRouterConfig extends Context.Tag("@game/OpenRouterConfig")<
+  OpenRouterConfig,
+  {
+    readonly apiKey: string
+    readonly model: string
+  }
+>() {
+  static readonly fromEnvLayer = Layer.effect(
+    OpenRouterConfig,
+    Effect.sync(() => {
+      const apiKey = getEnv("OPENROUTER_API_KEY")
+      if (!apiKey) {
+        return new TranscriptInterpretationError({
+          message: "OPENROUTER_API_KEY is not set"
+        })
+      }
+
+      return OpenRouterConfig.of({
+        apiKey,
+        model: getEnv("OPENROUTER_MODEL") ?? "openai/gpt-4.1-mini"
+      })
+    }).pipe(
+      Effect.flatMap((value) =>
+        value instanceof TranscriptInterpretationError
+          ? Effect.fail(value)
+          : Effect.succeed(value)
+      )
+    )
+  )
+}
+
+class TranscriptLlmTransport extends Context.Tag("@game/TranscriptLlmTransport")<
+  TranscriptLlmTransport,
+  {
+    readonly complete: (
+      request: TranscriptLlmRequest
+    ) => Effect.Effect<LiveTranscriptLlmResponse, TranscriptInterpretationError>
+  }
+>() {
+  static readonly openRouterLayer = Layer.effect(
+    TranscriptLlmTransport,
+    Effect.gen(function*() {
+      const config = yield* OpenRouterConfig
+
+      return TranscriptLlmTransport.of({
+        complete: (request) =>
+          Effect.tryPromise({
+            try: async () => {
+              const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${config.apiKey}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  model: config.model,
+                  temperature: 0,
+                  messages: [
+                    {
+                      role: "system",
+                      content: buildSystemPrompt(request.context)
+                    },
+                    {
+                      role: "user",
+                      content: [
+                        `Transcript: ${request.text}`,
+                        "",
+                        "Return JSON only."
+                      ].join("\n")
+                    }
+                  ]
+                })
+              })
+
+              if (!response.ok) {
+                return Promise.reject(new Error(`OpenRouter request failed (${response.status})`))
+              }
+
+              const json: unknown = await response.json()
+              const content = extractMessageContent(json)
+              if (!content) {
+                return Promise.reject(new Error("OpenRouter response did not include text content"))
+              }
+              const parsed: unknown = JSON.parse(content)
+              return Schema.decodeUnknownSync(LiveTranscriptLlmResponse)(parsed)
+            },
+            catch: (error) =>
+              new TranscriptInterpretationError({
+                message: error instanceof Error ? error.message : "OpenRouter request failed"
+              })
+          })
+      })
+    })
+  )
+
+  static readonly testLayer = (
+    complete: (
+      request: TranscriptLlmRequest
+    ) => Effect.Effect<LiveTranscriptLlmResponse, TranscriptInterpretationError>
+  ) => Layer.succeed(TranscriptLlmTransport, { complete })
+
+  static readonly demoLayer = (options?: { readonly latencyMs?: number }) => {
+    const latencyMs = options?.latencyMs ?? 0
+
+    return Layer.succeed(TranscriptLlmTransport, {
+      complete: (request) =>
+        Effect.gen(function*() {
+          if (latencyMs > 0) {
+            yield* Effect.sleep(Duration.millis(latencyMs))
+          }
+
+          return classifyTranscriptText(request.text)
+        })
+    })
+  }
+}
+
 export class TranscriptLlm extends Context.Tag("@game/TranscriptLlm")<
   TranscriptLlm,
   {
@@ -85,65 +202,21 @@ export class TranscriptLlm extends Context.Tag("@game/TranscriptLlm")<
     ) => Effect.Effect<LiveTranscriptLlmResponse, TranscriptInterpretationError>
   }
 >() {
-  static readonly liveLayer = Layer.succeed(TranscriptLlm, {
-    complete: (request) =>
-      Effect.tryPromise({
-        try: async () => {
-          const apiKey = getEnv("OPENROUTER_API_KEY")
-          if (!apiKey) {
-            return Promise.reject(new Error("OPENROUTER_API_KEY is not set"))
-          }
-
-          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              model: getEnv("OPENROUTER_MODEL") ?? "openai/gpt-4.1-mini",
-              temperature: 0,
-              messages: [
-                {
-                  role: "system",
-                  content: buildSystemPrompt(request.context)
-                },
-                {
-                  role: "user",
-                  content: [
-                    `Transcript: ${request.text}`,
-                    "",
-                    "Return JSON only."
-                  ].join("\n")
-                }
-              ]
-            })
-          })
-
-          if (!response.ok) {
-            return Promise.reject(new Error(`OpenRouter request failed (${response.status})`))
-          }
-
-          const json: unknown = await response.json()
-          const content = extractMessageContent(json)
-          if (!content) {
-            return Promise.reject(new Error("OpenRouter response did not include text content"))
-          }
-          const parsed: unknown = JSON.parse(content)
-          return Schema.decodeUnknownSync(LiveTranscriptLlmResponse)(parsed)
-        },
-        catch: (error) =>
-          new TranscriptInterpretationError({
-            message: error instanceof Error ? error.message : "OpenRouter request failed"
-          })
-      })
-  })
+  static readonly liveLayer = makeCachedTranscriptLlmLayer(
+    TranscriptLlm,
+    TranscriptLlmTransport.openRouterLayer.pipe(
+      Layer.provide(OpenRouterConfig.fromEnvLayer)
+    )
+  )
 
   static readonly testLayer = (
     complete: (
       request: TranscriptLlmRequest
     ) => Effect.Effect<LiveTranscriptLlmResponse, TranscriptInterpretationError>
-  ) => Layer.succeed(TranscriptLlm, { complete })
+  ) => makeCachedTranscriptLlmLayer(TranscriptLlm, TranscriptLlmTransport.testLayer(complete))
+
+  static readonly demoLayer = (options?: { readonly latencyMs?: number }) =>
+    makeCachedTranscriptLlmLayer(TranscriptLlm, TranscriptLlmTransport.demoLayer(options))
 }
 
 // ---------------------------------------------------------------------------
@@ -178,8 +251,8 @@ export class TranscriptInterpreter extends Context.Tag("@game/TranscriptInterpre
   static readonly mockLayer = Layer.succeed(TranscriptInterpreter, {
     interpret: (segments, context) =>
       Effect.sync(() => {
-        const text = segments.map((s) => s.text).join(" ").toLowerCase()
-        return matchPatterns(text, context)
+        const text = segments.map((s) => s.text).join(" ").trim()
+        return decodeLiveCandidates(classifyTranscriptText(text).candidates, context)
       })
   })
 
@@ -187,7 +260,6 @@ export class TranscriptInterpreter extends Context.Tag("@game/TranscriptInterpre
     TranscriptInterpreter,
     Effect.gen(function*() {
       const llm = yield* TranscriptLlm
-      const cache = yield* SynchronizedRef.make(new Map<string, ReadonlyArray<CandidateInterpretation>>())
 
       const interpret = (
         segments: ReadonlyArray<TranscriptSegment>,
@@ -195,28 +267,8 @@ export class TranscriptInterpreter extends Context.Tag("@game/TranscriptInterpre
       ) =>
         Effect.gen(function*() {
           const text = segments.map((segment) => segment.text).join(" ").trim()
-          const cacheKey = JSON.stringify({
-            activeCharacterId: context.activeCharacterId,
-            activeWeaponId: context.activeWeaponId,
-            entities: context.entities,
-            text
-          })
-
-          const cached = yield* SynchronizedRef.modify(cache, (entries) => {
-            const hit = entries.get(cacheKey)
-            return [hit, entries] as const
-          })
-
-          if (cached) {
-            return cached
-          }
-
           const response = yield* llm.complete({ text, context })
-          const interpretations = decodeLiveCandidates(response.candidates, context)
-
-          yield* SynchronizedRef.update(cache, (entries) => new Map([...entries, [cacheKey, interpretations]]))
-
-          return interpretations
+          return decodeLiveCandidates(response.candidates, context)
         })
 
       return TranscriptInterpreter.of({ interpret })
@@ -235,108 +287,6 @@ function resolveTarget(name: string, context: InterpretationContext): EntitySumm
 
 function allTargets(context: InterpretationContext): ReadonlyArray<EntitySummary> {
   return context.entities.filter((e) => e.id !== context.activeCharacterId && e.type === "creature")
-}
-
-function matchPatterns(
-  text: string,
-  context: InterpretationContext
-): ReadonlyArray<CandidateInterpretation> {
-  // --- Attack with named target ---
-  const attackNamed = text.match(/(?:i )?(?:attack|swing at|hit|strike)\s+(?:the\s+)?(\w+)/)
-  if (attackNamed) {
-    const targetName = attackNamed[1]
-    const target = resolveTarget(targetName, context)
-    if (target && context.activeWeaponId) {
-      const rollMatch = text.match(/(?:rolled?\s+(?:a\s+)?)?(\d+)/)
-      const roll = rollMatch ? Math.min(20, Math.max(1, parseInt(rollMatch[1], 10))) : null
-      const rollAfterTarget = rollMatch && attackNamed.index !== undefined && rollMatch.index !== undefined
-        && rollMatch.index > attackNamed.index
-      const attackRoll = roll !== null && rollAfterTarget ? roll : 10
-
-      return [{
-        event: AttackPerformed.make({
-          attackerId: context.activeCharacterId,
-          targetId: target.id,
-          weaponId: context.activeWeaponId,
-          attackRoll
-        }),
-        confidence: 0.9,
-        reasoning: `Unambiguous attack on ${target.name}`
-      }]
-    }
-  }
-
-  // --- Attack without target (ambiguous if multiple creatures) ---
-  const attackGeneric = text.match(/(?:i )?(?:attack|swing|hit|strike)(?:\s|$)/)
-  if (attackGeneric && context.activeWeaponId) {
-    const weaponId = context.activeWeaponId
-    const targets = allTargets(context)
-    if (targets.length === 1) {
-      return [{
-        event: AttackPerformed.make({
-          attackerId: context.activeCharacterId,
-          targetId: targets[0].id,
-          weaponId,
-          attackRoll: 10
-        }),
-        confidence: 0.85,
-        reasoning: `Attack with only one target available: ${targets[0].name}`
-      }]
-    }
-    if (targets.length > 1) {
-      return targets.map((target) => ({
-        event: AttackPerformed.make({
-          attackerId: context.activeCharacterId,
-          targetId: target.id,
-          weaponId,
-          attackRoll: 10
-        }),
-        confidence: 0.5,
-        reasoning: `Ambiguous attack — could target ${target.name}`
-      }))
-    }
-  }
-
-  // --- Movement ---
-  const moveMatch = text.match(/(?:i )?(?:move|walk|run|advance)\s+(\d+)\s*(?:feet|ft)?/)
-  if (moveMatch) {
-    const distance = parseInt(moveMatch[1], 10)
-    return [{
-      event: MovementPerformed.make({
-        entityId: context.activeCharacterId,
-        distanceMoved: distance,
-        isWithdrawal: false,
-        isRetreat: false
-      }),
-      confidence: 0.9,
-      reasoning: `Move ${distance} feet`
-    }]
-  }
-
-  // --- Withdrawal ---
-  if (text.match(/(?:i )?withdraw/)) {
-    return [{
-      event: WithdrawalDeclared.make({
-        entityId: context.activeCharacterId
-      }),
-      confidence: 0.85,
-      reasoning: "Withdrawal declared"
-    }]
-  }
-
-  // --- Defense stance ---
-  if (text.match(/(?:i )?(?:defend|take (?:a )?defensive stance|go defensive|total defense)/)) {
-    return [{
-      event: DefenseStanceTaken.make({
-        entityId: context.activeCharacterId
-      }),
-      confidence: 0.9,
-      reasoning: "Defensive stance"
-    }]
-  }
-
-  // --- Non-actionable input ---
-  return []
 }
 
 function extractMessageContent(json: unknown): string | undefined {
@@ -382,13 +332,13 @@ function buildSystemPrompt(context: InterpretationContext): string {
   return [
     "You classify tabletop RPG transcript text into candidate game actions.",
     "Return JSON only with shape:",
-    '{"candidates":[{"type":"attack|move|withdraw|defense|none","confidence":0.0,"reasoning":"...","targetName":"optional","attackRoll":10,"distanceMoved":30}]}',
+    "{\"candidates\":[{\"type\":\"attack|move|withdraw|defense|none\",\"confidence\":0.0,\"reasoning\":\"...\",\"targetName\":\"optional\",\"attackRoll\":10,\"distanceMoved\":30}]}",
     "Use only the listed entities when naming targets.",
     "Rules:",
-    '- "attack" may omit targetName when ambiguous or unknown.',
-    '- "move" must include distanceMoved.',
-    '- "withdraw" and "defense" do not need extra fields.',
-    '- "none" means the text is not an actionable game command.',
+    "- \"attack\" may omit targetName when ambiguous or unknown.",
+    "- \"move\" must include distanceMoved.",
+    "- \"withdraw\" and \"defense\" do not need extra fields.",
+    "- \"none\" means the text is not an actionable game command.",
     "Current entities:",
     entities
   ].join("\n")
@@ -410,7 +360,7 @@ function getEnv(name: string): string | undefined {
   return undefined
 }
 
-function isTextContentPart(value: unknown): value is { readonly type: "text", readonly text: string } {
+function isTextContentPart(value: unknown): value is { readonly type: "text"; readonly text: string } {
   return (
     typeof value === "object"
     && value !== null
@@ -464,7 +414,21 @@ function toCandidateInterpretations(
         }]
       }
 
-      return allTargets(context).map((target) => ({
+      const targets = allTargets(context)
+      if (targets.length === 1) {
+        return [{
+          event: AttackPerformed.make({
+            attackerId: context.activeCharacterId,
+            targetId: targets[0].id,
+            weaponId,
+            attackRoll
+          }),
+          confidence: Math.max(candidate.confidence, 0.85),
+          reasoning: `Attack with only one target available: ${targets[0].name}`
+        }]
+      }
+
+      return targets.map((target) => ({
         event: AttackPerformed.make({
           attackerId: context.activeCharacterId,
           targetId: target.id,
@@ -480,15 +444,15 @@ function toCandidateInterpretations(
       return candidate.distanceMoved === undefined
         ? []
         : [{
-            event: MovementPerformed.make({
-              entityId: context.activeCharacterId,
-              distanceMoved: candidate.distanceMoved,
-              isWithdrawal: false,
-              isRetreat: false
-            }),
-            confidence: candidate.confidence,
-            reasoning: candidate.reasoning
-          }]
+          event: MovementPerformed.make({
+            entityId: context.activeCharacterId,
+            distanceMoved: candidate.distanceMoved,
+            isWithdrawal: false,
+            isRetreat: false
+          }),
+          confidence: candidate.confidence,
+          reasoning: candidate.reasoning
+        }]
 
     case "withdraw":
       return [{
@@ -511,4 +475,121 @@ function toCandidateInterpretations(
     case "none":
       return []
   }
+}
+
+function classifyTranscriptText(text: string): LiveTranscriptLlmResponse {
+  const normalizedText = text.toLowerCase()
+
+  const attackNamed = normalizedText.match(/(?:i )?(?:attack|swing at|hit|strike)\s+(?:the\s+)?(\w+)/)
+  if (attackNamed) {
+    const rollMatch = normalizedText.match(/(?:rolled?\s+(?:a\s+)?)?(\d+)/)
+    const attackRoll = rollMatch ? Math.min(20, Math.max(1, parseInt(rollMatch[1], 10))) : 10
+
+    return {
+      candidates: [{
+        type: "attack",
+        confidence: 0.92,
+        reasoning: `Direct attack declaration against ${capitalize(attackNamed[1])}`,
+        targetName: attackNamed[1],
+        attackRoll
+      }]
+    }
+  }
+
+  const attackGeneric = normalizedText.match(/(?:i )?(?:attack|swing|hit|strike)(?:\s|$)/)
+  if (attackGeneric) {
+    return {
+      candidates: [{
+        type: "attack",
+        confidence: 0.55,
+        reasoning: "Attack declared without a target"
+      }]
+    }
+  }
+
+  const moveMatch = normalizedText.match(/(?:i )?(?:move|walk|run|advance)\s+(\d+)\s*(?:feet|ft)?/)
+  if (moveMatch) {
+    return {
+      candidates: [{
+        type: "move",
+        confidence: 0.88,
+        reasoning: "Movement amount is explicit",
+        distanceMoved: parseInt(moveMatch[1], 10)
+      }]
+    }
+  }
+
+  if (normalizedText.match(/(?:i )?withdraw/)) {
+    return {
+      candidates: [{
+        type: "withdraw",
+        confidence: 0.85,
+        reasoning: "Withdrawal declared"
+      }]
+    }
+  }
+
+  if (normalizedText.match(/(?:i )?(?:defend|take (?:a )?defensive stance|go defensive|total defense)/)) {
+    return {
+      candidates: [{
+        type: "defense",
+        confidence: 0.9,
+        reasoning: "Defensive stance"
+      }]
+    }
+  }
+
+  return {
+    candidates: [{
+      type: "none",
+      confidence: 1,
+      reasoning: "No actionable game command detected"
+    }]
+  }
+}
+
+function capitalize(value: string): string {
+  return value.length > 0
+    ? value[0].toUpperCase() + value.slice(1)
+    : value
+}
+
+function makeCachedTranscriptLlmLayer(
+  tag: typeof TranscriptLlm,
+  transportLayer: Layer.Layer<TranscriptLlmTransport, TranscriptInterpretationError, never>
+): Layer.Layer<TranscriptLlm, TranscriptInterpretationError, never> {
+  return Layer.effect(
+    tag,
+    Effect.gen(function*() {
+      const transport = yield* TranscriptLlmTransport
+      const cache = yield* SynchronizedRef.make(new Map<string, LiveTranscriptLlmResponse>())
+
+      return tag.of({
+        complete: (request) =>
+          Effect.gen(function*() {
+            const cacheKey = JSON.stringify({
+              activeCharacterId: request.context.activeCharacterId,
+              activeWeaponId: request.context.activeWeaponId,
+              entities: request.context.entities,
+              text: request.text
+            })
+
+            const cached = yield* SynchronizedRef.modify(cache, (entries) => {
+              const hit = entries.get(cacheKey)
+              return [hit, entries] as const
+            })
+
+            if (cached) {
+              return cached
+            }
+
+            const response = yield* transport.complete(request)
+
+            yield* SynchronizedRef.update(cache, (entries) => new Map([...entries, [cacheKey, response]]))
+
+            return response
+          })
+      })
+    })
+  ).pipe(Layer.provide(transportLayer))
 }

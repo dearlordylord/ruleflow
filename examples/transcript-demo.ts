@@ -6,7 +6,10 @@
  * DEMO SCAFFOLDING — not foundational code. This file exists to make the
  * transcript pipeline tangible: type natural language, see candidate events
  * and state changes. It hardcodes a scenario (Guido vs two goblins) and
- * uses the mock interpreter (no LLM).
+ * supports three modes:
+ * - mock: pure pattern-matching interpreter
+ * - demo: mocked LLM service with optional fake latency
+ * - live: real OpenRouter-backed LLM service
  *
  * Foundational code lives in src/transcript/ — the Effect services,
  * types, and pipeline orchestration that the LLM layer will plug into.
@@ -149,8 +152,13 @@ const demoProjectorLayer = Projector.layer.pipe(
 
 const demoCombatLayer = CombatResolver.layer.pipe(Layer.provide(demoBaseLayer))
 
-const interpreterLayer = process.env.TRANSCRIPT_INTERPRETER_MODE === "live"
+const interpreterMode = process.env.TRANSCRIPT_INTERPRETER_MODE ?? "mock"
+const demoLatencyMs = Number(process.env.TRANSCRIPT_DEMO_LATENCY_MS ?? "0")
+
+const interpreterLayer = interpreterMode === "live"
   ? TranscriptInterpreter.liveLayer.pipe(Layer.provide(TranscriptLlm.liveLayer))
+  : interpreterMode === "demo"
+  ? TranscriptInterpreter.liveLayer.pipe(Layer.provide(TranscriptLlm.demoLayer({ latencyMs: demoLatencyMs })))
   : TranscriptInterpreter.mockLayer
 
 const demoPipelineLayer = TranscriptPipeline.layer.pipe(
@@ -209,11 +217,6 @@ function formatEvent(event: Record<string, unknown>): string {
 async function processLine(
   trimmed: string
 ): Promise<void> {
-  const fakeLatencyMs = Number(process.env.TRANSCRIPT_DEMO_LATENCY_MS ?? "0")
-  if (fakeLatencyMs > 0) {
-    await new Promise((resolve) => setTimeout(resolve, fakeLatencyMs))
-  }
-
   const segment = new TranscriptSegment({
     text: Schema.decodeSync(Schema.NonEmptyString)(trimmed),
     timestamp: new Date(),
@@ -252,7 +255,11 @@ async function main(): Promise<void> {
   await runtime.runPromise(seedEntities())
 
   console.log("=".repeat(60))
-  const mode = process.env.TRANSCRIPT_INTERPRETER_MODE === "live" ? "live OpenRouter interpreter" : "mock interpreter"
+  const mode = interpreterMode === "live"
+    ? "live OpenRouter interpreter"
+    : interpreterMode === "demo"
+    ? "demo mocked LLM interpreter"
+    : "mock interpreter"
   console.log(`Transcript Pipeline Demo (${mode})`)
   console.log("=".repeat(60))
   console.log("")
@@ -268,8 +275,11 @@ async function main(): Promise<void> {
   console.log("  \"hmm let me think\"          (non-actionable, no candidates)")
   console.log("")
   console.log("Type a line of speech. Ctrl-C to exit.")
-  if (process.env.TRANSCRIPT_INTERPRETER_MODE === "live") {
+  if (interpreterMode === "live") {
     console.log("Using OPENROUTER_API_KEY from .env or the process environment.")
+  }
+  if (interpreterMode === "demo" && demoLatencyMs > 0) {
+    console.log(`Using mocked LLM responses with ${demoLatencyMs}ms fake latency.`)
   }
   console.log("-".repeat(60))
 
