@@ -5,3 +5,4 @@ export { TranscriptInterpreter, TranscriptLlm } from "./TranscriptInterpreter.js
 export type { PipelineResult } from "./TranscriptPipeline.js"
 export { TranscriptPipeline } from "./TranscriptPipeline.js"
 export { TranscriptSegment } from "./TranscriptSegment.js"
+export { AudioTranscriptSource, WhisperTranscriber } from "./WhisperTranscriber.js"

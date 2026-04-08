@@ -481,7 +481,7 @@ function classifyTranscriptText(text: string): LiveTranscriptLlmResponse {
   const normalizedText = text.toLowerCase()
 
   const attackNamed = normalizedText.match(/(?:i )?(?:attack|swing at|hit|strike)\s+(?:the\s+)?(\w+)/)
-  if (attackNamed) {
+  if (attackNamed && attackNamed[1] !== "that" && attackNamed[1] !== "thats") {
     const rollMatch = normalizedText.match(/(?:rolled?\s+(?:a\s+)?)?(\d+)/)
     const attackRoll = rollMatch ? Math.min(20, Math.max(1, parseInt(rollMatch[1], 10))) : 10
 
